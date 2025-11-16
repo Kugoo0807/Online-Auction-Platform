@@ -44,7 +44,7 @@ const seedDatabase = async () => {
       { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "buyer" }
     ]);
 
-    console.log('Dang tao Categories (co cha-con)...');
+    console.log('Dang tao Categories...');
     // 2. Tạo Categories
     const catElectronics = await Category.create({ category_name: "Đồ điện tử" });
     const catAntiques = await Category.create({ category_name: "Đồ cổ" });
@@ -198,7 +198,7 @@ const seedDatabase = async () => {
       deleter_id: admin._id
     });
 
-    console.log('--- TAO DU LIEU MAU (PHONG PHU) THANH CONG ---');
+    console.log('--- TAO DU LIEU MAU THANH CONG ---');
 
   } catch (error) {
     console.error('Loi khi tao du lieu mau:', error);

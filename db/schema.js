@@ -9,6 +9,8 @@ const userSchema = new Schema({
   role: { type: String, enum: ['buyer', 'seller', 'admin'], default: 'buyer' },
   date_of_birth: Date,
   phone_number: { type: String, unique: true, sparse: true }, // 'sparse' cho phép nhiều giá trị null
+  password_otp: { type: String, default: null },
+  otp_expired: { type: Date, default: null },
 }, { timestamps: true }); // Tự động thêm createdAt và updatedAt
 
 // 2. UpgradeRequest
