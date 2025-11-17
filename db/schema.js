@@ -11,6 +11,7 @@ const userSchema = new Schema({
   phone_number: { type: String, unique: true, sparse: true }, // 'sparse' cho phép nhiều giá trị null
   password_otp: { type: String, default: null },
   otp_expired: { type: Date, default: null },
+  address: { type: String, required: true },
 }, { timestamps: true }); // Tự động thêm createdAt và updatedAt
 
 // 2. UpgradeRequest
@@ -91,16 +92,24 @@ const ratingSchema = new Schema({
   comment: String,
 }, { timestamps: true });
 
+//11. Refresh Token
+const refreshTokenSchema = new Schema({
+  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  token: { type: String, required: true },
+  expires_at: { type: Date, required: true },
+  is_revoked: { type: Boolean, default: false },
+}, { timestamps: true });
 
 module.exports = {
   User: mongoose.model('User', userSchema),
-  UpgradeRequest: mongoose.model('UpgradeRequest', upgradeRequestSchema),
-  DeletionHistory: mongoose.model('DeletionHistory', deletionHistorySchema),
-  WatchList: mongoose.model('WatchList', watchListSchema),
+  UpgradeRequest: mongoose.model('Upgrade_Request', upgradeRequestSchema),
+  DeletionHistory: mongoose.model('Deletion_History', deletionHistorySchema),
+  WatchList: mongoose.model('Watch_List', watchListSchema),
   Category: mongoose.model('Category', categorySchema),
   Product: mongoose.model('Product', productSchema),
   Bid: mongoose.model('Bid', bidSchema),
   QnA: mongoose.model('QnA', qnaSchema),
-  AuctionResult: mongoose.model('AuctionResult', auctionResultSchema),
-  Rating: mongoose.model('Rating', ratingSchema)
+  AuctionResult: mongoose.model('Auction_Result', auctionResultSchema),
+  Rating: mongoose.model('Rating', ratingSchema), 
+  RefreshToken: mongoose.model('Refresh_Token', refreshTokenSchema)
 };

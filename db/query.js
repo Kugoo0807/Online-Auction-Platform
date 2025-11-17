@@ -11,7 +11,8 @@ const {
   Rating,
   UpgradeRequest,
   AuctionResult,
-  DeletionHistory
+  DeletionHistory,
+  RefreshToken
 } = require('./schema');
 
 const runQueries = async () => {

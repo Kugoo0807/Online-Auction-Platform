@@ -11,7 +11,8 @@ const {
   AuctionResult,
   Rating,
   UpgradeRequest,
-  DeletionHistory
+  DeletionHistory,
+  RefreshToken 
 } = require('./schema'); // Đảm bảo đường dẫn đúng
 
 const seedDatabase = async () => {
@@ -197,7 +198,11 @@ const seedDatabase = async () => {
       user_deleted_id: userToBeDeleted._id,
       deleter_id: admin._id
     });
-
+    // 11. Tạo RefreshTokens
+    await RefreshToken.create([
+      { user_id: buyer1._id, token: "sample_refresh_token_1", expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+      { user_id: seller1._id, token: "sample_refresh_token_2", expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
+    ]);
     console.log('--- TAO DU LIEU MAU THANH CONG ---');
 
   } catch (error) {
