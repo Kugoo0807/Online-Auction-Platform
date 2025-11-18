@@ -36,13 +36,13 @@ const seedDatabase = async () => {
     const [
       seller1, seller2, buyer1, buyer2, buyer3, admin, userToBeDeleted
     ] = await User.create([
-      { full_name: "Trần Minh Quang", email: "quang.tran@example.com", password: "hashed_password_123", role: "seller" },
-      { full_name: "Lê Thị Thanh Thảo", email: "thao.le@example.com", password: "hashed_password_123", role: "seller" },
-      { full_name: "Nguyễn Anh Dũng", email: "dung.nguyen@example.com", password: "hashed_password_456", role: "buyer" },
-      { full_name: "Phạm Hoài An", email: "an.pham@example.com", password: "hashed_password_456", role: "buyer" },
-      { full_name: "Vũ Đức Huy", email: "huy.vu@example.com", password: "hashed_password_456", role: "buyer" },
-      { full_name: "Nguyễn Nhật Nam", email: "nam.nguyen@example.com", password: "hashed_password_789", role: "admin" },
-      { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "buyer" }
+      { full_name: "Trần Minh Quang", email: "quang.tran@example.com", password: "hashed_password_123", role: "seller", address: "Hà Nội",  },
+      { full_name: "Lê Thị Thanh Thảo", email: "thao.le@example.com", password: "hashed_password_123", role: "seller", address: "Hồ Chí Minh" },
+      { full_name: "Nguyễn Anh Dũng", email: "dung.nguyen@example.com", password: "hashed_password_456", role: "buyer", address: "Đà Nẵng" },
+      { full_name: "Phạm Hoài An", email: "an.pham@example.com", password: "hashed_password_456", role: "buyer", address: "Hải Phòng" },
+      { full_name: "Vũ Đức Huy", email: "huy.vu@example.com", password: "hashed_password_456", role: "buyer", address: "Cần Thơ" },
+      { full_name: "Nguyễn Nhật Nam", email: "nam.nguyen@example.com", password: "hashed_password_789", role: "admin", address: "Hà Nội" },
+      { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "buyer", address: "Bình Dương" }
     ]);
 
     console.log('Dang tao Categories...');
