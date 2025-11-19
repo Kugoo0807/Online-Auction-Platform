@@ -1,19 +1,4 @@
-const mongoose = require('mongoose');
-const connectDB = require('./connect');
-const {
-  User,
-  Product,
-  Bid,
-  WatchList,
-  Category,
-  QnA,
-  Rating,
-  UpgradeRequest,
-  AuctionResult,
-  DeletionHistory,
-  RefreshToken
-} = require('./schema');
-
+import { User } from '../../db/schema.js';
 class userRepository {
   async findByEmail(email) {
     return await User.findOne({ email });
@@ -26,7 +11,7 @@ class userRepository {
   async create(userData) {
     const user = new User(userData);
     return await user.save();
-  } 
+  }
 
   async updatePassword(userId, newHashedPassword) {
     return await User.findByIdAndUpdate(
@@ -79,6 +64,7 @@ class userRepository {
     if (!updateData || typeof updateData !== 'object') {
       return await User.findById(userId);
     }
+
     const allowed = ['full_name', 'date_of_birth', 'phone_number', 'address', 'email'];
     const cleaned = Object.fromEntries(
       Object.entries(updateData).filter(([key, val]) =>
@@ -90,12 +76,17 @@ class userRepository {
         key !== 'id'
       )
     );
+
     if (Object.keys(cleaned).length === 0) {
       return await User.findById(userId);
     }
-    return await User.findByIdAndUpdate(userId, { $set: cleaned }, { new: true, runValidators: true });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      { $set: cleaned },
+      { new: true, runValidators: true }
+    );
   }
 }
 
-module.exports = new userRepository();
-
+export default new userRepository();
