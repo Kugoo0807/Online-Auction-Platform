@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
+// Schema
 // 1. User
 const userSchema = new Schema({
   full_name: { type: String, required: true },
