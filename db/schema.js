@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 // 1. User
@@ -100,16 +100,14 @@ const refreshTokenSchema = new Schema({
   is_revoked: { type: Boolean, default: false },
 }, { timestamps: true });
 
-module.exports = {
-  User: mongoose.model('User', userSchema),
-  UpgradeRequest: mongoose.model('Upgrade_Request', upgradeRequestSchema),
-  DeletionHistory: mongoose.model('Deletion_History', deletionHistorySchema),
-  WatchList: mongoose.model('Watch_List', watchListSchema),
-  Category: mongoose.model('Category', categorySchema),
-  Product: mongoose.model('Product', productSchema),
-  Bid: mongoose.model('Bid', bidSchema),
-  QnA: mongoose.model('QnA', qnaSchema),
-  AuctionResult: mongoose.model('Auction_Result', auctionResultSchema),
-  Rating: mongoose.model('Rating', ratingSchema), 
-  RefreshToken: mongoose.model('Refresh_Token', refreshTokenSchema)
-};
+export const User = mongoose.model('User', userSchema);
+export const UpgradeRequest = mongoose.model('Upgrade_Request', upgradeRequestSchema);
+export const DeletionHistory = mongoose.model('Deletion_History', deletionHistorySchema);
+export const WatchList = mongoose.model('Watch_List', watchListSchema);
+export const Category = mongoose.model('Category', categorySchema);
+export const Product = mongoose.model('Product', productSchema);
+export const Bid = mongoose.model('Bid', bidSchema);
+export const QnA = mongoose.model('QnA', qnaSchema);
+export const AuctionResult = mongoose.model('Auction_Result', auctionResultSchema);
+export const Rating = mongoose.model('Rating', ratingSchema);
+export const RefreshToken = mongoose.model('Refresh_Token', refreshTokenSchema);
