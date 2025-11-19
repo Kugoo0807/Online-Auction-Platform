@@ -77,14 +77,13 @@ class AuthController {
 
     async logout(req, res) {
         try {
-            const refreshToken = req.cookie.refreshToken;
-            if (refreshToken) {
-                await authService.logout(refreshToken);
+            const refreshToken = req.cookies.refreshToken;
+            if (!refreshToken) return res.status(400).json({ message: 'Không có token để logout' });
 
-                // Xóa cookie
-                res.clearCookie('refreshToken', { path: '/api/auth' });
-                res.status(200).json({ message: 'Đăng xuất thành công' });
-            }
+            await authService.logout(refreshToken);
+
+            res.clearCookie('refreshToken', { path: '/api/auth' });
+            res.status(200).json({ message: 'Đăng xuất thành công' });
         } catch (e) {
             res.status(500).json({ message: e.message });
         }

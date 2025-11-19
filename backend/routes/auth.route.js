@@ -15,7 +15,7 @@ export function AuthRoutes(authController) {
     router.post("/refresh", authController.refresh);
     
     // Logout (Cần có accessToken để xác định để đăng nhập)
-    router.post("/logout", [checkAuth], authController.logout);
+    router.post("/logout", authController.logout);
     
     // Đăng nhập bằng google
     router.post("/google/login", authController.loginWithGoogle);
