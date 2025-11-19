@@ -81,4 +81,4 @@ class ProductRepository {
     }
 }
 
-export default new ProductRepository();
+export const ProductRepository = new ProductRepository();
