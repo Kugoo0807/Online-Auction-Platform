@@ -6,13 +6,15 @@ const { Schema } = mongoose;
 const userSchema = new Schema({
   full_name: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['buyer', 'seller', 'admin'], default: 'buyer' },
+  password: { type: String},
+  role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
   date_of_birth: Date,
-  phone_number: { type: String, unique: true, sparse: true }, // 'sparse' cho phép nhiều giá trị null
+  phone_number: { type: String, sparse: true }, // 'sparse' cho phép nhiều giá trị null
   password_otp: { type: String, default: null },
   otp_expired: { type: Date, default: null },
-  address: { type: String, required: true },
+  address: { type: String},
+  auth_provider: { type: String, enum: ['local', 'google', 'facebook'], default: 'local' },
+  provider_id: { type: String, default: null }, 
 }, { timestamps: true }); // Tự động thêm createdAt và updatedAt
 
 // 2. UpgradeRequest
