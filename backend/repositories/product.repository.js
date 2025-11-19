@@ -1,4 +1,4 @@
-import { Product } from './schema.js';
+import { Product } from '../../db/schema.js';
 
 class ProductRepository { 
     async create(productData) {
