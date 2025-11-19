@@ -1,17 +1,30 @@
-const express = require('express');
-const simpleLogger = require('./middleware/logger.middleware.js');
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve('../.env') }); 
+
+import express from 'express';
+import connectDB from '../db/connect.js';
+import passport from 'passport';
+import cookieParser from 'cookie-parser';
+import './config/passport.config.js';
+import simpleLogger from './middleware/logger.middleware.js';
+
+await connectDB(); 
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Import routes
-const productRoutes = require('./routes/product.route.js');
-const authRoutes = require('./routes/auth.route.js');
-const adminRoutes = require('./routes/admin.route.js');
-
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(passport.initialize());
 app.use(simpleLogger);
+
+// Import routes
+const { authController } = await import('./controllers/auth.controller.js');
+const { AuthRoutes } = await import('./routes/auth.route.js');
+const { AdminRoutes } = await import('./routes/admin.route.js');
 
 app.get('/api', (req, res) => {
     res.send('Chào mừng đến với API Sàn Đấu Giá!');
@@ -21,9 +34,8 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: "API Sàn Đấu Giá đang chạy tốt!" });
 });
 
-app.use('/api/products', productRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/auth', AuthRoutes(authController));
+app.use('/api/admin', AdminRoutes());
 
 // START
 app.listen(PORT, () => {

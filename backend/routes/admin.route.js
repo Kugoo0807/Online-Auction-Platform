@@ -1,17 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const { verifyToken, isAdmin } = require('../middleware/auth.middleware.js');
+import express from 'express';
+import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
 
+export function AdminRoutes() {
+    const router = express.Router();
 
-router.get(
-    '/health',
-    [verifyToken, isAdmin], // 2 middlewares
-    (req, res) => {
-        res.status(200).json({ 
-            status: "Admin API đang chạy tốt!",
-            user: req.user
-        });
-    }
-);
+    router.get(
+        '/health',
+        [checkAuth, checkRole("admin")],
+        (req, res) => {
+            req.user.password = undefined;
+            res.status(200).json({
+                status: "Admin API đang chạy tốt!",
+                user: req.user
+            });
+        }
+    );
 
-module.exports = router;
+    return router;
+}

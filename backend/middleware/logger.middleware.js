@@ -4,4 +4,4 @@ const simpleLogger = (req, res, next) => {
     next();
 };
 
-module.exports = simpleLogger;
+export default simpleLogger;
