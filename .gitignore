@@ -40,3 +40,6 @@ Desktop.ini
 .cache/
 .tmp/
 coverage/
+
+# ENV
+.env

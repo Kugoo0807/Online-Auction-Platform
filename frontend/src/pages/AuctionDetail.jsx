@@ -2,11 +2,9 @@ import { useParams, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { products } from '../data/products'
 
-const productData = products;
-
 export default function AuctionDetail() {
   const { id } = useParams()
-  const product = productData[id]
+  const product = products.find(p => p.id === parseInt(id))
   const [bid, setBid] = useState(product.price)
   const [message, setMessage] = useState('')
 

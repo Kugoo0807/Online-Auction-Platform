@@ -1,43 +1,36 @@
-// ==== GIẢ LẬP XỬ LÝ TOKEN ====
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    
-    // 401 (Unauthorized) - Không cung cấp token
-    if (!authHeader) {
-        return res.status(401).json({ message: "Không tìm thấy token. Yêu cầu xác thực." });
-    }
+import passport from "passport";
 
-    // Giả lập token: 'Bearer valid-token-admin' hoặc 'Bearer valid-token-user'
-    const token = authHeader.split(' ')[1];
-
-    if (token === 'valid-token-admin') {
-        req.user = {
-            id: 1,
-            role: 'admin'
-        };
+const checkAuth = (req, res, next) => {
+    passport.authenticate('jwt', { session: false }, (err, user, info) => {
+        if (err || !user) {
+            return res.status(401).json({ message: info ? info.message : 'Không được phép. Vui lòng đăng nhập.' });
+        }
+        req.user = user;
         next();
-    } else if (token === 'valid-token-user') {
-        req.user = {
-            id: 2,
-            role: 'bidder'
-        };
-        next();
-    } else {
-        return res.status(401).json({ message: "Token không hợp lệ." });
-    }
+    })(req, res, next);
 };
 
-// ROLE ADMIN
-const isAdmin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-        next();
-    } else {
-        // 403 (Forbidden) - Đã xác thực nhưng không có quyền
-        return res.status(403).json({ message: "Từ chối truy cập. Yêu cầu quyền Admin." });
+const checkRole = (roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Không có quyền truy cập.' });
     }
+    next();
 };
 
-module.exports = {
-    verifyToken,
-    isAdmin
+const attemptLogin = (req, res, next) => {
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+        if (err) return next(err);
+
+        if (!user) {
+            // Trả về message từ LocalStrategy
+            return res.status(401).json({ 
+                message: info ? info.message : 'Đăng nhập thất bại.' 
+            });
+        }
+
+        req.user = user;
+        next();
+    }) (req, res, next);
 };
+
+export { checkAuth, attemptLogin, checkRole };
