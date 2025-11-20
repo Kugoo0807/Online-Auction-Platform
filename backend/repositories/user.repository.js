@@ -1,6 +1,5 @@
 import { User } from '../../db/schema.js';
-
-class UserRepository {
+class userRepository {
   async findByEmail(email) {
     return await User.findOne({ email });
   }

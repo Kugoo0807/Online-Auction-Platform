@@ -91,7 +91,7 @@ const ratingSchema = new Schema({
   rater_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // người mua
   rated_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // người bán
   result_id: { type: Schema.Types.ObjectId, ref: 'AuctionResult', required: true },
-  rating_type: { type: Number, min: 1, max: 5, required: true }, // Số sao
+  rating_type: { type: String, enum: ['positive','negative'], required: true }, 
   comment: String,
 }, { timestamps: true });
 

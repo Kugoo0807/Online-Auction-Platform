@@ -36,13 +36,13 @@ const seedDatabase = async () => {
     const [
       seller1, seller2, buyer1, buyer2, buyer3, admin, userToBeDeleted
     ] = await User.create([
-      { full_name: "Trần Minh Quang", email: "quang.tran@example.com", password: "hashed_password_123", role: "seller", address: "Hà Nội",  },
-      { full_name: "Lê Thị Thanh Thảo", email: "thao.le@example.com", password: "hashed_password_123", role: "seller", address: "Hồ Chí Minh" },
-      { full_name: "Nguyễn Anh Dũng", email: "dung.nguyen@example.com", password: "hashed_password_456", role: "buyer", address: "Đà Nẵng" },
-      { full_name: "Phạm Hoài An", email: "an.pham@example.com", password: "hashed_password_456", role: "buyer", address: "Hải Phòng" },
-      { full_name: "Vũ Đức Huy", email: "huy.vu@example.com", password: "hashed_password_456", role: "buyer", address: "Cần Thơ" },
-      { full_name: "Nguyễn Nhật Nam", email: "nam.nguyen@example.com", password: "hashed_password_789", role: "admin", address: "Hà Nội" },
-      { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "buyer", address: "Bình Dương" }
+      { full_name: "Trần Minh Quang", email: "quang.tran@example.com", password: "hashed_password_123", role: "seller", address: "Hà Nội", auth_provider: "local", provider_id: null },
+      { full_name: "Lê Thị Thanh Thảo", email: "thao.le@example.com", password: "hashed_password_123", role: "seller", address: "Hồ Chí Minh", auth_provider: "local", provider_id: null },
+      { full_name: "Nguyễn Anh Dũng", email: "dung.nguyen@example.com", password: "hashed_password_456", role: "bidder", address: "Đà Nẵng", auth_provider: "local", provider_id: null },
+      { full_name: "Phạm Hoài An", email: "an.pham@example.com", password: "hashed_password_456", role: "bidder", address: "Hải Phòng", auth_provider: "local", provider_id: null },
+      { full_name: "Vũ Đức Huy", email: "huy.vu@example.com", password: "hashed_password_456", role: "bidder", address: "Cần Thơ", auth_provider: "local", provider_id: null },
+      { full_name: "Nguyễn Nhật Nam", email: "nam.nguyen@example.com", password: "hashed_password_789", role: "admin", address: "Hà Nội", auth_provider: "local", provider_id: null },
+      { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "bidder", address: "Bình Dương", auth_provider: "local", provider_id: null }
     ]);
 
     console.log('Dang tao Categories...');
@@ -172,13 +172,13 @@ const seedDatabase = async () => {
       {
         rater_id: buyer2._id, rated_user_id: seller1._id,
         result_id: auctionResult1._id,
-        rating_type: 5, comment: "Người bán rất uy tín, laptop dùng tốt!"
+        rating_type: "positive", comment: "Người bán rất uy tín, laptop dùng tốt!"
       },
       // Buyer1 rate Seller1 cho product3
       {
         rater_id: buyer1._id, rated_user_id: seller1._id,
         result_id: auctionResult2._id,
-        rating_type: 4, comment: "Điện thoại ổn, nhưng giao hàng hơi chậm."
+        rating_type: "positive", comment: "Điện thoại ổn, nhưng giao hàng hơi chậm."
       }
     ]);
 
