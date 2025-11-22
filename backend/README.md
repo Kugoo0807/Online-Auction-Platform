@@ -9,6 +9,6 @@
 ---
 
 #Các thư viện:
-- npm install express mongoose bcryptjs jsonwebtoken passport passport-local passport-jwt dotenv google-auth-library cookie-parser
+- npm install express mongoose bcryptjs jsonwebtoken passport passport-local passport-jwt dotenv google-auth-library cookie-parser nodemailer
 
 ---
