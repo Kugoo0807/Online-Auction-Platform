@@ -6,7 +6,10 @@ import crypto from 'crypto';
 import { userRepository } from '../repositories/user.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
 
-//import emailService from './email.service.js';
+import { sendOtp } from './email.service.js';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || 'access_secret';
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'refresh_secret';

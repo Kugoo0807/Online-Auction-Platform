@@ -1,7 +1,5 @@
 import dotenv from 'dotenv';
-import path from 'path';
-
-dotenv.config({ path: path.resolve('../.env') }); 
+dotenv.config();
 
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
