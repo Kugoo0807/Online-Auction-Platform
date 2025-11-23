@@ -9,6 +9,8 @@ import SignUp from './pages/SignUp'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import './index.css'
+import OAuthCallback from './pages/OAuthCallback'
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -29,6 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
+          
         </Routes>
       </AuthProvider>
     </BrowserRouter>

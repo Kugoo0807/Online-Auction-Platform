@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { authService } from '../services/authService'
 import './Login.css'
 
 export default function Login() {
@@ -9,23 +10,47 @@ export default function Login() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleLogin = (e) => {
+  // Xử lý OAuth callback khi quay lại từ provider
+  useEffect(() => {
+    if (window.location.pathname === '/oauth/callback') {
+
+      const isOAuthCallback = authService.handleOAuthCallback();
+      if (isOAuthCallback) {
+        const from = location.state?.from || "/dashboard";
+        navigate(from, { replace: true });
+      }
+    }
+  }, [navigate, location]);
+
+  const handleLogin = async (e) => {
     e.preventDefault()
-    
-    // TODO: Thay thế bằng API call thực tế để xác thực người dùng
-    const fakeUser = {
-      email,
-      token: "mock-token-123"
-    };
+    setLoading(true)
+    setError('')
 
-    // Lưu thông tin người dùng vào context và localStorage
-    login(fakeUser);
-    
-    // Lấy đường dẫn trang trước đó (nếu có) hoặc về trang chủ
-    // Điều này giúp người dùng quay lại trang họ đang xem trước khi bị chuyển đến trang đăng nhập
-    const from = location.state?.from || "/"
-    navigate(from, { replace: true }) // Chuyển hướng sau khi đăng nhập thành công
+    const result = await login({ email, password })
+
+    if (result.success) {
+      const from = location.state?.from || "/dashboard"
+      navigate(from, { replace: true })
+    } else {
+      setError(result.error)
+    }
+    setLoading(false)
+  }
+
+  const handleGoogleLogin = () => {
+    authService.loginWithGoogle()
+  }
+
+  const handleFacebookLogin = () => {
+    authService.loginWithFacebook()
+  }
+
+  const handleGitHubLogin = () => {
+    authService.loginWithGitHub()
   }
 
   return (
@@ -36,27 +61,33 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Email</label>
-            <input 
-              type="email" 
-              placeholder="Email" 
+            <input
+              type="email"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div className="input-group">
             <label>Mật khẩu</label>
-            <input 
-              type="password" 
-              placeholder="Mật khẩu" 
+            <input
+              type="password"
+              placeholder="Mật khẩu"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
-          <button type="submit">ĐĂNG NHẬP</button>
+          {error && <div className="error-text">{error}</div>}
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP'}
+          </button>
         </form>
 
         <div className="forgot-password">
@@ -69,9 +100,15 @@ export default function Login() {
           <span>hoặc đăng nhập với</span>
         </div>
 
-        <button className="social-btn">Đăng nhập với Google</button>
-        <button className="social-btn">Đăng nhập với Facebook</button>
-        <button className="social-btn">Đăng nhập với GitHub</button>
+        <button className="social-btn" onClick={handleGoogleLogin}>
+          Đăng nhập với Google
+        </button>
+        <button className="social-btn" onClick={handleFacebookLogin}>
+          Đăng nhập với Facebook
+        </button>
+        <button className="social-btn" onClick={handleGitHubLogin}>
+          Đăng nhập với GitHub
+        </button>
 
         <div className="bottom-text">
           Chưa có tài khoản? <Link to="/signup">Đăng ký ngay</Link>
