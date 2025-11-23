@@ -1,6 +1,6 @@
-// db/seed.js
 const mongoose = require('mongoose');
-const connectDB = require('./connect'); // Đảm bảo đường dẫn đúng
+const bcrypt = require('bcryptjs');
+const connectDB = require('./connect');
 const {
   User,
   Category,
@@ -12,204 +12,257 @@ const {
   Rating,
   UpgradeRequest,
   DeletionHistory,
-  RefreshToken 
-} = require('./schema'); // Đảm bảo đường dẫn đúng
+  RefreshToken
+} = require('./schema');
 
 const seedDatabase = async () => {
   try {
-    await connectDB(); // Kết nối đến DB
+    await connectDB();
+    console.log('🔌 Đã kết nối MongoDB...');
 
-    console.log('Dang xoa du lieu cu...');
-    // Xoá tất cả 10 collection
+    // --- 1. DỌN DẸP DỮ LIỆU CŨ ---
+    console.log('🧹 Đang xóa dữ liệu cũ...');
     await Promise.all([
-      User.deleteMany({}), Category.deleteMany({}), Product.deleteMany({}),
-      Bid.deleteMany({}), WatchList.deleteMany({}), QnA.deleteMany({}),
-      AuctionResult.deleteMany({}), Rating.deleteMany({}),
-      UpgradeRequest.deleteMany({}), DeletionHistory.deleteMany({})
+      User.deleteMany({}), 
+      Category.deleteMany({}), 
+      Product.deleteMany({}),
+      Bid.deleteMany({}), 
+      WatchList.deleteMany({}), 
+      QnA.deleteMany({}),
+      AuctionResult.deleteMany({}), 
+      Rating.deleteMany({}),
+      UpgradeRequest.deleteMany({}), 
+      DeletionHistory.deleteMany({}),
+      RefreshToken.deleteMany({})
     ]);
-    console.log('Xoa du lieu cu thanh cong.');
+    console.log('✅ Đã xóa dữ liệu cũ.');
 
-    // --- TẠO DỮ LIỆU MẪU ---
+    // --- 2. CHUẨN BỊ MẬT KHẨU HASH ---
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash("password123", salt);
 
-    console.log('Dang tao Users...');
-    // 1. Tạo Users
-    const [
-      seller1, seller2, buyer1, buyer2, buyer3, admin, userToBeDeleted
-    ] = await User.create([
-      { full_name: "Trần Minh Quang", email: "quang.tran@example.com", password: "hashed_password_123", role: "seller", address: "Hà Nội", auth_provider: "local", provider_id: null },
-      { full_name: "Lê Thị Thanh Thảo", email: "thao.le@example.com", password: "hashed_password_123", role: "seller", address: "Hồ Chí Minh", auth_provider: "local", provider_id: null },
-      { full_name: "Nguyễn Anh Dũng", email: "dung.nguyen@example.com", password: "hashed_password_456", role: "bidder", address: "Đà Nẵng", auth_provider: "local", provider_id: null },
-      { full_name: "Phạm Hoài An", email: "an.pham@example.com", password: "hashed_password_456", role: "bidder", address: "Hải Phòng", auth_provider: "local", provider_id: null },
-      { full_name: "Vũ Đức Huy", email: "huy.vu@example.com", password: "hashed_password_456", role: "bidder", address: "Cần Thơ", auth_provider: "local", provider_id: null },
-      { full_name: "Nguyễn Nhật Nam", email: "nam.nguyen@example.com", password: "hashed_password_789", role: "admin", address: "Hà Nội", auth_provider: "local", provider_id: null },
-      { full_name: "Nguyễn Văn Hùng", email: "hung.ng@example.com", password: "hashed_password_000", role: "bidder", address: "Bình Dương", auth_provider: "local", provider_id: null }
-    ]);
-
-    console.log('Dang tao Categories...');
-    // 2. Tạo Categories
-    const catElectronics = await Category.create({ category_name: "Đồ điện tử" });
-    const catAntiques = await Category.create({ category_name: "Đồ cổ" });
-    const catFashion = await Category.create({ category_name: "Thời trang" });
-    
-    // Laptop là con của Đồ điện tử
-    const catLaptop = await Category.create({
-      category_name: "Laptop",
-      description: "Các loại máy tính xách tay",
-      parent_id: catElectronics._id
-    });
-
-    console.log('Dang tao Products...');
-    // 3. Tạo Products
-    const [
-      product1, product2, product3, product4, product5
-    ] = await Product.create([
-      // Sản phẩm 1: Đã kết thúc
-      {
-        product_name: "Macbook Pro 2019 (Cũ)", start_price: 15000000, bid_increment: 100000,
-        auction_end_time: new Date(Date.now() - 10000), // ĐÃ KẾT THÚC
-        seller_id: seller1._id, category_id: catLaptop._id,
-        current_highest_price: 15200000,
-        current_highest_bidder_id: buyer2._id
+    // --- 3. TẠO USERS (5 người) ---
+    console.log('👤 Đang tạo 5 Users...');
+    const [seller1, seller2, bidder1, bidder2, admin] = await User.create([
+      { 
+        full_name: "Nguyễn Văn Bán (Seller 1)", 
+        email: "seller1@example.com", 
+        password: hashedPassword, 
+        role: "seller", 
+        address: "Hà Nội",
+        phone_number: "0901234567"
       },
-      // Sản phẩm 2: Đang diễn ra
-      {
-        product_name: "Đồng hồ Odo (Pháp)", start_price: 2000000, bid_increment: 50000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
-        seller_id: seller2._id, category_id: catAntiques._id,
-        current_highest_price: 2000000
+      { 
+        full_name: "Trần Thị Buôn (Seller 2)", 
+        email: "seller2@example.com", 
+        password: hashedPassword, 
+        role: "seller", 
+        address: "TP.HCM",
+        phone_number: "0909888777"
       },
-      // Sản phẩm 3: Đã kết thúc
-      {
-        product_name: "Điện thoại Samsung S21", start_price: 10000000, bid_increment: 100000,
-        auction_end_time: new Date(Date.now() - 20000), // ĐÃ KẾT THÚC
-        seller_id: seller1._id, category_id: catElectronics._id,
-        current_highest_price: 10300000,
-        current_highest_bidder_id: buyer1._id
+      { 
+        full_name: "Lê Văn Mua (Bidder 1)", 
+        email: "bidder1@example.com", 
+        password: hashedPassword, 
+        role: "bidder", 
+        address: "Đà Nẵng",
+        phone_number: "0912345678"
       },
-      // Sản phẩm 4: Đang diễn ra
-      {
-        product_name: "Áo khoác Da Bò Thật", start_price: 800000, bid_increment: 20000,
-        auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 ngày
-        seller_id: seller2._id, category_id: catFashion._id,
-        current_highest_price: 820000,
-        current_highest_bidder_id: buyer3._id
+      { 
+        full_name: "Phạm Thị Săn (Bidder 2)", 
+        email: "bidder2@example.com", 
+        password: hashedPassword, 
+        role: "bidder", 
+        address: "Cần Thơ",
+        phone_number: "0987654321"
       },
-      // Sản phẩm 5: Đang diễn ra
-      {
-        product_name: "Laptop Dell XPS 13", start_price: 20000000, bid_increment: 200000,
-        auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 ngày
-        seller_id: seller1._id, category_id: catLaptop._id,
-        current_highest_price: 20400000,
-        current_highest_bidder_id: buyer2._id
+      { 
+        full_name: "Admin Quản Trị", 
+        email: "admin@example.com", 
+        password: hashedPassword, 
+        role: "admin", 
+        address: "Server",
+        phone_number: "0000000000"
       }
     ]);
 
-    console.log('Dang tao Bids...');
-    // 4. Tạo Bids
-    await Bid.create([
-      // Bids cho Product 1
-      { user_id: buyer1._id, product_id: product1._id, price: 15100000 },
-      { user_id: buyer2._id, product_id: product1._id, price: 15200000 },
-      // Bids cho Product 3
-      { user_id: buyer2._id, product_id: product3._id, price: 10100000 },
-      { user_id: buyer3._id, product_id: product3._id, price: 10200000 },
-      { user_id: buyer1._id, product_id: product3._id, price: 10300000 },
-      // Bids cho Product 4
-      { user_id: buyer3._id, product_id: product4._id, price: 820000 },
-      // Bids cho Product 5
-      { user_id: buyer1._id, product_id: product5._id, price: 20200000 },
-      { user_id: buyer2._id, product_id: product5._id, price: 20400000 },
+    // --- 4. TẠO CATEGORIES (6 danh mục: 3 cha, 3 con) ---
+    console.log('📂 Đang tạo 6 Categories...');
+    
+    // 3 Danh mục cha
+    const catElectronics = await Category.create({ category_name: "Đồ Điện Tử", description: "Các thiết bị điện tử" });
+    const catFashion = await Category.create({ category_name: "Thời Trang", description: "Quần áo, giày dép" });
+    const catFurniture = await Category.create({ category_name: "Nội Thất", description: "Bàn ghế, tủ giường" }); // Không có con
+
+    // 3 Danh mục con
+    const catLaptop = await Category.create({ 
+      category_name: "Laptop", 
+      description: "Máy tính xách tay các loại", 
+      parent_id: catElectronics._id 
+    });
+    const catPhone = await Category.create({ 
+      category_name: "Điện Thoại", 
+      description: "Smartphones", 
+      parent_id: catElectronics._id 
+    });
+    
+    const catShoes = await Category.create({ 
+      category_name: "Giày Dép", 
+      description: "Giày thể thao, giày da", 
+      parent_id: catFashion._id 
+    });
+
+    // --- 5. TẠO PRODUCTS (10 sản phẩm) ---
+    console.log('📦 Đang tạo 10 Products...');
+    
+    // Mảng ảnh mẫu (3 ảnh để thỏa mãn validation)
+    const sampleImages = [
+      "https://placehold.co/600x400/png?text=Anh+1",
+      "https://placehold.co/600x400/png?text=Anh+2",
+      "https://placehold.co/600x400/png?text=Anh+3"
+    ];
+
+    const products = await Product.create([
+      // --- Seller 1 bán Đồ điện tử (4 món) ---
+      {
+        product_name: "MacBook Pro M1 2020",
+        description: "Máy còn mới 99%, pin sạc ít lần, đầy đủ phụ kiện zin theo máy.",
+        start_price: 20000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Còn 7 ngày
+        seller_id: seller1._id,
+        category_id: catLaptop._id,
+        images: sampleImages
+      },
+      {
+        product_name: "iPhone 13 Pro Max",
+        description: "Bản 256GB màu xanh, trầy nhẹ ở viền, cam kết chưa sửa chữa.",
+        start_price: 15000000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Còn 3 ngày
+        seller_id: seller1._id,
+        category_id: catPhone._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Laptop Dell XPS 13",
+        description: "Dòng doanh nhân mỏng nhẹ, màn hình 4K cảm ứng cực đẹp.",
+        start_price: 18000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        seller_id: seller1._id,
+        category_id: catLaptop._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Samsung Galaxy S22 Ultra",
+        description: "Bút S-Pen đầy đủ, màn hình bị ám nhẹ, bán giá xác cho anh em.",
+        start_price: 8000000,
+        bid_increment: 100000,
+        auction_end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        seller_id: seller1._id,
+        category_id: catPhone._id,
+        images: sampleImages
+      },
+
+      // --- Seller 2 bán Thời trang & Nội thất (6 món) ---
+      {
+        product_name: "Giày Nike Air Jordan 1",
+        description: "Hàng auth bao check, size 42, mới đi lướt 2 lần.",
+        start_price: 3000000,
+        bid_increment: 100000,
+        auction_end_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catShoes._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Giày Adidas Ultraboost",
+        description: "Chạy bộ cực êm, size 40, full box.",
+        start_price: 1500000,
+        bid_increment: 50000,
+        auction_end_time: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catShoes._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Sofa Da Bò Ý",
+        description: "Sofa nhập khẩu nguyên chiếc, da thật 100%, ngồi rất êm.",
+        start_price: 25000000,
+        bid_increment: 1000000,
+        auction_end_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catFurniture._id, // Danh mục cha
+        images: sampleImages
+      },
+      {
+        product_name: "Bàn Ăn Gỗ Sồi",
+        description: "Bàn ăn 6 ghế, gỗ sồi nga tự nhiên đã qua xử lý mối mọt.",
+        start_price: 5000000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catFurniture._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Giày Tây Nam Da Cá Sấu",
+        description: "Hàng thủ công handmade, size 41, lịch lãm sang trọng.",
+        start_price: 4000000,
+        bid_increment: 100000,
+        auction_end_time: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catShoes._id,
+        images: sampleImages
+      },
+      {
+        product_name: "Tủ Quần Áo Gỗ Công Nghiệp",
+        description: "Tủ 4 cánh, màu trắng hiện đại, tháo lắp dễ dàng.",
+        start_price: 2000000,
+        bid_increment: 50000,
+        auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        seller_id: seller2._id,
+        category_id: catFurniture._id,
+        images: sampleImages
+      }
     ]);
 
-    console.log('Dang tao WatchLists...');
-    // 5. Tạo WatchLists
+    // --- 6. TẠO WATCHLIST ---
+    console.log('👀 Đang tạo WatchLists...');
     await WatchList.create([
-      { user_id: buyer1._id, product_id: product1._id },
-      { user_id: buyer1._id, product_id: product5._id },
-      { user_id: buyer2._id, product_id: product1._id },
-      { user_id: buyer2._id, product_id: product3._id },
-      { user_id: buyer3._id, product_id: product5._id },
+      { user_id: bidder1._id, product_id: products[0]._id }, // Bidder 1 thích Macbook
+      { user_id: bidder1._id, product_id: products[4]._id }, // Bidder 1 thích Giày Nike
+      { user_id: bidder2._id, product_id: products[1]._id }, // Bidder 2 thích iPhone
+      { user_id: seller1._id, product_id: products[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
     ]);
 
-    console.log('Dang tao QnAs...');
-    // 6. Tạo QnAs
+    // --- 7. TẠO QnA ---
+    console.log('❓ Đang tạo QnAs...');
     await QnA.create([
       {
-        product_id: product1._id, asker_id: buyer1._id,
-        question_content: "Sản phẩm này còn bảo hành không?",
-        answerer_id: seller1._id, answer_content: "Dạ, hàng xách tay không bảo hành ạ.",
-        answer_timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24)
+        product_id: products[0]._id, // Macbook
+        asker_id: bidder1._id,
+        question_content: "Máy có bị trầy xước gì không shop?",
+        answerer_id: seller1._id,
+        answer_content: "Máy đẹp keng như mới bạn nhé.",
+        answer_timestamp: new Date()
       },
       {
-        product_id: product1._id, asker_id: buyer2._id,
-        question_content: "Ship về Cà Mau mất bao lâu vậy shop?"
-      },
-      {
-        product_id: product2._id, asker_id: buyer3._id,
-        question_content: "Đồng hồ này có giấy chứng nhận không?",
-        answerer_id: seller2._id, answer_content: "Có giấy tờ tay của người bán trước đó ạ.",
-        answer_timestamp: new Date(Date.now() - 1000 * 60 * 30)
+        product_id: products[6]._id, // Sofa
+        asker_id: bidder2._id,
+        question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
+        // Chưa trả lời
       }
     ]);
 
-    console.log('Dang tao AuctionResults...');
-    // 7. Tạo AuctionResults
-    const [auctionResult1, auctionResult2] = await AuctionResult.create([
-      {
-        product_id: product1._id, winning_bidder_id: buyer2._id,
-        final_price: product1.current_highest_price, payment_status: "completed"
-      },
-      {
-        product_id: product3._id, winning_bidder_id: buyer1._id,
-        final_price: product3.current_highest_price, payment_status: "pending"
-      }
-    ]);
-
-    console.log('Dang tao Ratings...');
-    // 8. Tạo Ratings
-    await Rating.create([
-      // Buyer2 rate Seller1 cho product1
-      {
-        rater_id: buyer2._id, rated_user_id: seller1._id,
-        result_id: auctionResult1._id,
-        rating_type: "positive", comment: "Người bán rất uy tín, laptop dùng tốt!"
-      },
-      // Buyer1 rate Seller1 cho product3
-      {
-        rater_id: buyer1._id, rated_user_id: seller1._id,
-        result_id: auctionResult2._id,
-        rating_type: "positive", comment: "Điện thoại ổn, nhưng giao hàng hơi chậm."
-      }
-    ]);
-
-    console.log('Dang tao UpgradeRequests...');
-    // 9. Tạo UpgradeRequests
-    await UpgradeRequest.create([
-      { user_upgrade_id: buyer1._id, status: "pending" },
-      {
-        user_upgrade_id: buyer3._id, status: "approved",
-        approver_id: admin._id
-      }
-    ]);
-
-    console.log('Dang tao DeletionHistory...');
-    // 10. Tạo DeletionHistory
-    await DeletionHistory.create({
-      user_deleted_id: userToBeDeleted._id,
-      deleter_id: admin._id
-    });
-    // 11. Tạo RefreshTokens
-    await RefreshToken.create([
-      { user_id: buyer1._id, token: "sample_refresh_token_1", expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
-      { user_id: seller1._id, token: "sample_refresh_token_2", expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
-    ]);
-    console.log('--- TAO DU LIEU MAU THANH CONG ---');
+    console.log('✨ --- TẠO DỮ LIỆU MẪU THÀNH CÔNG --- ✨');
 
   } catch (error) {
-    console.error('Loi khi tao du lieu mau:', error);
+    console.error('❌ Lỗi khi tạo dữ liệu mẫu:', error);
   } finally {
     await mongoose.disconnect();
-    console.log('Da ngat ket noi MongoDB.');
+    console.log('👋 Đã ngắt kết nối MongoDB.');
   }
 };
 
