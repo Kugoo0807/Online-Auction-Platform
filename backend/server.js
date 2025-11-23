@@ -4,6 +4,7 @@ import path from 'path';
 dotenv.config({ path: path.resolve('../.env') }); 
 
 import express from 'express';
+import cors from 'cors';
 import connectDB from '../db/connect.js';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
@@ -20,6 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(simpleLogger);
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+}));
 
 // Import routes
 const { authController } = await import('./controllers/auth.controller.js');
