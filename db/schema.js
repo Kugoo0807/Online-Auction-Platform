@@ -100,13 +100,14 @@ const productSchema = new Schema({
   auction_start_time: { type: Date, default: Date.now },
   auction_end_time: { type: Date, required: true },
   max_bids_per_bidder: { type: Number, default: 2 },
+  bid_count: { type: Number, default: 0 },
   auto_renew: { type: Boolean, default: false },
   
   // Quan hệ
   seller_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   category_id: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
   current_highest_bidder_id: { type: Schema.Types.ObjectId, ref: 'User' },
-  current_highest_price: { type: Number },
+  current_highest_price: { type: Number, default: function() { return this.start_price; } },
   
   // Danh sách bidder bị cấm đấu giá
   banned_bidder_id: [{ type: Schema.Types.ObjectId, ref: 'User' }],
