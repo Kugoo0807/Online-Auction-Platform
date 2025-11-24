@@ -99,7 +99,7 @@ const productSchema = new Schema({
   // Các trường logic đấu giá
   auction_start_time: { type: Date, default: Date.now },
   auction_end_time: { type: Date, required: true },
-  bid_count: { type: Number, default: 0 },
+  max_bids_per_bidder: { type: Number, default: 2 },
   auto_renew: { type: Boolean, default: false },
   
   // Quan hệ

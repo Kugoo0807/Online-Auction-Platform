@@ -8,18 +8,20 @@ class ProductRepository {
             bid_increment: productData.bid_increment,
             buy_it_now_price: productData.buy_it_now_price ?? undefined,
             images: productData.image,
-            auction_start_time: productData.auction_start_time,
             auction_end_time: productData.auction_end_time,
             seller_id: productData.seller_id,
             category_id: productData.category_id,
             description: productData.description,
-            auto_renew: productData.auto_renew
+            auto_renew: productData.auto_renew,
+            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2
             });
         return await product.save();
     }
     
     async findById(productId) {
-        return await Product.findById(productId);
+        return await Product.findById(productId)
+            .populate('seller_id', 'full_name rating') 
+            .populate('category_id', 'category_name');
     }
     
     async findByName(productName) {
@@ -28,7 +30,10 @@ class ProductRepository {
 
     async findByCondition(keyword, filter = {}, sortOption = {}, limit = 5) {
         if (keyword) {
-            filter.product_name = { $regex: keyword, $options: 'i' }; 
+            filter.$or = [
+                { product_name: { $regex: keyword, $options: 'i' } },
+                { description: { $regex: keyword, $options: 'i' } }
+            ]; 
         }
         const finalSort = Object.keys(sortOption).length ? sortOption : { auction_end_time: 1 };
         return await Product.find(filter)
@@ -48,7 +53,7 @@ class ProductRepository {
         return await Product.findByIdAndUpdate(
             product_id,
             { $addToSet: { banned_bidder_id: bidder_id } }, 
-            { new: true } 
+            { new: true, runValidators: true }
         );
     }
 
@@ -65,8 +70,8 @@ class ProductRepository {
         return product ? product.banned_bidder_id: [];
     }
 
-    async updateProductInfo(productId, updateData) {S
-        return await Product.findByIdAndUpdate(productId, updateData, { new: true });
+    async updateProductInfo(productId, updateData) {
+        return await Product.findByIdAndUpdate(productId, updateData, { new: true, runValidators: true });
     }
     
 }
