@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './App.css'
-import ProductSection from './ProductSection'
+import ProductSection from './components/ProductSection'
 import { categories } from './data/categories'
 import { products } from './data/products'
 import { useAuth } from './context/AuthContext'
