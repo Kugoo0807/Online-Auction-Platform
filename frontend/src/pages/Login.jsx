@@ -36,13 +36,34 @@ export default function Login() {
       const from = location.state?.from || "/dashboard"
       navigate(from, { replace: true })
     } else {
+      // Hiển thị lỗi đỏ (class 'error' sẽ được áp dụng)
       setError(result.error)
     }
     setLoading(false)
   }
 
+  // hàm helper để cập nhật input và tự động xóa lỗi khi người dùng sửa
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value);
+    if (error) setError(''); // xóa thông báo lỗi ngay khi gõ
+  };
+
   const handleGoogleLogin = () => {
-    authService.loginWithGoogle()
+    // get config
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+
+    if (!googleClientId || googleClientId.includes('placeholder')) {
+        alert("Note: You are using a placeholder Client ID. Google will show an error, but this proves the redirect works!");
+    }
+
+    // construct Google Auth URL
+    const targetUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&prompt=consent&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile&access_type=offline`;
+
+    // redirect
+    window.location.href = targetUrl;
   }
 
   const handleFacebookLogin = () => {
@@ -65,9 +86,10 @@ export default function Login() {
               type="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleInputChange(setEmail)} // dùng handleInputChange để xóa lỗi khi gõ
               required
               disabled={loading}
+              className={error ? 'error' : ''} // 'error' để hiện viền đỏ
             />
           </div>
 
@@ -77,12 +99,14 @@ export default function Login() {
               type="password"
               placeholder="Mật khẩu"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handleInputChange(setPassword)} // dùng handleInputChange để xóa lỗi khi gõ
               required
               disabled={loading}
+              className={error ? 'error' : ''} // 'error' để hiện viền đỏ
             />
           </div>
 
+          {/* Hiển thị message lỗi màu đỏ */}
           {error && <div className="error-text">{error}</div>}
 
           <button type="submit" disabled={loading}>
