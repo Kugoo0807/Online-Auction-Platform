@@ -12,8 +12,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchMyAuctions = async () => {
       try {
-        const data = await auctionService.getAuctions({ user: user._id })
-        setMyAuctions(data)
+        if (user?._id) {
+          const data = await auctionService.getAuctions({ user: user._id })
+          setMyAuctions(data)
+        }
       } catch (error) {
         console.error('Error fetching my auctions:', error)
       } finally {
@@ -35,8 +37,9 @@ export default function Dashboard() {
         marginBottom: '30px'
       }}>
         <div>
-          <h1>Xin chào, {user?.name}!</h1>
+          <h1>Xin chào, {user?.full_name}!</h1>
           <p>Email: {user?.email}</p>
+          <p> Role: <strong>{user?.role}</strong></p>
         </div>
         <div>
           <Link to="/create-auction" style={{ marginRight: '10px' }}>

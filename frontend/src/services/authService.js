@@ -6,22 +6,9 @@ export const authService = {
     const response = await api.post('/auth/login', { email, password });
     
     // Backend trả về { token: "Bearer <accessToken>" }
-    if (response.data.token) {
-      const token = response.data.token.replace('Bearer ', '');
-      localStorage.setItem('authToken', token);
-    }
-    
-    // Lấy thông tin user sau khi login
-    const userResponse = await api.get('/auth/me');
-    if (userResponse.data.user) {
-      localStorage.setItem('userInfo', JSON.stringify(userResponse.data.user));
-      return { 
-        user: userResponse.data.user,
-        accessToken: response.data.token 
-      };
-    }
-    
-    return response.data;
+    return {
+      accessToken: response.data.token  
+    };
   },
 
   // Đăng ký - backend expect: full_name, email, password, address, phone_number
@@ -39,23 +26,13 @@ export const authService = {
   // Lấy profile user
   getProfile: async () => {
     const response = await api.get('/auth/me');
-    
-    if (response.data.user) { 
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
-    }
-    
     return response.data;
   },
 
   // Refresh token - backend dùng cookies
   refreshToken: async () => {
+    // HttpOnly tự gửi
     const response = await api.post('/auth/refresh');
-    
-    if (response.data.token) {
-      const token = response.data.token.replace('Bearer ', '');
-      localStorage.setItem('authToken', token);
-    }
-    
     return response.data;
   },
 
@@ -65,37 +42,17 @@ export const authService = {
       await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userInfo');
-    }
+    } 
   },
 
   // Đăng nhập Google - backend expect code
   loginWithGoogle: async (code) => {
     const response = await api.post('/auth/google/login', { code });
-    
-    if (response.data.token) {
-      const token = response.data.token.replace('Bearer ', '');
-      localStorage.setItem('authToken', token);
-      
-      // Lấy thông tin user
-      const userResponse = await api.get('/auth/me');
-      if (userResponse.data.user) {
-        localStorage.setItem('userInfo', JSON.stringify(userResponse.data.user));
-      }
-    }
-    
-    return response.data;
+    return { accessToken: response.data.token };
   },
 
-  // Lấy user từ localStorage
-  getCurrentUser: () => {
-    try {
-      const userStr = localStorage.getItem('userInfo');
-      return userStr ? JSON.parse(userStr) : null;
-    } catch (error) {
-      return null;
-    }
+  // Xử lý callback OAuth
+  handleOAuthCallback: () => {
+    return true;
   }
 };
