@@ -2,25 +2,37 @@ import { RefreshToken } from '../../db/schema.js';
 
 class TokenRepository {
     async saveRefreshToken(userId, refreshToken, expiry) {
-        const token = new RefreshToken({
+        try {
+            const token = new RefreshToken({
                 user_id: userId,
                 token: refreshToken,
                 expires_at: expiry
             });
-        await token.save();
-        return token;
+            await token.save();
+            return token;
+        } catch (error) {
+            throw error;
+        }
     }
 
     async findRefreshToken(refreshToken) {
-        return await RefreshToken.findOne({ token: refreshToken, is_revoked: false });
+        try {
+            return await RefreshToken.findOne({ token: refreshToken, is_revoked: false });
+        } catch (error) {
+            throw error;
+        }
     }
     
     async deleteRefreshToken(refreshToken) {
+        try {
             return await RefreshToken.findOneAndUpdate(
                 { token: refreshToken },
                 { is_revoked: true },
                 { new: true }
             );
+        } catch (error) {
+            throw error;
+        }
     }
 }
 
