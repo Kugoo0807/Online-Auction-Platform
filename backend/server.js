@@ -29,6 +29,8 @@ app.use(cors({
 const { authController } = await import('./controllers/auth.controller.js');
 const { AuthRoutes } = await import('./routes/auth.route.js');
 const { AdminRoutes } = await import('./routes/admin.route.js');
+const { productController } = await import('./controllers/product.controller.js');
+const { ProductRoutes } = await import('./routes/product.route.js');
 
 app.get('/api', (req, res) => {
     res.send('Chào mừng đến với API Sàn Đấu Giá!');
@@ -39,6 +41,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', AuthRoutes(authController));
+app.use('/api/products', ProductRoutes(productController));
 app.use('/api/admin', AdminRoutes());
 
 // START

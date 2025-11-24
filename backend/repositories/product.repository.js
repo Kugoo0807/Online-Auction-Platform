@@ -1,7 +1,7 @@
 import { Product } from '../../db/schema.js';
 
 class ProductRepository { 
-    async createProduct(productData) { 
+    async create(productData) { 
         const product = new Product({
             product_name: productData.product_name,
             start_price: productData.start_price,
@@ -13,7 +13,8 @@ class ProductRepository {
             category_id: productData.category_id,
             description: productData.description,
             auto_renew: productData.auto_renew,
-            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2
+            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2,
+            bid_count: productData.bid_count ?? 0
             });
         return await product.save();
     }
