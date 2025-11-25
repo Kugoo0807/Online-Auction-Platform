@@ -1,13 +1,8 @@
-
 import { categoryRepository } from '../repositories/category.repository.js';
-import { categoryRepository } from "../backend/repositories/category.repository.js";
-import { Category } from "../db/schema.js";
 
 class CategoryService {
     async createCategory(categoryData) {
-        const existed = await Category.findOne({
-            category_name: categoryData.category_name
-        });
+        const existed = await categoryRepository.findByName(categoryData.category_name);
         if (existed) {
             throw new Error("Category name already exists");
         }
@@ -24,15 +19,11 @@ class CategoryService {
 
     async updateCategory(categoryId, updateData) {
         if (updateData.category_name) {
-            const existed = await Category.findOne({
-                category_name: updateData.category_name,
-                _id: { $ne: categoryId } 
-            });
-            if (existed) {
+            const existed = await categoryRepository.findByName(updateData.category_name);
+            if (existed && existed._id.toString() !== categoryId) {
                 throw new Error("Category name already exists");
             }
         }
-
         return await categoryRepository.update(categoryId, updateData);
     }
 

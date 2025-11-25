@@ -80,7 +80,8 @@ watchListSchema.plugin(checkForeignKeys);
 const categorySchema = new Schema({
   category_name: { type: String, required: true, unique: true },
   description: String,
-  parent_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null }
+  parent_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+  slug: { type: String, required: true, unique: true, index: true },
 });
 categorySchema.plugin(checkForeignKeys);
 
