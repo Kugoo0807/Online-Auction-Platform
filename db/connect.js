@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const DB_URI = process.env.MONGODB_URI || "mongodb+srv://Web:1111@database.b0lr6f1.mongodb.net/onlineauction?retryWrites=true&w=majority";
+const DB_URI = process.env.MONGODB_URI;
 
 const connectDB = async () => {
   if (!DB_URI) {
