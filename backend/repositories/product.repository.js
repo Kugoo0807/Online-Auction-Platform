@@ -9,8 +9,8 @@ class ProductRepository {
             buy_it_now_price: productData.buy_it_now_price ?? undefined,
             images: productData.image,
             auction_end_time: productData.auction_end_time,
-            seller_id: productData.seller_id,
-            category_id: productData.category_id,
+            seller: productData.seller,
+            category: productData.category,
             description: productData.description,
             auto_renew: productData.auto_renew,
             max_bids_per_bidder: productData.max_bids_per_bidder ?? 2,
@@ -19,64 +19,85 @@ class ProductRepository {
         return await product.save();
     }
     
-    async findById(product_id) {
-        return await Product.findById(product_id)
-            .populate('seller_id', 'full_name rating') 
-            .populate('category_id', 'category_name');
+    async findById(product) {
+        return await Product.findById(product)
+            .populate('seller', 'full_name rating') 
+            .populate('category', 'category_name');
     }
     
     async findByName(productName) {
         return await Product.find({ product_name: productName });
     }
 
-    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 5) {
+    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 10, page = 1) {
         if (keyword) {
             filter.$or = [
                 { product_name: { $regex: keyword, $options: 'i' } },
                 { description: { $regex: keyword, $options: 'i' } }
             ]; 
         }
+
         const finalSort = Object.keys(sortOption).length ? sortOption : { auction_end_time: 1 };
+        
+        const skip = (page - 1) * limit;
+
         return await Product.find(filter)
             .sort(finalSort)
-            .limit(limit);
+            .skip(skip)
+            .limit(limit)
+            .populate('seller', 'full_name rating') 
+            .populate('category', 'category_name');
+    }
+
+    async findRandom(filter, limit) {
+        const docs = await Product.aggregate([
+            { $match: filter },
+            { $sample: { size: limit } }
+        ]);
+
+        return await Product.populate(docs, [
+            { path: 'seller', select: 'full_name rating' },
+            { path: 'category', select: 'category_name' }
+        ]);
     }
     
-    async removeProduct(product_id) {
-        return await Product.findByIdAndDelete(product_id);
+    async removeProduct(product) {
+        return await Product.findByIdAndDelete(product);
     }
 
-    async findBySeller (seller_id) {
-        return await Product.find({ seller_id });
+    async findBySeller (seller) {
+        return await Product.find({ seller })
+            .populate('seller', 'full_name rating') 
+            .populate('category', 'category_name');
     }
 
-    async addBannedBidder(product_id, bidder_id) {
+    async addBannedBidder(product, bidder) {
         return await Product.findByIdAndUpdate(
-            product_id,
-            { $addToSet: { banned_bidder_id: bidder_id } }, 
+            product,
+            { $addToSet: { banned_bidder: bidder } }, 
             { new: true, runValidators: true }
         );
     }
 
-    async removeBannedBidder(product_id, bidder_id) {
+    async removeBannedBidder(product, bidder) {
         return await Product.findByIdAndUpdate(
-            product_id,
-            { $pull: { banned_bidder_id: bidder_id } }, 
+            product,
+            { $pull: { banned_bidder: bidder } }, 
             { new: true } 
         );
     }
 
-    async findBannedBidders(product_id) {
-        const product = await Product.findById(product_id).select('banned_bidder_id');
-        return product ? product.banned_bidder_id: [];
+    async findBannedBidders(product) {
+        const foundProduct = await Product.findById(productId).select('banned_bidder');
+        return foundProduct ? foundProduct.banned_bidder : [];
     }
 
-    async updateProductInfo(product_id, updateData) {
-        return await Product.findByIdAndUpdate(product_id, updateData, { new: true, runValidators: true });
+    async updateProductInfo(product, updateData) {
+        return await Product.findByIdAndUpdate(product, updateData, { new: true, runValidators: true });
     }
     
     async existsInCategories(categoryIds) {
-        const result = await Product.exists({ category_id: { $in: categoryIds } });
+        const result = await Product.exists({ category: { $in: categoryIds } });
         return !!result;
     }
 }
