@@ -90,26 +90,29 @@ const seedDatabase = async () => {
     console.log('📂 Đang tạo 6 Categories...');
     
     // 3 Danh mục cha
-    const catElectronics = await Category.create({ category_name: "Đồ Điện Tử", description: "Các thiết bị điện tử" });
-    const catFashion = await Category.create({ category_name: "Thời Trang", description: "Quần áo, giày dép" });
-    const catFurniture = await Category.create({ category_name: "Nội Thất", description: "Bàn ghế, tủ giường" }); // Không có con
+    const catElectronics = await Category.create({ category_name: "Đồ Điện Tử", description: "Các thiết bị điện tử" , slug: "do-dien-tu" });
+    const catFashion = await Category.create({ category_name: "Thời Trang", description: "Quần áo, giày dép", slug: "thoi-trang" });
+    const catFurniture = await Category.create({ category_name: "Nội Thất", description: "Bàn ghế, tủ giường", slug: "noi-that" }); // Không có con
 
     // 3 Danh mục con
     const catLaptop = await Category.create({ 
       category_name: "Laptop", 
       description: "Máy tính xách tay các loại", 
-      parent_id: catElectronics._id 
+      parent_id: catElectronics._id,
+      slug: "laptop"
     });
     const catPhone = await Category.create({ 
       category_name: "Điện Thoại", 
       description: "Smartphones", 
-      parent_id: catElectronics._id 
+      parent_id: catElectronics._id,
+      slug: "dien-thoai"
     });
     
     const catShoes = await Category.create({ 
       category_name: "Giày Dép", 
       description: "Giày thể thao, giày da", 
-      parent_id: catFashion._id 
+      parent_id: catFashion._id,
+      slug: "giay-dep"
     });
 
     // --- 5. TẠO PRODUCTS (10 sản phẩm) ---
