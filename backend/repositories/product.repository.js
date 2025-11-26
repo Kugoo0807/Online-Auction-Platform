@@ -1,7 +1,7 @@
 import { Product } from '../../db/schema.js';
 
 class ProductRepository { 
-    async createProduct(productData) { 
+    async create(productData) { 
         const product = new Product({
             product_name: productData.product_name,
             start_price: productData.start_price,
@@ -13,13 +13,14 @@ class ProductRepository {
             category_id: productData.category_id,
             description: productData.description,
             auto_renew: productData.auto_renew,
-            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2
+            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2,
+            bid_count: productData.bid_count ?? 0
             });
         return await product.save();
     }
     
-    async findById(productId) {
-        return await Product.findById(productId)
+    async findById(product_id) {
+        return await Product.findById(product_id)
             .populate('seller_id', 'full_name rating') 
             .populate('category_id', 'category_name');
     }
@@ -70,10 +71,14 @@ class ProductRepository {
         return product ? product.banned_bidder_id: [];
     }
 
-    async updateProductInfo(productId, updateData) {
-        return await Product.findByIdAndUpdate(productId, updateData, { new: true, runValidators: true });
+    async updateProductInfo(product_id, updateData) {
+        return await Product.findByIdAndUpdate(product_id, updateData, { new: true, runValidators: true });
     }
     
+    async existsInCategories(categoryIds) {
+        const result = await Product.exists({ category_id: { $in: categoryIds } });
+        return !!result;
+    }
 }
 
 export const productRepository = new ProductRepository();
