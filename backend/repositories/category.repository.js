@@ -1,4 +1,5 @@
 import { Category } from '../../db/schema.js';
+import slugify from 'slugify'
 
 class CategoryRepository {
     async create(data) {
@@ -19,12 +20,30 @@ class CategoryRepository {
     }
 
     async update(id, updateData) {
-        if (!updateData.parent_id) updateData.parent_id = null;
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] === undefined) {
+                delete updateData[key];
+            }
+        });
 
-        if (updateData.parent_id && updateData.parent_id.toString() === id.toString()) {
-            throw new Error("Category cannot be its own parent");
+        // parent_id
+        if ('parent_id' in updateData) {
+            const pid = updateData.parent_id;
+
+            // Các giá trị biểu thị "Xóa danh mục cha"
+            const emptyValues = [null, "", "null"]; 
+
+            if (emptyValues.includes(pid)) {
+                updateData.parent_id = null; 
+            } 
+            else {
+                if (pid.toString() === id.toString()) {
+                    throw new Error("Danh mục cha không thể là chính nó");
+                }
+            }
         }
 
+        // slug
         if (updateData.category_name) {
             updateData.slug = await this.generateSlug(updateData.category_name, id);
         }
@@ -45,19 +64,20 @@ class CategoryRepository {
     }
 
     async findByName(name) {
-        return await Category.findOne({ category_name: name });
+        return await Category.findOne({
+            category_name: { 
+                $regex: `^${name}$`, // Khớp 100% độ dài
+                $options: 'i'        // Bỏ qua hoa thường
+            }
+        });
     }
 
     async generateSlug(name, excludeId = null) {
-        const baseSlug = name
-            .toString()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-")
-            .replace(/-+/g, "-");
+        const baseSlug = slugify(name, {
+            lower: true,
+            strict: true,
+            locale: 'vi'
+        });
 
         let slug = baseSlug;
         let count = 1;
@@ -68,6 +88,23 @@ class CategoryRepository {
             filter.slug = slug; 
         }
         return slug;
+    }
+
+    async hasChildren(id) {
+        const children = await Category.exists({ parent_id: categoryId });
+        return !!children;
+    }
+
+    async getAllDescendantIds(id) {
+        let ids = [id];
+        const children = await Category.find({ parent_id: id }).select('_id');
+
+        for (const child of children) {
+            const descendantIds = await this.getAllDescendantIds(child._id);
+            ids = ids.concat(descendantIds);
+        }
+
+        return ids;
     }
 }
 
