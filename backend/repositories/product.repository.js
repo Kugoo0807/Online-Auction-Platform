@@ -19,8 +19,8 @@ class ProductRepository {
         return await product.save();
     }
     
-    async findById(productId) {
-        return await Product.findById(productId)
+    async findById(product_id) {
+        return await Product.findById(product_id)
             .populate('seller_id', 'full_name rating') 
             .populate('category_id', 'category_name');
     }
@@ -71,10 +71,14 @@ class ProductRepository {
         return product ? product.banned_bidder_id: [];
     }
 
-    async updateProductInfo(productId, updateData) {
-        return await Product.findByIdAndUpdate(productId, updateData, { new: true, runValidators: true });
+    async updateProductInfo(product_id, updateData) {
+        return await Product.findByIdAndUpdate(product_id, updateData, { new: true, runValidators: true });
     }
     
+    async existsInCategories(categoryIds) {
+        const result = await Product.exists({ category_id: { $in: categoryIds } });
+        return !!result;
+    }
 }
 
 export const productRepository = new ProductRepository();
