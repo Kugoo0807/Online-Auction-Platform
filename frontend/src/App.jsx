@@ -10,7 +10,7 @@ import Signup from './pages/Signup' // Lưu ý tên file bạn đặt là SignUp
 import Dashboard from './pages/Dashboard'
 import AuctionDetail from './pages/AuctionDetail'
 import OAuthCallback from './pages/OAuthCallback'
-
+import CategoryPage from './pages/CategoryPage';
 // Import các Route bảo vệ (nếu bạn đã tạo file component này rồi)
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
@@ -18,15 +18,14 @@ import GuestRoute from './components/GuestRoute'
 export default function App() {
   return (
     <Routes>
-      {/* MainLayout bọc ngoài cùng:
-        Nghĩa là TẤT CẢ các trang bên trong đều sẽ có Header và Footer 
-      */}
       <Route element={<MainLayout />}>
         
         {/* 1. Các trang Public (Ai cũng vào được) */}
         <Route path="/" element={<HomePages />} />
         <Route path="/auction/:id" element={<AuctionDetail />} />
+        <Route path="/category/:slug" element={<CategoryPage />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+        
         
         {/* 2. Các trang Khách (Đã đăng nhập thì không vào được nữa) */}
         <Route element={<GuestRoute />}>
