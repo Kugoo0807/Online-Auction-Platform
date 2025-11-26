@@ -149,12 +149,10 @@ class AuthService {
             throw new Error('Refresh Token không hợp lệ!');
         }
 
-        console.log(payload.id);
         const user = await userRepository.findById(payload.id);
         if (!user) {
             throw new Error('Không tìm thấy người dùng ứng với Token!');
         }
-        console.log(user.id);
 
         // Xóa Refresh Token cũ và tạo Tokens mới
         await tokenRepository.deleteRefreshToken(oldRefreshToken);
@@ -207,7 +205,7 @@ class AuthService {
                 //await emailService.sendOtp(email, otp);
                 console.log('OTP: ' + otp);
             } catch (e) {
-                console.error('Lỗi khi xử lý forgotPassword: ' + e);
+                throw new Error('Lỗi khi xử lý forgotPassword: ' + e);
             }
         }
 

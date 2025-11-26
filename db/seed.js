@@ -98,20 +98,20 @@ const seedDatabase = async () => {
     const catLaptop = await Category.create({ 
       category_name: "Laptop", 
       description: "Máy tính xách tay các loại", 
-      parent_id: catElectronics._id,
+      parent: catElectronics._id,
       slug: "laptop"
     });
     const catPhone = await Category.create({ 
       category_name: "Điện Thoại", 
       description: "Smartphones", 
-      parent_id: catElectronics._id,
+      parent: catElectronics._id,
       slug: "dien-thoai"
     });
     
     const catShoes = await Category.create({ 
       category_name: "Giày Dép", 
       description: "Giày thể thao, giày da", 
-      parent_id: catFashion._id,
+      parent: catFashion._id,
       slug: "giay-dep"
     });
 
@@ -133,8 +133,8 @@ const seedDatabase = async () => {
         start_price: 20000000,
         bid_increment: 500000,
         auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Còn 7 ngày
-        seller_id: seller1._id,
-        category_id: catLaptop._id,
+        seller: seller1._id,
+        category: catLaptop._id,
         images: sampleImages
       },
       {
@@ -143,8 +143,8 @@ const seedDatabase = async () => {
         start_price: 15000000,
         bid_increment: 200000,
         auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Còn 3 ngày
-        seller_id: seller1._id,
-        category_id: catPhone._id,
+        seller: seller1._id,
+        category: catPhone._id,
         images: sampleImages
       },
       {
@@ -153,8 +153,8 @@ const seedDatabase = async () => {
         start_price: 18000000,
         bid_increment: 500000,
         auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        seller_id: seller1._id,
-        category_id: catLaptop._id,
+        seller: seller1._id,
+        category: catLaptop._id,
         images: sampleImages
       },
       {
@@ -163,8 +163,8 @@ const seedDatabase = async () => {
         start_price: 8000000,
         bid_increment: 100000,
         auction_end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        seller_id: seller1._id,
-        category_id: catPhone._id,
+        seller: seller1._id,
+        category: catPhone._id,
         images: sampleImages
       },
 
@@ -175,8 +175,8 @@ const seedDatabase = async () => {
         start_price: 3000000,
         bid_increment: 100000,
         auction_end_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catShoes._id,
+        seller: seller2._id,
+        category: catShoes._id,
         images: sampleImages
       },
       {
@@ -185,8 +185,8 @@ const seedDatabase = async () => {
         start_price: 1500000,
         bid_increment: 50000,
         auction_end_time: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catShoes._id,
+        seller: seller2._id,
+        category: catShoes._id,
         images: sampleImages
       },
       {
@@ -195,8 +195,8 @@ const seedDatabase = async () => {
         start_price: 25000000,
         bid_increment: 1000000,
         auction_end_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catFurniture._id, // Danh mục cha
+        seller: seller2._id,
+        category: catFurniture._id, // Danh mục cha
         images: sampleImages
       },
       {
@@ -205,8 +205,8 @@ const seedDatabase = async () => {
         start_price: 5000000,
         bid_increment: 200000,
         auction_end_time: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catFurniture._id,
+        seller: seller2._id,
+        category: catFurniture._id,
         images: sampleImages
       },
       {
@@ -215,8 +215,8 @@ const seedDatabase = async () => {
         start_price: 4000000,
         bid_increment: 100000,
         auction_end_time: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catShoes._id,
+        seller: seller2._id,
+        category: catShoes._id,
         images: sampleImages
       },
       {
@@ -225,8 +225,8 @@ const seedDatabase = async () => {
         start_price: 2000000,
         bid_increment: 50000,
         auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        seller_id: seller2._id,
-        category_id: catFurniture._id,
+        seller: seller2._id,
+        category: catFurniture._id,
         images: sampleImages
       }
     ]);
@@ -234,26 +234,26 @@ const seedDatabase = async () => {
     // --- 6. TẠO WATCHLIST ---
     console.log('👀 Đang tạo WatchLists...');
     await WatchList.create([
-      { user_id: bidder1._id, product_id: products[0]._id }, // Bidder 1 thích Macbook
-      { user_id: bidder1._id, product_id: products[4]._id }, // Bidder 1 thích Giày Nike
-      { user_id: bidder2._id, product_id: products[1]._id }, // Bidder 2 thích iPhone
-      { user_id: seller1._id, product_id: products[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
+      { user: bidder1._id, product: products[0]._id }, // Bidder 1 thích Macbook
+      { user: bidder1._id, product: products[4]._id }, // Bidder 1 thích Giày Nike
+      { user: bidder2._id, product: products[1]._id }, // Bidder 2 thích iPhone
+      { user: seller1._id, product: products[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
     ]);
 
     // --- 7. TẠO QnA ---
     console.log('❓ Đang tạo QnAs...');
     await QnA.create([
       {
-        product_id: products[0]._id, // Macbook
-        asker_id: bidder1._id,
+        product: products[0]._id, // Macbook
+        asker: bidder1._id,
         question_content: "Máy có bị trầy xước gì không shop?",
-        answerer_id: seller1._id,
+        answerer: seller1._id,
         answer_content: "Máy đẹp keng như mới bạn nhé.",
         answer_timestamp: new Date()
       },
       {
-        product_id: products[6]._id, // Sofa
-        asker_id: bidder2._id,
+        product: products[6]._id, // Sofa
+        asker: bidder2._id,
         question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
         // Chưa trả lời
       }

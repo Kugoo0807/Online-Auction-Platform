@@ -1,4 +1,4 @@
-import { sendOtp } from './backend/services/email.service.js'; 
+import { sendOtp } from './services/email.service.js'; 
 
 const email = '<mail bản thân>@gmail.com'; // <--- Nhập email cá nhân của bạn vào đây để check
 const otpTest = '123456';

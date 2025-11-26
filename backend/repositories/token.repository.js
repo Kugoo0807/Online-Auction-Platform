@@ -3,7 +3,7 @@ import { RefreshToken } from '../../db/schema.js';
 class TokenRepository {
     async saveRefreshToken(userId, refreshToken, expiry) {
         const token = new RefreshToken({
-                user_id: userId,
+                user: userId,
                 token: refreshToken,
                 expires_at: expiry
             });

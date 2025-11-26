@@ -76,6 +76,75 @@ class ProductController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    async getProductsByCategory(req, res) {
+        try {
+            const { slug } = req.params;
+            const { page } = req.query;
+            const pageNumber = parseInt(page) || 1;
+
+            const products = await productService.getProductsByCategorySlug(slug, pageNumber);
+
+            return res.status(200).json({
+                message: 'Lấy danh sách sản phẩm theo thư mục thành công!',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getRandom5ProductsByCategory(req, res) {
+        try {
+            const { slug } = req.params;
+            const products = await productService.getRandom5ProductsByCategorySlug(slug);
+
+            return res.status(200).json({
+                message: 'Lấy 5 sản phẩm ngẫu nhiên thành công',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getSellerProducts(req, res) {
+        try {
+            const sellerId = req.user._id; 
+            
+            const { page } = req.query;
+
+            const pageNumber = parseInt(page) || 1;
+            const products = await productService.getProductsBySellerId(sellerId, pageNumber);
+
+            return res.status(200).json({
+                message: 'Lấy danh sách sản phẩm của seller thành công',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    async searchProducts(req, res) {
+        try {
+            const { keyword, page } = req.query;
+
+            if (!keyword) {
+                return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
+            }
+
+            const pageNumber = parseInt(page) || 1;
+            const products = await productService.searchProducts(keyword, pageNumber);
+
+            return res.status(200).json({
+                message: 'Kết quả tìm kiếm',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }
 
 export const productController = new ProductController();
