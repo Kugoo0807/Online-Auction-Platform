@@ -41,7 +41,7 @@ class AuthService {
             password: hashedPassword,
             full_name: full_name,
             address: address,
-            phone_number: phone_number,
+            phone_number: phone_number || undefined,
             role: 'bidder' // Mặc định
         });
 
