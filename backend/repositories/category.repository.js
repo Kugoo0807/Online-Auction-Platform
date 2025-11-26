@@ -19,6 +19,15 @@ class CategoryRepository {
         return await Category.findById(id).populate("parent", "category_name");
     }
 
+    async findByName(name) {
+        return await Category.findOne({
+            category_name: {
+                $regex: `^${name}$`,
+                $options: 'i'
+            }
+        });
+    }
+
     async update(id, updateData) {
         Object.keys(updateData).forEach(key => {
             if (updateData[key] === undefined) {

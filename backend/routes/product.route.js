@@ -4,6 +4,8 @@ import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
 export function ProductRoutes(productController) {
     const router = express.Router();
 
+    // ======= PUBLIC ROUTES =======
+
     // Tìm kiếm
     router.get('/search', productController.searchProducts);
 
@@ -18,11 +20,17 @@ export function ProductRoutes(productController) {
     // Lấy ngẫu nhiên 5 sản phẩm từ 1 danh mục
     router.get('/category/:slug/random', productController.getRandom5ProductsByCategory);
 
+
+    // ======= CẦN QUYỀN SELLER =======
+
     // Tạo sản phẩm
     router.post('/create', [checkAuth, checkRole('seller')], productController.createProduct);
 
     // Lấy sản phẩm của seller
     router.get('/seller', [checkAuth, checkRole('seller')], productController.getSellerProducts);
+
+
+    // ======= ROUTER ĐỘNG =======
     
     // Lấy chi tiết sản phẩm
     router.get('/:id', productController.getProductDetails);

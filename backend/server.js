@@ -26,9 +26,17 @@ app.use(cors({
 }));
 
 // Import routes
+
+// === AUTH ===
 const { authController } = await import('./controllers/auth.controller.js');
 const { AuthRoutes } = await import('./routes/auth.route.js');
 const { AdminRoutes } = await import('./routes/admin.route.js');
+
+// === CATEGORY ===
+const { categoryController } = await import('./controllers/category.controller.js');
+const { CategoryRoutes } = await import('./routes/category.route.js');
+
+// === PRODUCT ===
 const { productController } = await import('./controllers/product.controller.js');
 const { ProductRoutes } = await import('./routes/product.route.js');
 
@@ -41,8 +49,9 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', AuthRoutes(authController));
-app.use('/api/products', ProductRoutes(productController));
 app.use('/api/admin', AdminRoutes());
+app.use('/api/products', ProductRoutes(productController));
+app.use('/api/categories', CategoryRoutes(categoryController));
 
 // START
 app.listen(PORT, () => {
