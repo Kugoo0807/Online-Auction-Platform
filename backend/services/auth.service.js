@@ -24,7 +24,7 @@ const googleClient = new OAuth2Client(
 
 class AuthService {
     async register(registerData) {
-        const { email, password, full_name, address, phone_number } = registerData;
+        const { email, password, full_name, address } = registerData;
 
         // Kiểm tra tồn tại
         const existingUser = await userRepository.findByEmail(email);
@@ -41,7 +41,6 @@ class AuthService {
             password: hashedPassword,
             full_name: full_name,
             address: address,
-            phone_number: phone_number || undefined,
             role: 'bidder' // Mặc định
         });
 
