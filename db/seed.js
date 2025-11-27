@@ -119,10 +119,11 @@ const seedDatabase = async () => {
     console.log('📦 Đang tạo 10 Products...');
     
     // Mảng ảnh mẫu (3 ảnh để thỏa mãn validation)
+    const sampleThumbnail = "https://thanhnien.mediacdn.vn/uploaded/thuthao/2018_11_10/14_ZHRV.jpg";
     const sampleImages = [
-      "https://placehold.co/600x400/png?text=Anh+1",
-      "https://placehold.co/600x400/png?text=Anh+2",
-      "https://placehold.co/600x400/png?text=Anh+3"
+      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
+      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
+      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
     ];
 
     const products = await Product.create([
@@ -135,6 +136,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Còn 7 ngày
         seller: seller1._id,
         category: catLaptop._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -145,6 +147,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Còn 3 ngày
         seller: seller1._id,
         category: catPhone._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -155,6 +158,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
         seller: seller1._id,
         category: catLaptop._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -165,6 +169,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         seller: seller1._id,
         category: catPhone._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
 
@@ -177,6 +182,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catShoes._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -187,6 +193,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catShoes._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -197,6 +204,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catFurniture._id, // Danh mục cha
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -207,6 +215,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catFurniture._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -217,6 +226,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catShoes._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
@@ -227,6 +237,7 @@ const seedDatabase = async () => {
         auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catFurniture._id,
+        thumbnail: sampleThumbnail,
         images: sampleImages
       }
     ]);

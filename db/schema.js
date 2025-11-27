@@ -92,9 +92,18 @@ const productSchema = new Schema({
   start_price: { type: Number, required: true, default: 0 },
   bid_increment: { type: Number, default: 10000 },
   buy_it_now_price: { type: Number },
-  images: { 
-    type: [String], 
-    validate: [arrayLimit, 'Sản phẩm phải có ít nhất 3 ảnh minh họa'] 
+  thumbnail: {
+    type: String,
+    required: [true, "Sản phẩm phải có ảnh đại diện"]
+  },
+  images: {
+    type: [String],
+    validate: {
+      validator: function (arr) {
+        return arr.length >= 3;
+      },
+      message: "Sản phẩm phải có ít nhất 3 ảnh phụ"
+    }
   },
   
   // Các trường logic đấu giá
