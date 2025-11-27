@@ -134,6 +134,7 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
 ### 2.2. Các API danh sách (Homepage & Filter)
 * **Mô tả**: Các API dưới đây đều trả về cấu trúc Mảng sản phẩm bên trong `data`
 * **BẢNG API DANH SÁNH:**
+
 | Chức năng | URL | Method | Query Params | Mô tả |
 | :--- | :--- | :---: | :--- | :--- |
 | **Top sắp hết hạn** | `VITE_API_URL/products/top-ending` | `GET` | N/A | Lấy 5 sản phẩm có thời gian kết thúc gần nhất (cho Homepage). |

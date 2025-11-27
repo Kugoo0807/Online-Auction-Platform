@@ -14,8 +14,7 @@ class ProductRepository {
             category: productData.category,
             description: productData.description,
             auto_renew: productData.auto_renew,
-            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2,
-            bid_count: productData.bid_count ?? 0
+            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2
             });
         return await product.save();
     }
