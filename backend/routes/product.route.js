@@ -1,5 +1,6 @@
 import express from 'express';
 import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
+import uploadCloud from '../config/cloudinary.config.js';
 
 export function ProductRoutes(productController) {
     const router = express.Router();
@@ -24,7 +25,17 @@ export function ProductRoutes(productController) {
     // ======= CẦN QUYỀN SELLER =======
 
     // Tạo sản phẩm
-    router.post('/create', [checkAuth, checkRole('seller')], productController.createProduct);
+    router.post('/create', 
+        [
+            checkAuth, 
+            checkRole('seller'),
+            uploadCloud.fields([
+                { name: 'thumbnail', maxCount: 1 }, // Field name là 'thumbnail', tối đa 1 ảnh
+                { name: 'images', maxCount: 10 }    // Field name là 'images', tối đa 10 ảnh
+            ])
+        ], 
+        productController.createProduct
+    );
 
     // Lấy sản phẩm của seller
     router.get('/seller', [checkAuth, checkRole('seller')], productController.getSellerProducts);

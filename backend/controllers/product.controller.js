@@ -3,8 +3,18 @@ import { productService } from "../services/product.service.js";
 class ProductController {
     async createProduct(req, res) {
         try {
-            const seller_id = req.user._id;
-            const productData = { ...req.body, seller_id };
+            // Seller_id
+            const seller = req.user._id;
+
+            // Ảnh
+            if (!req.files || !req.files['thumbnail'] || !req.files['images']) {
+                return res.status(400).json({ message: 'Vui lòng upload ảnh thumbnail và ảnh chi tiết!' });
+            }
+            const thumbnailPath = req.files['thumbnail'][0].path;
+            const imagesPaths = req.files['images'].map(file => file.path);
+
+            // Xử lí dữ liệu
+            const productData = { ...req.body, seller, thumbnail: thumbnailPath, images: imagesPaths };
 
             const newProduct = await productService.createProduct(productData);
 
