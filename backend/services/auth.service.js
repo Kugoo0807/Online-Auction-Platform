@@ -187,7 +187,9 @@ class AuthService {
 
     async forgotPassword(email) {
         const user = await userRepository.findByEmail(email);
-        
+        if (!user) {
+            throw new Error('Email không tồn tại trong hệ thống!');
+        }
         if (user) {
             try {
                 // Tạo OTP (6 số) và hash OTP trước khi đưa cho Database
@@ -216,17 +218,17 @@ class AuthService {
         const user = await userRepository.findByEmail(email);
 
         // Kiểm tra user và OTP
-        if (!user || !user.passwordOtp || !user.otpExpires) {
+        if (!user || !user.password_otp || !user.otp_expired) {
             throw new Error('Yêu cầu không hợp lệ!');
         }
 
         // Kiểm tra OTP hết hạn
-        if (user.otpExpires < new Date()) {
+        if (user.otp_expired < new Date()) {
             throw new Error('OTP đã hết hạn!');
         }
 
         // Kiểm tra OTP (so sánh với bản đã hash trong DB)
-        const isOtpMatch = await bcrypt.compare(otp, user.passwordOtp);
+        const isOtpMatch = await bcrypt.compare(otp, user.password_otp);
         if (!isOtpMatch) {
             throw new Error('OTP không chính xác!');
         }

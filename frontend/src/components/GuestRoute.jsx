@@ -8,9 +8,9 @@ export default function GuestRoute({ children }) {
   // đang trong quá trình xác thực
   if (loading) return <div>Loading auth...</div>;
 
-  // nếu đã đăng nhập -> ddẩy về Dashboard
+  // nếu đã đăng nhập -> đẩy về Home
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // nếu chưa đăng nhập -> cho phép truy cập (render children hoặc Outlet)

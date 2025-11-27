@@ -54,7 +54,7 @@ export default function Login() {
     const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
 
     if (!googleClientId || googleClientId.includes('placeholder')) {
-        alert("Note: You are using a placeholder Client ID. Google will show an error, but this proves the redirect works!");
+      alert("Note: You are using a placeholder Client ID. Google will show an error, but this proves the redirect works!");
     }
 
     // construct Google Auth URL
@@ -115,9 +115,9 @@ export default function Login() {
         </form>
 
         <div className="forgot-password">
-          <a href="#" onClick={(e) => { e.preventDefault(); console.log('Forgot password clicked'); }}>
+          <Link to="/forgot-password">
             Quên mật khẩu?
-          </a>
+          </Link>
         </div>
 
         <div className="divider">

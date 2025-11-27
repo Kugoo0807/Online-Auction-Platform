@@ -20,6 +20,12 @@ export function AuthRoutes(authController) {
     // Đăng nhập bằng google
     router.post("/google/login", authController.loginWithGoogle);
     
+    // Quên mật khẩu
+    router.post('/forgot-password', authController.forgotPassword);
+
+    // Đặt lại mật khẩu
+    router.post('/reset-password', authController.resetPassword);
+
     // Hàm test get me (kiểm tra đăng nhập)
     router.get('/me', [checkAuth], (req, res) => {
         req.user.password = undefined;
