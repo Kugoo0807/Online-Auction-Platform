@@ -99,7 +99,7 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
 #### Input: Không cần
 
 #### Output (JSON Success - 200)
-> Trả về 1 Object DUY NHẤT
+> Trả về mảng các sản phẩm
 ```json
 {
     "message": "Lấy thông tin sản phẩm thành công!",
