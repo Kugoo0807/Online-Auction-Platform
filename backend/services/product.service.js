@@ -1,7 +1,7 @@
 import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
-import { executeTransaction } from '../utils/db.helper.js';
-import { recalculateAuctionState } from '../utils/auction.helper.js';
+import { executeTransaction } from '../../db/db.helper.js';
+import { recalculateAuctionState } from '../utils/auction.util.js';
 
 const LIMIT_ITEMS = 8;
 

@@ -1,7 +1,7 @@
 import { productRepository } from '../repositories/product.repository.js';
 import { bidRepository } from '../repositories/bid.repository.js';
-import { executeTransaction } from '../utils/db.helper.js';
-import { recalculateAuctionState } from '../utils/auction.helper.js';
+import { executeTransaction } from '../../db/db.helper.js';
+import { recalculateAuctionState } from '../utils/auction.util.js';
 
 class BidService {
     async placeBid(userId, productId, amount) {
@@ -24,7 +24,7 @@ class BidService {
 
             // Validate Quyền hạn
             if (product.seller.toString() === userId) throw new Error("Không thể tự đấu giá sản phẩm của mình!");
-            if (product.banned_bidder && product.banned_bidder.includes(userId)) {
+            if (product.banned_bidder && product.banned_bidder.some(id => id.toString() === userId)) {
                 throw new Error("Bạn đã bị người bán chặn đấu giá sản phẩm này!");
             }
 
@@ -74,7 +74,7 @@ class BidService {
                 // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
                 
                 // Tính toán lại winner và price dựa trên thuật toán
-                recalculateAuctionState(product);
+                recalculateAuctionState(product, userId);
 
                 // Logic Auto Renew (Gia hạn 10p nếu còn < 5p)
                 if (product.auto_renew) {
@@ -93,7 +93,8 @@ class BidService {
                 user: userId,
                 product: productId,
                 price: finalPrice, 
-                max_bid_price: amount
+                max_bid_price: amount,
+                holder: finalWinnerId
             }, session);
 
             return {
