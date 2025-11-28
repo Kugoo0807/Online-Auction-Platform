@@ -79,6 +79,15 @@ class ProductRepository {
             .populate('category', 'category_name');
     }
 
+    // Xử lí transaction
+    async findByIdForUpdate(id, session) {
+        return await Product.findById(id).session(session);
+    }
+
+    async save(productDocument, session) {
+        return await productDocument.save({ session });
+    }
+
     async addBannedBidder(product, bidder) {
         return await Product.findByIdAndUpdate(
             product,
@@ -95,7 +104,7 @@ class ProductRepository {
         );
     }
 
-    async findBannedBidders(product) {
+    async findBannedBidders(productId) {
         const foundProduct = await Product.findById(productId).select('banned_bidder');
         return foundProduct ? foundProduct.banned_bidder : [];
     }
