@@ -9,7 +9,11 @@ const connectDB = async () => {
   }
 
   try {
-    await mongoose.connect(DB_URI);
+    await mongoose.connect(DB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        family: 4
+    });
 
     console.log(`[MONGOOSE] Kết nối MongoDB Atlas thành công!`);
     console.log(`[MONGOOSE] Host: ${mongoose.connection.host}`);
