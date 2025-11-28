@@ -110,8 +110,16 @@ const productSchema = new Schema({
   auction_start_time: { type: Date, default: Date.now },
   auction_end_time: { type: Date, required: true },
   max_bids_per_bidder: { type: Number, default: 2 },
-  bid_count: { type: Number, default: 0 },
-  auto_renew: { type: Boolean, default: false },
+  bid_count: { type: Number, default: 0 },              // Tổng số bid của sản phẩm
+  auto_bid_map: { type: Map, of: Number, default: {}},  // Map lượt bid của bidder
+  bid_counts: { type: Map, of: Number, default: {}},    // Số lần bid của mỗi bidder
+  // Trạng thái đấu giá
+  auction_status: { 
+    type: String, 
+    enum: ['active', 'ended', 'sold', 'cancelled'],
+    default: 'active'
+  },
+  auto_renew: { type: Boolean, default: false },        // Cho phép gia hạn auction
   
   // Quan hệ
   seller: { type: Schema.Types.ObjectId, ref: 'User', required: true },

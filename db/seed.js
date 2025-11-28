@@ -144,6 +144,7 @@ const seedDatabase = async () => {
         description: "Bản 256GB màu xanh, trầy nhẹ ở viền, cam kết chưa sửa chữa.",
         start_price: 15000000,
         bid_increment: 200000,
+        buy_it_now_price: 18000000,
         auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Còn 3 ngày
         seller: seller1._id,
         category: catPhone._id,
@@ -223,6 +224,7 @@ const seedDatabase = async () => {
         description: "Hàng thủ công handmade, size 41, lịch lãm sang trọng.",
         start_price: 4000000,
         bid_increment: 100000,
+        buy_it_now_price: 6000000,
         auction_end_time: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
         category: catShoes._id,
