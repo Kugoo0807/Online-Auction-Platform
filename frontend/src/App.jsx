@@ -14,6 +14,8 @@ import CategoryPage from './pages/CategoryPage';
 // Import các Route bảo vệ (nếu bạn đã tạo file component này rồi)
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* 3. Các trang Private (Phải đăng nhập mới vào được) */}
