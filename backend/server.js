@@ -40,6 +40,13 @@ const { CategoryRoutes } = await import('./routes/category.route.js');
 const { productController } = await import('./controllers/product.controller.js');
 const { ProductRoutes } = await import('./routes/product.route.js');
 
+// === BACKGROUND SERVICES (CRON JOB) ===
+const { cronService } = await import('./services/cron.service.js');
+cronService.start(); 
+console.log('Cron Service đã được khởi động...');
+
+// === ROUTER SETUP ===
+
 app.get('/api', (req, res) => {
     res.send('Chào mừng đến với API Sàn Đấu Giá!');
 });

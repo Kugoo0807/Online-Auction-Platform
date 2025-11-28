@@ -60,6 +60,15 @@ class ProductRepository {
             { path: 'category', select: 'category_name' }
         ]);
     }
+
+    async findExpired() {
+        const now = new Date();
+        console.log('NOW: ' + now);
+        return await Product.find({
+            auction_status: 'active',
+            auction_end_time: { $lt: now }
+        });
+    }
     
     async removeProduct(product) {
         return await Product.findByIdAndDelete(product);
