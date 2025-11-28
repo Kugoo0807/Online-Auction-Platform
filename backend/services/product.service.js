@@ -2,7 +2,7 @@ import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
-
+import { watchListRepository } from '../repositories/watchlist.repository.js';
 const LIMIT_ITEMS = 8;
 
 class ProductService {
@@ -138,6 +138,37 @@ class ProductService {
             await productRepository.save(product, session);
             return { success: true };
         });
+    }
+    
+    async toggleWatchList(userId, productId) {
+        const product = await productRepository.findById(productId);    
+        if (!product) {
+            throw new Error('Sản phẩm không tồn tại');
+        }
+        const isExist = await watchListRepository.exists(userId, productId);
+        if (isExist) {
+            await watchListRepository.remove(userId, productId);
+            return { 
+                action: 'removed', 
+                message: 'Đã xóa sản phẩm khỏi danh sách yêu thích' 
+            };
+        } else {
+            await watchListRepository.add(userId, productId);
+            return { 
+                action: 'added', 
+                message: 'Đã thêm sản phẩm vào danh sách yêu thích' 
+            };
+        }
+    }
+
+    async getMyWatchList(userId) {
+        const list = await watchListRepository.getByUserId(userId);
+        return list;
+    }
+
+    async checkIsWatching(userId, productId) {
+        const isWatching = await watchListRepository.exists(userId, productId);
+        return { is_watching: isWatching };
     }
 }
 
