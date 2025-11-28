@@ -115,7 +115,7 @@ class ProductService {
             recalculateAuctionState(product);
 
             await productRepository.save(product, session);
-            return { success: true, message: "Đã chặn người dùng và cập nhật lại giá sàn" };
+            return { success: true };
         });
     }
 
@@ -136,7 +136,7 @@ class ProductService {
             recalculateAuctionState(product);
 
             await productRepository.save(product, session);
-            return { success: true, message: "Đã bỏ chặn và khôi phục quyền đấu giá" };
+            return { success: true };
         });
     }
 }
