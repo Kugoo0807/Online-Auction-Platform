@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ProductSection from '../components/ProductSection'
 import { productService } from '../services/product.service'
+import HeroSection from '../components/home/HeroSection'
 export default function HomePage() {
   const [topEnding, setTopEnding] = useState([])
   const [topPrice, setTopPrice] = useState([])
@@ -10,7 +11,9 @@ export default function HomePage() {
   useEffect(() => {
     const fetchHomepageData = async () => {
       try {
+
         setLoading(true)
+
         const [endingRes, priceRes, biddedRes] = await Promise.all([
           productService.getTopEnding(),
           productService.getTopPrice(),
@@ -32,19 +35,21 @@ export default function HomePage() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <ProductSection 
-        title="Sắp kết thúc" 
-        products={topEnding} 
+      <HeroSection />
+
+      <ProductSection
+        title="Sắp kết thúc"
+        products={topEnding}
         loading={loading}
       />
-      <ProductSection 
-        title="Giá cao nhất" 
-        products={topPrice} 
+      <ProductSection
+        title="Giá cao nhất"
+        products={topPrice}
         loading={loading}
       />
-      <ProductSection 
-        title="Đấu giá nhiều nhất" 
-        products={topBidded} 
+      <ProductSection
+        title="Đấu giá nhiều nhất"
+        products={topBidded}
         loading={loading}
       />
     </div>
