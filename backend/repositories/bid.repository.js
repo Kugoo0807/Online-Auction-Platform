@@ -6,7 +6,8 @@ class BidRepository {
             user: bidData.user,
             product: bidData.product,
             price: bidData.price,
-            max_bid_price: bidData.max_bid_price
+            max_bid_price: bidData.max_bid_price,
+            holder: bidData.holder
         });
         return await bid.save({ session });
     }

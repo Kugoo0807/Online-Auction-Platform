@@ -1,7 +1,7 @@
 import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
-import { executeTransaction } from '../utils/db.helper.js';
-import { recalculateAuctionState } from '../utils/auction.helper.js';
+import { executeTransaction } from '../../db/db.helper.js';
+import { recalculateAuctionState } from '../utils/auction.util.js';
 
 const LIMIT_ITEMS = 8;
 
@@ -115,7 +115,7 @@ class ProductService {
             recalculateAuctionState(product);
 
             await productRepository.save(product, session);
-            return { success: true, message: "Đã chặn người dùng và cập nhật lại giá sàn" };
+            return { success: true };
         });
     }
 
@@ -136,7 +136,7 @@ class ProductService {
             recalculateAuctionState(product);
 
             await productRepository.save(product, session);
-            return { success: true, message: "Đã bỏ chặn và khôi phục quyền đấu giá" };
+            return { success: true };
         });
     }
 }

@@ -155,6 +155,51 @@ class ProductController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    async getMinValidPrice(req, res) {
+        try {
+            const user = req.user._id;
+            const { id } = req.params;
+
+            const result = await productService.getMinValidPrice(id, user);
+            return res.status(200).json({
+                message: 'Lấy giá trị đặt thấp nhất thành công',
+                min_valid_price: result.min_valid_price
+            })
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async banBidder(req, res) {
+        try {
+            const seller = req.user._id.toString();
+            const { product, bidder } = req.body;
+            
+            const result = await productService.banBidder(seller, product, bidder);
+            return res.status(200).json({
+                message: "Đã chặn người dùng và cập nhật lại giá sàn",
+                result
+            })
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async unbanBidder(req, res) {
+        try {
+            const seller = req.user._id.toString();
+            const { product, bidder } = req.body;
+            
+            const result = await productService.unbanBidder(seller, product, bidder);
+            return res.status(200).json({
+                message: "Đã bỏ chặn và khôi phục quyền đấu giá",
+                result
+            })
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export const productController = new ProductController();
