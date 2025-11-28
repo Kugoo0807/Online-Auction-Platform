@@ -99,34 +99,40 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
 #### Input: Không cần
 
 #### Output (JSON Success - 200)
-> Trả về mảng các sản phẩm
+> Trả về 1 Object duy nhất
 ```json
 {
     "message": "Lấy thông tin sản phẩm thành công!",
     "data": {
-        "_id": "6927d0b500c978b0d0efb963",
-        "product_name": "Sofa Da Bò Ý",
-        "description": "Sofa nhập khẩu nguyên chiếc...",
-        "start_price": 25000000,
-        "current_highest_price": 25000000,
-        "bid_increment": 1000000,
-        "thumbnail": "https://thanhnien.mediacdn.vn/.../thumb.jpg",
+        "_id": "69298f74959d65bf518893a4",
+        "product_name": "Bàn Ăn Gỗ Sồi",
+        "description": "Bàn ăn 6 ghế, gỗ sồi nga tự nhiên đã qua xử lý mối mọt.",
+        "start_price": 5000000,
+        "bid_increment": 200000,
+        "thumbnail": "https://thanhnien.mediacdn.vn/uploaded/thuthao/2018_11_10/14_ZHRV.jpg",
         "images": [
-            "https://cdn.tgdd.vn/.../img1.jpg",
-            "https://cdn.tgdd.vn/.../img2.jpg",
-            "https://cdn.tgdd.vn/.../img3.jpg"
+            "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
+            "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
+            "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
         ],
-        "auction_start_time": "2025-11-27T04:16:53.908Z",
-        "auction_end_time": "2025-12-11T04:16:53.901Z",
+        "auction_end_time": "2025-11-27T12:03:00.267Z",
+        "max_bids_per_bidder": 2,
+        "bid_count": 0,
+        "auto_bid_map": {},
+        "bid_counts": {},
+        "auction_status": "ended",
+        "auto_renew": false,
         "seller": {
-            "_id": "6927d0b400c978b0d0efb943",
-            "full_name": "Trần Thị Buôn"
+            "_id": "69298f73959d65bf51889383",
+            "full_name": "Trần Thị Buôn (Seller 2)"
         },
         "category": {
-            "_id": "6927d0b500c978b0d0efb952",
+            "_id": "69298f73959d65bf51889392",
             "category_name": "Nội Thất"
         },
-        "bid_count": 0
+        "banned_bidder": [],
+        "auction_start_time": "2025-11-20T12:03:00.272Z",
+        "current_highest_price": 5000000
     }
 }
 ```
@@ -148,6 +154,7 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
 #### Input: Không cần
 
 #### Output (JSON Success - 200)
+> Trả về mảng các sản phẩm
 ```json
 {
     "message": "Lấy danh sách giá cao nhất thành công",
@@ -167,6 +174,9 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
             "auction_end_time": "2025-12-11T04:16:53.901Z",
             "max_bids_per_bidder": 2,
             "bid_count": 0,
+            "auto_bid_map": {},
+            "bid_counts": {},
+            "auction_status": "ended",
             "auto_renew": false,
             "seller": {
                 "_id": "6927d0b400c978b0d0efb943",
@@ -178,10 +188,7 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
             },
             "banned_bidder": [],
             "auction_start_time": "2025-11-27T04:16:53.908Z",
-            "current_highest_price": 25000000,
-            "createdAt": "2025-11-27T04:16:54.048Z",
-            "updatedAt": "2025-11-27T04:16:54.048Z",
-            "__v": 0
+            "current_highest_price": 25000000
         },
         {
             "_id": "6927db2cedd91304b7cf1a0d",
@@ -198,6 +205,9 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
             "auction_end_time": "2025-12-31T23:59:00.000Z",
             "max_bids_per_bidder": 2,
             "bid_count": 2,
+            "auto_bid_map": {},
+            "bid_counts": {},
+            "auction_status": "ended",
             "auto_renew": true,
             "seller": {
                 "_id": "6927d0b400c978b0d0efb942",
@@ -209,10 +219,7 @@ Tài liệu hướng dẫn tích hợp API Quản lý Sản phẩm.
             },
             "banned_bidder": [],
             "auction_start_time": "2025-11-27T05:01:32.012Z",
-            "current_highest_price": 24000000,
-            "createdAt": "2025-11-27T05:01:32.074Z",
-            "updatedAt": "2025-11-27T05:01:32.074Z",
-            "__v": 0
+            "current_highest_price": 24000000
         }
     ]
 }
