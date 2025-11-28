@@ -1,24 +1,52 @@
-import HeroSection from '../components/home/HeroSection';
-import ProductSection from '../components/ProductSection';
-
-import { products } from '../data/products';
+import { useState, useEffect } from 'react'
+import ProductSection from '../components/ProductSection'
+import { productService } from '../services/product.service'
 export default function HomePage() {
+  const [topEnding, setTopEnding] = useState([])
+  const [topPrice, setTopPrice] = useState([])
+  const [topBidded, setTopBidded] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchHomepageData = async () => {
+      try {
+        setLoading(true)
+        const [endingRes, priceRes, biddedRes] = await Promise.all([
+          productService.getTopEnding(),
+          productService.getTopPrice(),
+          productService.getTopBidded()
+        ])
+
+        setTopEnding(endingRes.data || [])
+        setTopPrice(priceRes.data || [])
+        setTopBidded(biddedRes.data || [])
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu homepage:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHomepageData()
+  }, [])
+
   return (
     <div style={{ padding: '20px' }}>
-      <HeroSection />
-      
-      <ProductSection
-        title="🔥 Top 5 sản phẩm gần kết thúc"
-        products={products.slice(0, 5)}
+      <ProductSection 
+        title="Sắp kết thúc" 
+        products={topEnding} 
+        loading={loading}
       />
-      <ProductSection
-        title="💰 Top 5 sản phẩm có nhiều lượt ra giá nhất"
-        products={products.slice(0, 5)}
+      <ProductSection 
+        title="Giá cao nhất" 
+        products={topPrice} 
+        loading={loading}
       />
-      <ProductSection
-        title="🏆 Top 5 sản phẩm có giá cao nhất"
-        products={products.slice(0, 5)}
+      <ProductSection 
+        title="Đấu giá nhiều nhất" 
+        products={topBidded} 
+        loading={loading}
       />
     </div>
-  );
+  )
 }
