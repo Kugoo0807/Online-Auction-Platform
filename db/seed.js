@@ -22,20 +22,19 @@ const seedDatabase = async () => {
 
     // --- 1. DỌN DẸP DỮ LIỆU CŨ ---
     console.log('🧹 Đang xóa dữ liệu cũ...');
-    await Promise.all([
-      User.deleteMany({}), 
-      Category.deleteMany({}), 
-      Product.deleteMany({}),
-      Bid.deleteMany({}), 
-      WatchList.deleteMany({}), 
-      QnA.deleteMany({}),
-      AuctionResult.deleteMany({}), 
-      Rating.deleteMany({}),
-      UpgradeRequest.deleteMany({}), 
-      DeletionHistory.deleteMany({}),
-      RefreshToken.deleteMany({})
-    ]);
-    console.log('✅ Đã xóa dữ liệu cũ.');
+    try { await User.collection.drop(); } catch(e) {}
+    try { await Category.collection.drop(); } catch(e) {}
+    try { await Product.collection.drop(); } catch(e) {}
+    try { await Bid.collection.drop(); } catch(e) {}
+    try { await WatchList.collection.drop(); } catch(e) {}
+    try { await QnA.collection.drop(); } catch(e) {}
+    try { await AuctionResult.collection.drop(); } catch(e) {} 
+    try { await Rating.collection.drop(); } catch(e) {}
+    try { await UpgradeRequest.collection.drop(); } catch(e) {}
+    try { await DeletionHistory.collection.drop(); } catch(e) {}
+    try { await RefreshToken.collection.drop(); } catch(e) {}
+
+    console.log('✅ Đã xóa dữ liệu và index cũ.');
 
     // --- 2. CHUẨN BỊ MẬT KHẨU HASH ---
     const salt = await bcrypt.genSalt(10);
@@ -126,7 +125,7 @@ const seedDatabase = async () => {
       "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
     ];
 
-    const products = await Product.create([
+    const activeProducts = await Product.create([
       // --- Seller 1 bán Đồ điện tử (4 món) ---
       {
         product_name: "MacBook Pro M1 2020",
@@ -175,6 +174,18 @@ const seedDatabase = async () => {
       },
 
       // --- Seller 2 bán Thời trang & Nội thất (6 món) ---
+      {
+        product_name: "Đồng Hồ Rolex (Cấm Newbie)",
+        description: "Chỉ dành cho người có uy tín cao.",
+        start_price: 100000000,
+        bid_increment: 2000000,
+        auction_end_time: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        seller: seller2._id,
+        category: catFashion._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages,
+        allow_newbie: false
+      },
       {
         product_name: "Giày Nike Air Jordan 1",
         description: "Hàng auth bao check, size 42, mới đi lướt 2 lần.",
@@ -243,21 +254,129 @@ const seedDatabase = async () => {
         images: sampleImages
       }
     ]);
+    const soldProducts = await Product.create([
+        {
+            product_name: "Sony PlayStation 5 (Đã bán)",
+            description: "Máy chơi game console, fullbox.",
+            start_price: 10000000,
+            bid_increment: 200000,
+            auction_end_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Đã hết hạn 2 ngày
+            seller: seller1._id,
+            category: catElectronics._id,
+            thumbnail: sampleThumbnail,
+            images: sampleImages,
+            auction_status: 'sold', // Đã bán
+            current_highest_bidder: bidder1._id, // Bidder 1 thắng
+            current_highest_price: 12000000
+        },
+        {
+            product_name: "Loa Bluetooth Marshall (Đã bán)",
+            description: "Nghe nhạc cực hay.",
+            start_price: 5000000,
+            bid_increment: 100000,
+            auction_end_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // Đã hết hạn 5 ngày
+            seller: seller2._id,
+            category: catElectronics._id,
+            thumbnail: sampleThumbnail,
+            images: sampleImages,
+            auction_status: 'sold',
+            current_highest_bidder: bidder2._id, // Bidder 2 thắng
+            current_highest_price: 6000000
+        }
+    ]);
 
     // --- 6. TẠO WATCHLIST ---
     console.log('👀 Đang tạo WatchLists...');
     await WatchList.create([
-      { user: bidder1._id, product: products[0]._id }, // Bidder 1 thích Macbook
-      { user: bidder1._id, product: products[4]._id }, // Bidder 1 thích Giày Nike
-      { user: bidder2._id, product: products[1]._id }, // Bidder 2 thích iPhone
-      { user: seller1._id, product: products[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
+      { user: bidder1._id, product: activeProducts[0]._id }, // Bidder 1 thích Macbook
+      { user: bidder1._id, product: activeProducts[4]._id }, // Bidder 1 thích Giày Nike
+      { user: bidder2._id, product: activeProducts[1]._id }, // Bidder 2 thích iPhone
+      { user: seller1._id, product: activeProducts[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
     ]);
 
-    // --- 7. TẠO QnA ---
+    // --- 7. TẠO AUCTION RESULTS (Đơn hàng) ---
+    console.log('📜 Đang tạo Auction Results...');
+    
+    // Đơn hàng 1: Seller 1 bán PS5 cho Bidder 1 (Thành công tốt đẹp)
+    const result1 = await AuctionResult.create({
+        product: soldProducts[0]._id,
+        winning_bidder: bidder1._id,
+        seller: seller1._id,
+        final_price: 12000000,
+        status: 'completed',
+        shipping_address: "123 Đường A, Đà Nẵng",
+        payment_proof: "https://example.com/payment.jpg",
+        shipping_proof: "https://example.com/ship.jpg"
+    });
+
+    // Đơn hàng 2: Seller 2 bán Loa cho Bidder 2 (Có xích mích)
+    const result2 = await AuctionResult.create({
+        product: soldProducts[1]._id,
+        winning_bidder: bidder2._id,
+        seller: seller2._id,
+        final_price: 6000000,
+        status: 'completed',
+        shipping_address: "456 Đường B, Cần Thơ"
+    });
+
+    // --- 7. TẠO RATINGS & UPDATE USER STATS ---
+    console.log('⭐ Đang tạo Ratings...');
+
+    await Rating.create([
+        // Giao dịch 1: Khen nhau (+1)
+        {
+            rater: bidder1._id,
+            rated_user: seller1._id, // Khen Seller 1
+            auction_result: result1._id,
+            rating_type: 1,
+            comment: "Shop uy tín, máy ngon!"
+        },
+        {
+            rater: seller1._id,
+            rated_user: bidder1._id, // Khen Bidder 1
+            auction_result: result1._id,
+            rating_type: 1,
+            comment: "Khách chuyển khoản nhanh, very good."
+        },
+
+        // Giao dịch 2: Seller chê Bidder (-1)
+        {
+            rater: seller2._id,
+            rated_user: bidder2._id, // Chê Bidder 2
+            auction_result: result2._id,
+            rating_type: -1,
+            comment: "Khách bom hàng, thái độ lồi lõm."
+        },
+        // Bidder 2 cay cú chê lại Seller 2 (-1)
+        {
+            rater: bidder2._id,
+            rated_user: seller2._id,
+            auction_result: result2._id,
+            rating_type: -1,
+            comment: "Hàng dỏm, đừng mua."
+        }
+    ]);
+
+    // --- 8. CẬP NHẬT ĐIỂM SỐ USER (Quan trọng để test logic) ---
+    console.log('📊 Đang cập nhật điểm User...');
+
+    // Seller 1: +1 điểm (1 đánh giá)
+    await User.findByIdAndUpdate(seller1._id, { rating_score: 1, rating_count: 1 });
+
+    // Bidder 1: +1 điểm (1 đánh giá) -> Uy tín 100%
+    await User.findByIdAndUpdate(bidder1._id, { rating_score: 1, rating_count: 1 });
+
+    // Seller 2: -1 điểm (1 đánh giá)
+    await User.findByIdAndUpdate(seller2._id, { rating_score: -1, rating_count: 1 });
+
+    // Bidder 2: -1 điểm (1 đánh giá) -> Uy tín 0% -> Sẽ bị chặn khi bid hàng xịn
+    await User.findByIdAndUpdate(bidder2._id, { rating_score: -1, rating_count: 1 });
+
+    // --- 9. TẠO QnA ---
     console.log('❓ Đang tạo QnAs...');
     await QnA.create([
       {
-        product: products[0]._id, // Macbook
+        product: activeProducts[0]._id, // Macbook
         asker: bidder1._id,
         question_content: "Máy có bị trầy xước gì không shop?",
         answerer: seller1._id,
@@ -265,7 +384,7 @@ const seedDatabase = async () => {
         answer_timestamp: new Date()
       },
       {
-        product: products[6]._id, // Sofa
+        product: activeProducts[6]._id, // Sofa
         asker: bidder2._id,
         question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
         // Chưa trả lời
