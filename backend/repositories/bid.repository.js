@@ -16,6 +16,7 @@ class BidRepository {
         return await Bid.find({ product: productId })
             .sort({ createdAt: -1 })
             .populate('user', 'full_name rating')
+            .populate('holder', 'full_name rating');
     }
 }
 
