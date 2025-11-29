@@ -5,55 +5,6 @@ import { MOCK_PRODUCTS } from '../data/products';
 const IS_USE_MOCK = true;
 
 export const auctionService = {
-  
-  // Lấy sản phẩm theo danh mục
-  getProductsByCategory: async (slug) => {
-    if (IS_USE_MOCK) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const filtered = MOCK_PRODUCTS.filter(p => p.category_slug === slug);
-          
-          // Tự định nghĩa tên tiếng Việt tương ứng với slug
-          const CATEGORY_NAMES = {
-            'laptop': 'Laptop',
-            'dien-thoai': 'Điện Thoại Di Động',
-            'may-tinh-bang': 'Máy Tính Bảng',
-            'dong-ho': 'Đồng Hồ',
-            'laptop-gaming': 'Laptop Gaming',
-            'tu-lanh': 'Tủ Lạnh'
-          };
-
-          const prettyName = CATEGORY_NAMES[slug] || slug; 
-
-          resolve({ 
-            data: filtered, 
-            categoryName: prettyName
-          });
-        }, 500);
-      });
-    }
-    try {
-      const response = await api.get(`/categories/${slug}`);
-      return response.data;
-      
-    } catch (error) {
-      // a. Log chi tiết lỗi để debug (Chỉ hiện trong F12 Console)
-      console.error(`[API Error] Lỗi khi lấy danh mục ${slug}:`, error);
-
-      if (error.response) {
-        if (error.response.status === 404) {
-          throw new Error("Danh mục này không tồn tại hoặc đã bị xóa.");
-        }
-        if (error.response.status === 500) {
-          throw new Error("Hệ thống đang bảo trì, vui lòng thử lại sau.");
-        }
-      } else if (error.request) {
-        throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
-      }
-
-      throw error; 
-    }
-  },
 
   // Lấy danh sách sản phẩm active (Trang chủ)
   getAuctions: async () => {

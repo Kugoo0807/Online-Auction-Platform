@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import connectDB from '../db/connect.js';
+import connectDB from '../db/connect.js'
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import './config/passport.config.js';
@@ -40,6 +40,17 @@ const { CategoryRoutes } = await import('./routes/category.route.js');
 const { productController } = await import('./controllers/product.controller.js');
 const { ProductRoutes } = await import('./routes/product.route.js');
 
+// === BID ===
+const { bidController } = await import('./controllers/bid.controller.js');
+const { BidRoutes } = await import('./routes/bid.route.js');
+
+// === BACKGROUND SERVICES (CRON JOB) ===
+const { cronService } = await import('./services/cron.service.js');
+cronService.start(); 
+console.log('Cron Service đã được khởi động...');
+
+// === ROUTER SETUP ===
+
 app.get('/api', (req, res) => {
     res.send('Chào mừng đến với API Sàn Đấu Giá!');
 });
@@ -52,6 +63,7 @@ app.use('/api/auth', AuthRoutes(authController));
 app.use('/api/admin', AdminRoutes());
 app.use('/api/products', ProductRoutes(productController));
 app.use('/api/categories', CategoryRoutes(categoryController));
+app.use('/api/bids', BidRoutes(bidController));
 
 // START
 app.listen(PORT, () => {

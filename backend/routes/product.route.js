@@ -40,11 +40,20 @@ export function ProductRoutes(productController) {
     // Lấy sản phẩm của seller
     router.get('/seller', [checkAuth, checkRole('seller')], productController.getSellerProducts);
 
+    // Ban bidder
+    router.post('/seller/ban-bidder', [checkAuth, checkRole('seller')], productController.banBidder);
+
+    // Unban bidder
+    router.post('/seller/unban-bidder', [checkAuth, checkRole('seller')], productController.unbanBidder);
+
 
     // ======= ROUTER ĐỘNG =======
     
     // Lấy chi tiết sản phẩm
     router.get('/:id', productController.getProductDetails);
+    
+    // Lấy giá trị đặt thấp nhất
+    router.get('/:id/min-price', checkAuth, productController.getMinValidPrice);
 
     return router;
 }

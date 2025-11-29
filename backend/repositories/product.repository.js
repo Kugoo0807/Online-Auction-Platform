@@ -22,7 +22,8 @@ class ProductRepository {
     async findById(product) {
         return await Product.findById(product)
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
     }
     
     async findByName(productName) {
@@ -46,7 +47,8 @@ class ProductRepository {
             .skip(skip)
             .limit(limit)
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
     }
 
     async findRandom(filter, limit) {
@@ -57,8 +59,17 @@ class ProductRepository {
 
         return await Product.populate(docs, [
             { path: 'seller', select: 'full_name rating' },
-            { path: 'category', select: 'category_name' }
+            { path: 'category', select: 'category_name' },
+            { path: 'current_highest_bidder', select: 'full_name rating'}
         ]);
+    }
+
+    async findExpired() {
+        const now = new Date();
+        return await Product.find({
+            auction_status: 'active',
+            auction_end_time: { $lt: now }
+        });
     }
     
     async removeProduct(product) {
@@ -68,7 +79,17 @@ class ProductRepository {
     async findBySeller (seller) {
         return await Product.find({ seller })
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
+    }
+
+    // Xử lí transaction
+    async findByIdForUpdate(id, session) {
+        return await Product.findById(id).session(session);
+    }
+
+    async save(productDocument, session) {
+        return await productDocument.save({ session });
     }
 
     async addBannedBidder(product, bidder) {
@@ -87,7 +108,7 @@ class ProductRepository {
         );
     }
 
-    async findBannedBidders(product) {
+    async findBannedBidders(productId) {
         const foundProduct = await Product.findById(productId).select('banned_bidder');
         return foundProduct ? foundProduct.banned_bidder : [];
     }

@@ -60,7 +60,6 @@ class AuthController {
         try {
             const oldRefreshToken = req.cookies.refreshToken;
             if (!oldRefreshToken) {
-                console.log('..Đã vào refresh');
                 return res.status(401).json({ message: 'Không tìm thấy refresh token!' });
             }
 
