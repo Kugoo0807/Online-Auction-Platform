@@ -28,7 +28,7 @@ export default function Header() {
 
       {/* Danh mục Button & Dropdown */}
       <div onMouseEnter={() => setShowCategories(true)} onMouseLeave={() => setShowCategories(false)} style={{ position: 'relative' }}>
-        <button style={{ backgroundColor: 'white', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px' }}>
+        <button style={{ backgroundColor: '#181818ff', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px' }}>
           📂 Danh mục
         </button>
         <CategoryMenu 
