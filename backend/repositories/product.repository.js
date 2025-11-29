@@ -22,7 +22,8 @@ class ProductRepository {
     async findById(product) {
         return await Product.findById(product)
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
     }
     
     async findByName(productName) {
@@ -46,7 +47,8 @@ class ProductRepository {
             .skip(skip)
             .limit(limit)
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
     }
 
     async findRandom(filter, limit) {
@@ -57,7 +59,8 @@ class ProductRepository {
 
         return await Product.populate(docs, [
             { path: 'seller', select: 'full_name rating' },
-            { path: 'category', select: 'category_name' }
+            { path: 'category', select: 'category_name' },
+            { path: 'current_highest_bidder', select: 'full_name rating'}
         ]);
     }
 
@@ -76,7 +79,8 @@ class ProductRepository {
     async findBySeller (seller) {
         return await Product.find({ seller })
             .populate('seller', 'full_name rating') 
-            .populate('category', 'category_name');
+            .populate('category', 'category_name')
+            .populate('current_highest_bidder', 'full_name rating');
     }
 
     // Xử lí transaction
