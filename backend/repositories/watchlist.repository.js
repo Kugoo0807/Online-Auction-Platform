@@ -20,7 +20,11 @@ async getByUserId(userId) {
     return await WatchList.find({ user: userId }) 
       .populate({
         path: 'product', 
-        select: 'product_name start_price images auction_end_time' 
+        select: 'product_name thumbnail current_highest_price start_price buy_it_now_price seller auction_status auction_start_time auction_end_time bid_count',
+        populate: {
+          path: 'seller',
+          select: 'full_name rating'
+        }
       })
       .sort({ timestamp_added: -1 })
       .lean();
