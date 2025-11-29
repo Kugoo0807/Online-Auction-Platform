@@ -19,16 +19,31 @@ export default function Header() {
     alert(`Tìm kiếm: ${query}`);
   };
 
+  const btnStyle = {
+    whiteSpace: 'nowrap',
+    cursor: 'pointer'
+  };
+
   return (
     <div style={{ backgroundColor: 'var(--color-primary)', padding: '15px 20px', display: 'flex', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
       {/* Logo */}
-      <Link to="/" style={{ textDecoration: 'none', color: 'white', fontSize: '24px', fontWeight: 'bold', marginRight: '20px' }}>
+      <Link to="/" style={{ 
+        textDecoration: 'none', 
+        color: 'white', 
+        fontSize: '24px', 
+        fontWeight: 'bold', 
+        marginRight: '20px',
+        flexShrink: 0
+      }}>
         AuctionHub
       </Link>
 
       {/* Danh mục Button & Dropdown */}
-      <div onMouseEnter={() => setShowCategories(true)} onMouseLeave={() => setShowCategories(false)} style={{ position: 'relative' }}>
-        <button style={{ backgroundColor: '#181818ff', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px' }}>
+      <div 
+        onMouseEnter={() => setShowCategories(true)} 
+        onMouseLeave={() => setShowCategories(false)} 
+        style={{ position: 'relative', flexShrink: 0 }}>
+        <button style={{ backgroundColor: '#181818ff', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px', whiteSpace: 'nowrap' }}>
           📂 Danh mục
         </button>
         <CategoryMenu 
@@ -39,12 +54,12 @@ export default function Header() {
       </div>
 
       {/* Search Bar */}
-      <div style={{ margin: '0 20px', flex: 1 }}>
+      <div style={{ margin: '0 20px', flex: 1, minWidth: '200px' }}>
         <SearchBar onSearch={handleSearch} />
       </div>
 
       {/* User Actions */}
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: '15px' }}>
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
         {user ? (
           <>
              <Link to="/create-auction"><button>➕ Tạo đấu giá</button></Link> {/* Thêm style vào nhé */}
