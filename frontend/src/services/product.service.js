@@ -1,79 +1,109 @@
-import axios from 'axios';
-
-const API_URL = `${import.meta.env.VITE_API_URL}/products`;
+import api from './api'; // Dùng chung instance api đã cấu hình Refresh Token
 
 class ProductService {
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_URL,
-    });
-  }
+  
+  // --- PUBLIC APIS ---
 
-  // Thêm interceptor để tự động gắn token
-  setAuthToken(token) {
-    if (token) {
-      this.api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete this.api.defaults.headers.common['Authorization'];
+  // 1. Tìm kiếm sản phẩm
+  async searchProducts(keyword, page = 1) {
+    try {
+      // API của Backend bạn đang sử dụng: /products/search?keyword=...
+      const response = await api.get('/products/search', {
+        params: { 
+          keyword, 
+          page 
+        }
+      });
+      return response.data; 
+    } catch (error) {
+      console.error("Lỗi searchProducts:", error);
+      return { data: [] };
     }
   }
 
-  // Public APIs - không cần token
+  // 2. Lấy chi tiết sản phẩm
   async getProductDetail(id) {
-    const response = await this.api.get(`/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getProductDetail:", error);
+      throw error;
+    }
   }
 
+  // 3. Lấy sản phẩm theo danh mục
+  async getProductsByCategory(slug, page = 1) {
+    try {
+      const response = await api.get(`/products/category/${slug}`, {
+        params: { page }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getProductsByCategory:", error);
+      return { data: [] };
+    }
+  }
+
+  // 4. Các API Top sản phẩm
   async getTopEnding() {
-    const response = await this.api.get('/top-ending');
-    return response.data;
+    try {
+      const response = await api.get('/products/top-ending');
+      return response.data;
+    } catch (error) {
+      return { data: [] };
+    }
   }
 
   async getTopPrice() {
-    const response = await this.api.get('/top-price');
-    return response.data;
+    try {
+      const response = await api.get('/products/top-price');
+      return response.data;
+    } catch (error) {
+      return { data: [] };
+    }
   }
 
   async getTopBidded() {
-    const response = await this.api.get('/top-bidded');
-    return response.data;
+    try {
+      const response = await api.get('/products/top-bidded');
+      return response.data;
+    } catch (error) {
+      return { data: [] };
+    }
   }
 
-  async searchProducts(keyword, page = 1) {
-    const response = await this.api.get('/search', {
-      params: { keyword, page }
-    });
-    return response.data;
-  }
-
-  async getProductsByCategory(slug, page = 1) {
-    const response = await this.api.get(`/category/${slug}`, {
-      params: { page }
-    });
-    return response.data;
-  }
-
+  // 5. Lấy sản phẩm liên quan
   async getRelatedProducts(slug) {
-    const response = await this.api.get(`/category/${slug}/random`);
-    return response.data;
+    try {
+      const response = await api.get(`/products/category/${slug}/random`);
+      return response.data;
+    } catch (error) {
+      return { data: [] };
+    }
   }
 
-  // Seller APIs - cần token
+  // --- SELLER API ---
+
   async createProduct(productData) {
-    // QUAN TRỌNG: Không set Content-Type, để browser tự set boundary
-    const response = await this.api.post('/create', productData, {
-      headers: {
-        'Content-Type': undefined // Cho phép browser tự set
-      }
-    });
-    return response.data;
+    try {
+      const response = await api.post('/products/create', productData);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi createProduct:", error);
+      throw error;
+    }
   }
 
   async getSellerProducts(page = 1) {
-    const response = await this.api.get('/seller', {
-      params: { page }
-    });
-    return response.data;
+    try {
+      const response = await api.get('/products/seller', {
+        params: { page }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
