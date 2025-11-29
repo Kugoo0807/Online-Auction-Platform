@@ -14,16 +14,17 @@ class ProductRepository {
             category: productData.category,
             description: productData.description,
             auto_renew: productData.auto_renew,
-            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2
+            max_bids_per_bidder: productData.max_bids_per_bidder ?? 2,
+            allow_newbie: productData.allow_newbie
             });
         return await product.save();
     }
     
     async findById(product) {
         return await Product.findById(product)
-            .populate('seller', 'full_name rating') 
+            .populate('seller', 'full_name rating_score rating_count') 
             .populate('category', 'category_name')
-            .populate('current_highest_bidder', 'full_name rating');
+            .populate('current_highest_bidder', 'full_name rating_score rating_count');
     }
     
     async findByName(productName) {
@@ -46,9 +47,9 @@ class ProductRepository {
             .sort(finalSort)
             .skip(skip)
             .limit(limit)
-            .populate('seller', 'full_name rating') 
+            .populate('seller', 'full_name rating_score rating_count') 
             .populate('category', 'category_name')
-            .populate('current_highest_bidder', 'full_name rating');
+            .populate('current_highest_bidder', 'full_name rating_score rating_count');
     }
 
     async findRandom(filter, limit) {
@@ -58,9 +59,9 @@ class ProductRepository {
         ]);
 
         return await Product.populate(docs, [
-            { path: 'seller', select: 'full_name rating' },
+            { path: 'seller', select: 'full_name rating_score rating_count' },
             { path: 'category', select: 'category_name' },
-            { path: 'current_highest_bidder', select: 'full_name rating'}
+            { path: 'current_highest_bidder', select: 'full_name rating_score rating_count'}
         ]);
     }
 
@@ -78,9 +79,9 @@ class ProductRepository {
 
     async findBySeller (seller) {
         return await Product.find({ seller })
-            .populate('seller', 'full_name rating') 
+            .populate('seller', 'full_name rating_score rating_count') 
             .populate('category', 'category_name')
-            .populate('current_highest_bidder', 'full_name rating');
+            .populate('current_highest_bidder', 'full_name rating_score rating_count');
     }
 
     // Xử lí transaction

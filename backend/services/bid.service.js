@@ -1,5 +1,8 @@
 import { productRepository } from '../repositories/product.repository.js';
 import { bidRepository } from '../repositories/bid.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
+import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 
@@ -33,9 +36,28 @@ class BidService {
             if (currentBidCount >= product.max_bids_per_bidder) {
                 throw new Error(`Bạn đã hết lượt ra giá (Tối đa: ${product.max_bids_per_bidder} lần)`);
             }
+
+            // Validate Điểm đánh giá
+            const bidder = await userRepository.findById(userId);
+            if (!bidder) throw new Error("Không tìm thấy thông tin người dùng");
+
+            if (bidder.rating_count === 0) {
+                if (!product.allow_newbie) {
+                    throw new Error('Sản phẩm này không cho phép người mới (chưa có đánh giá) tham gia!');
+                }
+            } else {
+                const positiveCount = (bidder.rating_count + bidder.rating_score) / 2;
+                const positiveRatio = positiveCount / bidder.rating_count;
+                
+                if (positiveRatio < 0.8) {
+                    throw new Error(`Điểm uy tín thấp (${(positiveRatio * 100).toFixed(1)}%). Yêu cầu trên 80% mới được đấu giá.`);
+                }
+            }
             
-            // Nếu có giá Mua ngay và user trả >= giá đó
+            // LOGIC MUA NGAY HOẶC ĐẤU GIÁ
             let isBuyItNow = false;
+
+            // Check mua Ngay
             if (product.buy_it_now_price && amount >= product.buy_it_now_price) {
                 isBuyItNow = true;
                 amount = product.buy_it_now_price;
@@ -64,12 +86,21 @@ class BidService {
             product.auto_bid_map.set(userId, amount);
             product.bid_count += 1;
 
-            // 7. XỬ LÝ LOGIC RIÊNG
+            // XỬ LÝ LOGIC RIÊNG
             if (isBuyItNow) {
                 // === TRƯỜNG HỢP MUA NGAY ===
                 product.auction_status = 'sold';
                 product.current_highest_price = amount;
                 product.current_highest_bidder = userId;
+
+                // Tạo đơn hàng
+                await auctionResultRepository.create({
+                    product: product._id,
+                    winning_bidder: userId,
+                    seller: product.seller,
+                    final_price: amount,
+                    status: 'pending_payment'
+                }, session);
             } else {
                 // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
                 

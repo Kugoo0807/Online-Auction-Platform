@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { productRepository } from '../repositories/product.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+import { notifyAuctionEndedSold, notifyAuctionEndedNoBid } from '../services/email.service.js';
 
 class CronService {
     start() {
@@ -11,8 +12,6 @@ class CronService {
     }
 
     async closeEndedAuctions() {
-        const now = new Date();
-        
         // Tìm sản phẩm hết hạn mà vẫn đang active
         const expiredProducts = await productRepository.findExpired();
 
@@ -32,8 +31,9 @@ class CronService {
                     await auctionResultRepository.create({
                         product: product._id,
                         winning_bidder: product.current_highest_bidder,
+                        seller: product.seller,
                         final_price: product.current_highest_price,
-                        payment_status: 'pending'
+                        status: 'pending_payment'
                     });
 
                     console.log(`[${new Date().toISOString()}] [CRON] [CLOSE] SOLD | Product: "${product.product_name}" (${product._id}) | Winner: ${product.current_highest_bidder} | Price: ${product.current_highest_price}`);
