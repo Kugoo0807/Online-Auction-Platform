@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { productRepository } from '../repositories/product.repository.js';
-import { auctionResultRepository } from '../repositories/auctionResult.repository.js';
+import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 
 class CronService {
     start() {
