@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import ProductSection from '../components/ProductSection'
+import ProductSection from '../components/product/ProductSection'
 import { productService } from '../services/product.service'
 import HeroSection from '../components/home/HeroSection'
 export default function HomePage() {

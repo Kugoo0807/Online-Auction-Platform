@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { auctionService } from '../services/auctionService'
-import ProductSection from '../components/ProductSection'
+import ProductSection from '../components/product/ProductSection'
 
 export default function Dashboard() {
   const { user, logout } = useAuth()

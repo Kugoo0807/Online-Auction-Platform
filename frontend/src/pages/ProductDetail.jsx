@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { productService } from '../services/product.service'
 import { categoryService } from '../services/categoryService' 
-import { ProductCard } from '../components/ProductSection'
+import { ProductCard } from '../components/product/ProductSection'
 import { useAuth } from '../context/AuthContext'
 
 export default function ProductDetail() {

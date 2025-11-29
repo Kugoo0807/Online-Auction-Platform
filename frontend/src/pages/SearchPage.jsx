@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { productService } from '../services/product.service';
 import ProductGrid from '../components/product/ProductGrid';
+import ProductSection from '../components/product/ProductSection';
 import './SearchPage.css';
 
 const SearchPage = () => {
@@ -50,13 +51,8 @@ const SearchPage = () => {
         </div>
 
         {/* --- NỘI DUNG --- */}
-        {loading ? (
-          <div className="loading-screen">
-            <div className="spinner"></div>
-            Đang tìm kiếm sản phẩm...
-          </div>
-        ) : products.length > 0 ? (
-          <ProductGrid products={products} />
+        {products.length > 0 ? (
+          <ProductSection products={products} loading={loading} />
         ) : (
           <div className="no-results">
             <p>😞 Không tìm thấy sản phẩm nào phù hợp với từ khóa này.</p>

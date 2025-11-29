@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { categoryService } from '../services/categoryService';
-import ProductGrid from '../components/product/ProductGrid'; 
+import ProductSection from '../components/product/ProductSection'
 import './CategoryPage.css';
 
 const CategoryPage = () => {
@@ -36,15 +36,6 @@ const CategoryPage = () => {
     fetchProducts();
   }, [slug]);
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div> {/* Nếu bạn có class spinner */}
-        Đang tải dữ liệu...
-      </div>
-    );
-  }
-
   return (
     <div className="category-page">
       <div className="category-container">
@@ -70,13 +61,11 @@ const CategoryPage = () => {
         </div>
 
         {/* --- DANH SÁCH SẢN PHẨM --- */}
-        {products.length > 0 ? (
-          <ProductGrid products={products} />
-        ) : (
-          <div className="no-products">
-            <p>Hiện chưa có sản phẩm nào trong danh mục này.</p>
-          </div>
-        )}
+        <ProductSection
+          title={categoryName}
+          products={products}
+          loading={loading}
+        />
 
       </div>
     </div>
