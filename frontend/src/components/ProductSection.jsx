@@ -124,7 +124,7 @@ export function ProductCard({ product }) {
         borderRadius: '12px',
         padding: '12px',
         width: '300px',
-        height: '440px',
+        height: '500px',
         textAlign: 'center',
         boxShadow: '0 6px 12px rgba(13,27,42,0.06)',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',

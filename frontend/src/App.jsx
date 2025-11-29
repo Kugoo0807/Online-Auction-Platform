@@ -13,6 +13,7 @@ import CategoryPage from './pages/CategoryPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import SearchPage from './pages/SearchPage'; // Trang tìm kiếm
+import ProductDetail from './pages/ProductDetail';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
@@ -24,10 +25,11 @@ export default function App() {
       <Route element={<MainLayout />}>
         {/* Public */}
         <Route path="/" element={<HomePages />} />
-        <Route path="/auction/:id" element={<AuctionDetail />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+        <Route path="/auction/:id" element={<ProductDetail />} />
+
         
         {/* Guest only */}
         <Route element={<GuestRoute />}>
