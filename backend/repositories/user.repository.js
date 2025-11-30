@@ -66,6 +66,17 @@ class UserRepository {
       { new: true, runValidators: true }
     );
   }
+
+  async updateRatingStats(userId, score, count, session = null) {
+        return await User.findByIdAndUpdate(
+            userId,
+            { 
+                rating_score: score,
+                rating_count: count
+            },
+            { new: true, session }
+        );
+    }
 }
 
 export const userRepository = new UserRepository();
