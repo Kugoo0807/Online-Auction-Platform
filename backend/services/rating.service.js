@@ -16,6 +16,19 @@ class RatingService {
                 throw new Error('Bạn đã đánh giá giao dịch này rồi!');
             }
 
+            // Validate trạng thái đơn hàng
+            const order = await auctionResultRepository.findById(auction_result);
+            if (!order) {
+                throw new Error('Đơn hàng không tồn tại!');
+            }
+
+            // Chỉ cho phép đánh giá khi đơn hàng đã hoàn tất hoặc bị hủy
+            const allowedStatus = ['completed', 'cancelled'];
+            if (!allowedStatus.includes(order.status)) {
+                throw new Error('Giao dịch chưa hoàn tất (hoặc chưa bị hủy), không thể đánh giá lúc này!');
+            }
+
+            // Tạo rating
             await ratingRepository.create(data, session);
 
             // Tính toán lại chỉ số rating
