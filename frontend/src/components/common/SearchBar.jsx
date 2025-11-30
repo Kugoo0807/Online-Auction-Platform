@@ -113,7 +113,7 @@ export default function SearchBar({ onSearch }) {
   };
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', display: 'flex' }}>
+    <div ref={wrapperRef} className="relative flex w-full max-w-3xl group">
       <input
         type="text"
         placeholder="Tìm kiếm sản phẩm..."
@@ -121,146 +121,84 @@ export default function SearchBar({ onSearch }) {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setShowDropdown(true)}
         onKeyPress={handleKeyPress}
-        style={{ 
-          width: '700px', 
-          padding: '15px 20px', 
-          marginLeft: '10px', 
-          fontSize: '16px', 
-          border: '2px solid #ccc', 
-          borderRadius: '25px 0 0 25px', 
-          outline: 'none',
-          borderRight: 'none',
-        }}
+        className="w-full py-2.5 pl-5 pr-4 text-gray-800 bg-white border border-transparent rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 shadow-sm"
       />
+      
       <button
         onClick={handleSearch}
-        style={{ 
-          backgroundColor: '#004E92', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '0 25px 25px 0', 
-          cursor: 'pointer', 
-          fontSize: '18px', 
-          padding: '0 25px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center' 
-        }}
+        className="bg-blue-700 hover:bg-blue-600 text-white rounded-r-full px-6 flex items-center justify-center transition duration-200 border-l border-blue-800 shadow-sm cursor-pointer"
       >
-        🔍
+        <span className="text-xl">🔍</span>
       </button>
 
       {showDropdown && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: '10px',
-          width: '700px',
-          backgroundColor: 'white',
-          borderRadius: '10px',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-          zIndex: 1000,
-          border: '1px solid #eee',
-          overflow: 'hidden',
-          marginTop: '5px'
-        }}>
+        <div className="absolute top-full left-0 w-full bg-white rounded-xl shadow-2xl z-50 mt-2 border border-gray-100 overflow-hidden">
             
             {/* TRƯỜNG HỢP 1: Đang gõ chữ -> Hiện gợi ý sản phẩm */}
             {query.trim().length >= 2 ? (
                 <>
                     {suggestions.length > 0 ? (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        <ul className="py-2">
                             {suggestions.map((product) => (
                                 <li 
                                     key={product._id}
                                     onClick={() => handleSelectProduct(product._id)}
-                                    style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', cursor: 'pointer', borderBottom: '1px solid #f5f5f5' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                    className="flex items-center px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors"
                                 >
-                                    {/* Ảnh sản phẩm được resize chuẩn */}
                                     <img 
                                         src={product.thumbnail || (product.images && product.images[0]) || DEFAULT_IMAGE} 
                                         alt={product.product_name}
-                                        style={{ 
-                                            width: '40px', 
-                                            height: '40px', 
-                                            objectFit: 'contain', // Giữ tỷ lệ ảnh, không bị méo
-                                            borderRadius: '4px', 
-                                            marginRight: '15px',
-                                            border: '1px solid #eee',
-                                            backgroundColor: '#fff' 
-                                        }}
+                                        className="w-10 h-10 object-contain rounded bg-white border border-gray-200 mr-4 shrink-0"
                                         onError={(e) => {e.target.src = DEFAULT_IMAGE}}
                                     />
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>{product.product_name}</div>
-                                        <div style={{ fontSize: '12px', color: '#2563eb', fontWeight: 'bold' }}>{formatCurrency(product.current_highest_price || product.start_price)}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-gray-800 truncate">{product.product_name}</div>
+                                        <div className="text-xs font-bold text-blue-600">
+                                            {formatCurrency(product.current_highest_price || product.start_price)}
+                                        </div>
                                     </div>
                                 </li>
                             ))}
                             <li 
                                 onClick={handleSearch}
-                                style={{ padding: '12px', textAlign: 'center', color: '#004E92', fontSize: '14px', fontWeight: '600', cursor: 'pointer', backgroundColor: '#eef6fc' }}
+                                className="px-4 py-3 text-center text-sm font-semibold text-blue-700 cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors"
                             >
                                 Xem tất cả kết quả cho "{query}"
                             </li>
                         </ul>
                     ) : (
-                        <div style={{ padding: '20px', textAlign: 'center', color: '#777' }}>Không tìm thấy sản phẩm nào</div>
+                        <div className="p-6 text-center text-gray-500 italic">Không tìm thấy sản phẩm nào</div>
                     )}
                 </>
             ) : (
                 /* TRƯỜNG HỢP 2: Chưa gõ gì -> Hiện Lịch sử & Xu hướng */
-                <div style={{ padding: '15px' }}>
+                <div className="p-4">
                     
                     {/* Phần Lịch sử tìm kiếm */}
                     {history.length > 0 && (
-                        <div style={{ marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#888', textTransform: 'uppercase' }}>🕒 Lịch sử tìm kiếm</div>
-                                {/* Nút Xóa Tất Cả */}
+                        <div className="mb-5">
+                            <div className="flex justify-between items-center mb-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">🕒 Lịch sử tìm kiếm</div>
                                 <span 
                                     onClick={clearAllHistory}
-                                    style={{ fontSize: '12px', color: '#e02424', cursor: 'pointer', textDecoration: 'underline' }}
+                                    className="text-xs text-red-500 hover:text-red-700 cursor-pointer underline decoration-red-200 hover:decoration-red-700 transition"
                                 >
                                     Xóa tất cả
                                 </span>
                             </div>
                             
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            <div className="flex flex-wrap gap-2">
                                 {history.map((item, index) => (
                                     <span 
                                         key={index}
                                         onClick={() => handleSelectKeyword(item)}
-                                        style={{ 
-                                            backgroundColor: '#f1f3f5', 
-                                            padding: '6px 12px', 
-                                            borderRadius: '20px', 
-                                            fontSize: '13px', 
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            color: '#333',
-                                            border: '1px solid #e9ecef',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#e9ecef';
-                                            e.currentTarget.style.borderColor = '#dee2e6';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#f1f3f5';
-                                            e.currentTarget.style.borderColor = '#e9ecef';
-                                        }}
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-full cursor-pointer flex items-center transition border border-gray-200 group/tag"
                                     >
                                         {item}
                                         <span 
                                             onClick={(e) => removeHistoryItem(e, item)}
-                                            style={{ marginLeft: '8px', color: '#adb5bd', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+                                            className="ml-2 text-gray-400 hover:text-red-500 font-bold text-lg leading-none"
                                             title="Xóa từ này"
-                                            onMouseEnter={(e) => e.target.style.color = '#e02424'}
-                                            onMouseLeave={(e) => e.target.style.color = '#adb5bd'}
                                         >×</span>
                                     </span>
                                 ))}
@@ -271,23 +209,24 @@ export default function SearchBar({ onSearch }) {
                     {/* Phần Xu hướng (Trending) */}
                     {trending.length > 0 && (
                         <div>
-                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#888', marginBottom: '10px', textTransform: 'uppercase' }}>🔥 Đang được quan tâm</div>
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">🔥 Đang được quan tâm</div>
+                            <ul>
                                 {trending.map(prod => (
                                     <li 
                                         key={prod._id}
                                         onClick={() => handleSelectProduct(prod._id)}
-                                        style={{ padding: '8px 0', cursor: 'pointer', borderBottom: '1px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                        className="flex justify-between items-center py-2 cursor-pointer border-b border-dashed border-gray-100 hover:bg-gray-50 px-2 rounded transition"
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <div className="flex items-center flex-1 min-w-0">
                                             <img 
                                                 src={prod.thumbnail || (prod.images && prod.images[0]) || DEFAULT_IMAGE} 
-                                                style={{ width: '30px', height: '30px', objectFit: 'contain', marginRight: '10px', borderRadius: '4px' }}
+                                                className="w-8 h-8 object-contain mr-3 rounded border border-gray-200 bg-white"
                                                 onError={(e) => {e.target.src = DEFAULT_IMAGE}}
+                                                alt=""
                                             />
-                                            <span style={{ fontSize: '14px', color: '#333' }}>{prod.product_name}</span>
+                                            <span className="text-sm text-gray-700 truncate">{prod.product_name}</span>
                                         </div>
-                                        <span style={{ fontSize: '11px', color: '#e02424', backgroundColor: '#fde8e8', padding: '2px 6px', borderRadius: '10px' }}>Hot</span>
+                                        <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full ml-2 border border-red-100">Hot</span>
                                     </li>
                                 ))}
                             </ul>

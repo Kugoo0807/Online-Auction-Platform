@@ -7,7 +7,7 @@ import { setAuthToken } from '../services/api'
 export default function OAuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const {setUser} = useAuth()
+  const { setUser } = useAuth()
   const processedRef = useRef(false)
 
   useEffect(() => {
@@ -47,26 +47,9 @@ export default function OAuthCallback() {
   }, [searchParams, navigate, setUser]);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh', 
-      flexDirection: 'column',
-      background: '#c7dbe6',
-      fontFamily: 'Inter, sans-serif',
-      color: '#153243'
-    }}>
-      <div style={{
-        width: '50px',
-        height: '50px',
-        border: '5px solid #b5bec6',
-        borderTopColor: '#284b63',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite'
-      }}></div>
-      <h3 style={{ marginTop: '20px', fontWeight: '600' }}>Processing Google Login...</h3>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    <div className="flex justify-center items-center h-screen flex-col bg-[#c7dbe6] font-sans text-[#153243]">
+      <div className="w-[50px] h-[50px] border-[5px] border-[#b5bec6] border-t-[#284b63] rounded-full animate-spin"></div>
+      <h3 className="mt-5 font-semibold">Processing Google Login...</h3>
     </div>
   )
 }
