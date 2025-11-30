@@ -202,7 +202,7 @@ auctionResultSchema.plugin(checkForeignKeys);
 const ratingSchema = new Schema({
   rater: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   rated_user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  auction_result: { type: Schema.Types.ObjectId, ref: 'AuctionResult', required: true },
+  auction_result: { type: Schema.Types.ObjectId, ref: 'Auction_Result', required: true },
   rating_type: { type: Number, enum: [1, -1], required: true }, 
   comment: String,
 }, { timestamps: true });
@@ -220,7 +220,7 @@ refreshTokenSchema.plugin(checkForeignKeys);
 
 // 12 Chat Message
 const chatMessageSchema = new Schema({
-  auction_result: { type: Schema.Types.ObjectId, ref: 'AuctionResult', required: true },
+  auction_result: { type: Schema.Types.ObjectId, ref: 'Auction_Result', required: true },
   sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true },
   is_read: { type: Boolean, default: false }
@@ -242,7 +242,7 @@ const Category = mongoose.model('Category', categorySchema);
 const Product = mongoose.model('Product', productSchema);
 const Bid = mongoose.model('Bid', bidSchema);
 const QnA = mongoose.model('QnA', qnaSchema);
-const AuctionResult = mongoose.model('AuctionResult', auctionResultSchema);
+const AuctionResult = mongoose.model('Auction_Result', auctionResultSchema);
 const Rating = mongoose.model('Rating', ratingSchema);
 const RefreshToken = mongoose.model('Refresh_Token', refreshTokenSchema);
 const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
