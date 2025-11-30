@@ -6,7 +6,7 @@ export default function MainLayout() {
   return (
     <div>
       <Header />
-      <div style={{ minHeight: '80vh' }}>
+      <div className="min-h-[80vh]">
         {/* Outlet là nơi nội dung của các trang con (HomePage, LoginPage) sẽ hiển thị */}
         <Outlet />
       </div>

@@ -6,6 +6,7 @@ export default function CategoryMenu({ show, onHover, onClickCategory }) {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
+  // 1. Fetch dữ liệu danh mục khi mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -20,6 +21,7 @@ export default function CategoryMenu({ show, onHover, onClickCategory }) {
     fetchData();
   }, []);
 
+  // 2. Xử lý phân loại cha/con
   const rootCategories = categories?.filter(c => !c.parent) || [];
   
   const getChildCategories = (parentId) => {
@@ -35,41 +37,40 @@ export default function CategoryMenu({ show, onHover, onClickCategory }) {
 
   return (
     <div 
-      style={{ 
-        position: 'absolute', top: '100%', left: '0', 
-        width: '600px', backgroundColor: '#FFFFFF', 
-        display: 'flex', flexWrap: 'wrap', gap: '30px', 
-        padding: '25px', borderRadius: '15px', 
-        boxShadow: '0 8px 25px rgba(0,0,0,0.15)', zIndex: 1000, 
-        border: '1px solid #E9ECEF' 
-      }}
+      className="absolute top-full left-0 w-[600px] z-50 pt-3"
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
     >
-      {rootCategories.map((rootCat) => {
-        const subCats = getChildCategories(rootCat._id);
-        return (
-          <div key={rootCat._id} style={{ minWidth: '250px', marginBottom: '15px' }}>
-            <h4 
-              style={{ margin: '0 0 12px 0', color: '#2c3e50', borderBottom: '2px solid #3498db', cursor: 'pointer' }}
-              onClick={() => handleCategoryClick(rootCat.slug)}
-            >
-              {rootCat.category_name}
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              {subCats.map(sub => (
-                <span 
-                  key={sub._id} 
-                  style={{ cursor: 'pointer', color: '#555', fontSize: '14px' }}
-                  onClick={() => handleCategoryClick(sub.slug)}
-                >
-                  • {sub.category_name}
-                </span>
-              ))}
+      <div className="bg-white flex flex-wrap gap-8 p-6 rounded-xl shadow-2xl border border-gray-200">
+        {rootCategories.map((rootCat) => {
+          const subCats = getChildCategories(rootCat._id);
+          return (
+            <div key={rootCat._id} className="min-w-[200px] mb-2 flex-1">
+              
+              {/* Danh mục cha */}
+              <h4 
+                className="text-slate-700 font-bold border-b-2 border-blue-500 cursor-pointer mb-3 pb-1 hover:text-blue-600 transition-colors uppercase tracking-wide text-sm"
+                onClick={() => handleCategoryClick(rootCat.slug)}
+              >
+                {rootCat.category_name}
+              </h4>
+              
+              {/* Danh sách danh mục con */}
+              <div className="flex flex-col gap-2">
+                {subCats.map(sub => (
+                  <span 
+                    key={sub._id} 
+                    className="cursor-pointer text-gray-500 text-sm hover:text-blue-600 hover:translate-x-1 transition-all duration-200 flex items-center"
+                    onClick={() => handleCategoryClick(sub.slug)}
+                  >
+                    <span className="mr-1 text-xs opacity-50">•</span> {sub.category_name}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

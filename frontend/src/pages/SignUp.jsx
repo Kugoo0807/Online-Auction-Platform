@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { authService } from '../services/authService'
-import './SignUp.css'
 
 export default function SignUp() {
   const navigate = useNavigate()
@@ -17,10 +16,8 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Xử lý OAuth callback khi quay lại từ provider (cho signup)
   useEffect(() => {
     if (window.location.pathname === '/oauth/callback') {
-
       const isOAuthCallback = authService.handleOAuthCallback();
       if (isOAuthCallback) {
         navigate('/dashboard', { replace: true });
@@ -65,26 +62,25 @@ export default function SignUp() {
   }
 
   const handleGoogleSignUp = () => {
-    authService.loginWithGoogle() // Dùng chung endpoint với login
+    authService.loginWithGoogle()
   }
 
   const handleFacebookSignUp = () => {
-    authService.loginWithFacebook() // Dùng chung endpoint với login
+    authService.loginWithFacebook()
   }
 
   const handleGitHubSignUp = () => {
-    authService.loginWithGitHub() // Dùng chung endpoint với login
+    authService.loginWithGitHub()
   }
 
   return (
-    <div className="signup-page">
-      <div className="container">
-        <h1>ĐĂNG KÝ TÀI KHOẢN</h1>
+    <div className="bg-[#c7dbe6] min-h-screen flex justify-center py-[60px] font-sans text-[#153243]">
+      <div className="w-[420px]">
+        <h1 className="text-center mb-[30px] text-[20px] font-semibold">ĐĂNG KÝ TÀI KHOẢN</h1>
 
         <form onSubmit={handleSignUp}>
-          <div className="input-group">
-
-            <label>Họ và tên*</label>
+          <div className="mb-[18px]">
+            <label className="block text-[15px] font-semibold">Họ và tên*</label>
             <input
               type="text"
               name="name"
@@ -93,11 +89,12 @@ export default function SignUp() {
               onChange={handleChange}
               required
               disabled={loading}
+              className="w-full p-3 mt-[5px] border border-[#b5bec6] rounded-[3px] bg-[#b5bec6] text-[15px] text-[#153243] focus:outline-none focus:border-[#284b63]"
             />
           </div>
 
-          <div className="input-group">
-            <label>Email*</label>
+          <div className="mb-[18px]">
+            <label className="block text-[15px] font-semibold">Email*</label>
             <input
               type="email"
               name="email"
@@ -106,11 +103,12 @@ export default function SignUp() {
               onChange={handleChange}
               required
               disabled={loading}
+              className="w-full p-3 mt-[5px] border border-[#b5bec6] rounded-[3px] bg-[#b5bec6] text-[15px] text-[#153243] focus:outline-none focus:border-[#284b63]"
             />
           </div>
 
-          <div className="input-group">
-            <label>Địa chỉ*</label>
+          <div className="mb-[18px]">
+            <label className="block text-[15px] font-semibold">Địa chỉ*</label>
             <input
               type="text"
               name="address"
@@ -119,11 +117,12 @@ export default function SignUp() {
               onChange={handleChange}
               required
               disabled={loading}
+              className="w-full p-3 mt-[5px] border border-[#b5bec6] rounded-[3px] bg-[#b5bec6] text-[15px] text-[#153243] focus:outline-none focus:border-[#284b63]"
             />
           </div>
 
-          <div className="input-group">
-            <label>Mật khẩu*</label>
+          <div className="mb-[18px]">
+            <label className="block text-[15px] font-semibold">Mật khẩu*</label>
             <input
               type="password"
               name="password"
@@ -132,11 +131,12 @@ export default function SignUp() {
               onChange={handleChange}
               required
               disabled={loading}
+              className="w-full p-3 mt-[5px] border border-[#b5bec6] rounded-[3px] bg-[#b5bec6] text-[15px] text-[#153243] focus:outline-none focus:border-[#284b63]"
             />
           </div>
 
-          <div className="input-group">
-            <label>Xác nhận mật khẩu*</label>
+          <div className="mb-[18px]">
+            <label className="block text-[15px] font-semibold">Xác nhận mật khẩu*</label>
             <input
               type="password"
               name="confirmPassword"
@@ -145,38 +145,63 @@ export default function SignUp() {
               onChange={handleChange}
               required
               disabled={loading}
+              className="w-full p-3 mt-[5px] border border-[#b5bec6] rounded-[3px] bg-[#b5bec6] text-[15px] text-[#153243] focus:outline-none focus:border-[#284b63]"
             />
           </div>
 
-          {error && <div className="error-text">{error}</div>}
+          {error && <div className="text-[#c62828] text-[13px] mt-1">{error}</div>}
 
-          <div style={{ border: '2px dotted #284b63', width: '200px', height: '70px', margin: '20px auto' }}>
-            <div style={{ fontSize: '13px', textAlign: 'center', paddingTop: '20px', color: '#153243' }}>
+          <div className="border-2 border-dotted border-[#284b63] w-[200px] h-[70px] mx-auto my-5">
+            <div className="text-[13px] text-center pt-5 text-[#153243]">
               [reCAPTCHA]<br />I'm not a robot
             </div>
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full p-3 mt-2.5 bg-[#284b63] border-2 border-[#284b63] text-white cursor-pointer text-[15px] font-semibold transition duration-150 hover:bg-[#1e3a4f] hover:border-[#1e3a4f]"
+          >
             {loading ? 'ĐANG ĐĂNG KÝ...' : 'Đăng ký'}
           </button>
         </form>
 
-        <div className="divider">
-          <span>hoặc đăng ký với</span>
+        <div className="relative text-center my-5 text-[#153243] text-[13px]">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-[#284b63]"></span>
+          </div>
+          <span className="relative bg-[#c7dbe6] px-2 z-10">
+            hoặc đăng ký với
+          </span>
         </div>
 
-        <button className="social-btn" onClick={handleGoogleSignUp}>
+        <button 
+          className="w-full mt-2 p-3.5 text-[15px] border-2 border-[#BFB1C1] bg-white text-[#153243] cursor-pointer font-semibold transition duration-150 hover:bg-[#f5f5f5]"
+          onClick={handleGoogleSignUp}
+        >
           Đăng ký với Google
         </button>
-        <button className="social-btn" onClick={handleFacebookSignUp}>
+        <button 
+          className="w-full mt-2 p-3.5 text-[15px] border-2 border-[#BFB1C1] bg-white text-[#153243] cursor-pointer font-semibold transition duration-150 hover:bg-[#f5f5f5]"
+          onClick={handleFacebookSignUp}
+        >
           Đăng ký với Facebook
         </button>
-        <button className="social-btn" onClick={handleGitHubSignUp}>
+        <button 
+          className="w-full mt-2 p-3.5 text-[15px] border-2 border-[#BFB1C1] bg-white text-[#153243] cursor-pointer font-semibold transition duration-150 hover:bg-[#f5f5f5]"
+          onClick={handleGitHubSignUp}
+        >
           Đăng ký với GitHub
         </button>
 
-        <div className="bottom-text">
-          Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
+        <div className="mt-[15px] text-center text-[14px]">
+          Đã có tài khoản?{' '}
+          <Link 
+            to="/login" 
+            className="font-semibold text-[#284b63] underline hover:text-[#1e3a4f]"
+          >
+            Đăng nhập ngay
+          </Link>
         </div>
       </div>
     </div>
