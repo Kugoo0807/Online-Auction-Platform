@@ -22,28 +22,6 @@ class UserRepository {
     );
   }
 
-  async saveOtp(userId, hashedOtp, expiry) {
-    return await User.findByIdAndUpdate(
-      userId,
-      {
-        password_otp: hashedOtp,
-        otp_expired: expiry,
-      },
-      { new: true }
-    );
-  }
-
-  async clearOtp(userId) {
-    return await User.findByIdAndUpdate(
-      userId,
-      {
-        password_otp: null,
-        otp_expired: null,
-      },
-      { new: true }
-    );
-  }
-
   async findByProviderId(provider, providerId) {
     return await User.findOne({ auth_provider: provider, provider_id: providerId });
   }

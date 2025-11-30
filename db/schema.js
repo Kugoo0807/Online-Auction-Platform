@@ -55,8 +55,6 @@ const userSchema = new Schema({
   date_of_birth: Date,
   phone_number: { type: String, sparse: true },
   address: { type: String },
-  password_otp: { type: String, default: null },
-  otp_expired: { type: Date, default: null },
   auth_provider: { type: String, enum: ['local', 'google', 'facebook'], default: 'local' },
   provider_id: { type: String, default: null },
   rating_score: { type: Number, default: 0 }, // Tổng điểm: cứ +1 hoặc -1

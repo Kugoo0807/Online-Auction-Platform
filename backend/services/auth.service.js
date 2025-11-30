@@ -238,11 +238,11 @@ class AuthService {
                 const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
                 // Lưu OTP
-                await userRepository.saveOtp(user.id, hashedOtp, expiry);
+                await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
                 // Gửi OTP (chưa hash) cho người dùng
                 //await emailService.sendOtp(email, otp);
-                console.log('OTP: ' + otp);
+                console.log('[FORGOT PASSWORD OTP]: ' + otp);
             } catch (e) {
                 throw new Error('Lỗi khi xử lý forgotPassword: ' + e);
             }
@@ -252,22 +252,22 @@ class AuthService {
     }
     
     async resetPassword(email, otp, newPassword) {
+        const otpRecord = await otpRepository.findByEmail(email);
+
+       // Kiểm tra OTP có tồn tại không
+        if (!otpRecord) {
+            throw new Error('Mã OTP không tồn tại hoặc đã hết hạn!');
+        }
+
+        // So sánh mã OTP (hash)
+        const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+        if (!isMatch) {
+            throw new Error('Mã OTP không chính xác!');
+        }
+
         const user = await userRepository.findByEmail(email);
-
-        // Kiểm tra user và OTP
-        if (!user || !user.password_otp || !user.otp_expired) {
-            throw new Error('Yêu cầu không hợp lệ!');
-        }
-
-        // Kiểm tra OTP hết hạn
-        if (user.otp_expired < new Date()) {
-            throw new Error('OTP đã hết hạn!');
-        }
-
-        // Kiểm tra OTP (so sánh với bản đã hash trong DB)
-        const isOtpMatch = await bcrypt.compare(otp, user.password_otp);
-        if (!isOtpMatch) {
-            throw new Error('OTP không chính xác!');
+        if (!user) {
+            throw new Error('Người dùng không tồn tại!');
         }
 
         // Hash mật khẩu mới
