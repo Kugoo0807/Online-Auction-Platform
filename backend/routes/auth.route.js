@@ -5,6 +5,9 @@ import passport from 'passport';
 export function AuthRoutes(authController) {
     const router = express.Router();
 
+    // Gửi OTP (email)
+    router.post('/send-otp', authController.sendOtp);
+
     // Đăng ký (input: email, password, full_name, address, phone_number)
     router.post("/register", authController.register);
     

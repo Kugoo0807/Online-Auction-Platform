@@ -48,12 +48,15 @@ const userSchema = new Schema({
   full_name: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String },
+  // Role & Permissions
   role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
+  seller_expiry_date: { type: Date, default: null },
+  // Profile Info
   date_of_birth: Date,
   phone_number: { type: String, sparse: true },
+  address: { type: String },
   password_otp: { type: String, default: null },
   otp_expired: { type: Date, default: null },
-  address: { type: String },
   auth_provider: { type: String, enum: ['local', 'google', 'facebook'], default: 'local' },
   provider_id: { type: String, default: null },
   rating_score: { type: Number, default: 0 }, // Tổng điểm: cứ +1 hoặc -1
@@ -62,7 +65,7 @@ const userSchema = new Schema({
 
 // 2. UpgradeRequest
 const upgradeRequestSchema = new Schema({
-  user_upgrade: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  bidder: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   approver: { type: Schema.Types.ObjectId, ref: 'User' },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
 }, { timestamps: true });
@@ -120,7 +123,6 @@ const productSchema = new Schema({
   // Các trường logic đấu giá
   auction_start_time: { type: Date, default: Date.now },
   auction_end_time: { type: Date, required: true },
-  max_bids_per_bidder: { type: Number, default: 2 },
   bid_count: { type: Number, default: 0 },              // Tổng số bid của sản phẩm
   auto_bid_map: { type: Map, of: Number, default: {}},  // Map lượt bid của bidder
   bid_counts: { type: Map, of: Number, default: {}},    // Số lần bid của mỗi bidder
@@ -218,6 +220,21 @@ const refreshTokenSchema = new Schema({
 }, { timestamps: true });
 refreshTokenSchema.plugin(checkForeignKeys);
 
+// 12 Chat Message
+const chatMessageSchema = new Schema({
+  auction_result: { type: Schema.Types.ObjectId, ref: 'AuctionResult', required: true },
+  sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true },
+  is_read: { type: Boolean, default: false }
+}, { timestamps: true });
+
+// 13 OTP
+const otpSchema = new Schema({
+    email: { type: String, required: true, index: true },
+    otp: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now, expires: 600 } // Tự động xóa sau 600s (10 phút)
+});
+
 // --- KHAI BÁO MODEL ---
 const User = mongoose.model('User', userSchema);
 const UpgradeRequest = mongoose.model('Upgrade_Request', upgradeRequestSchema);
@@ -230,6 +247,8 @@ const QnA = mongoose.model('QnA', qnaSchema);
 const AuctionResult = mongoose.model('AuctionResult', auctionResultSchema);
 const Rating = mongoose.model('Rating', ratingSchema);
 const RefreshToken = mongoose.model('Refresh_Token', refreshTokenSchema);
+const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+const OtpModel = mongoose.model('Otp', otpSchema);
 
 // --- EXPORT (CommonJS) ---
 module.exports = {
@@ -243,5 +262,7 @@ module.exports = {
   QnA,
   AuctionResult,
   Rating,
-  RefreshToken
+  RefreshToken,
+  ChatMessage,
+  OtpModel
 };

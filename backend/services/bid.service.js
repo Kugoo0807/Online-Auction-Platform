@@ -31,12 +31,6 @@ class BidService {
                 throw new Error("Bạn đã bị người bán chặn đấu giá sản phẩm này!");
             }
 
-            // Validate Số lượt Bid
-            const currentBidCount = product.bid_counts.get(userId) || 0;
-            if (currentBidCount >= product.max_bids_per_bidder) {
-                throw new Error(`Bạn đã hết lượt ra giá (Tối đa: ${product.max_bids_per_bidder} lần)`);
-            }
-
             // Validate Điểm đánh giá
             const bidder = await userRepository.findById(userId);
             if (!bidder) throw new Error("Không tìm thấy thông tin người dùng");

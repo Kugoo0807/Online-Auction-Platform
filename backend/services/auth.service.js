@@ -5,6 +5,7 @@ import crypto from 'crypto';
 
 import { userRepository } from '../repositories/user.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
+import { otpRepository } from '../repositories/otp.repository.js';
 
 import { sendOtp } from './email.service.js';
 
@@ -23,10 +24,43 @@ const googleClient = new OAuth2Client(
 );
 
 class AuthService {
-    async register(registerData) {
-        const { email, password, full_name, address } = registerData;
+    async sendRegisterOtp(email) {
+        const existingUser = await userRepository.findByEmail(email);
+        if (existingUser) {
+            throw new Error('Email đã tồn tại trong hệ thống!');
+        }
 
-        // Kiểm tra tồn tại
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const salt = await bcrypt.genSalt(10);
+        const hashedOtp = await bcrypt.hash(otp, salt);
+
+        await otpRepository.createOrUpdateOtp(email, hashedOtp);
+
+        console.log(`[REGISTER OTP] Gửi tới ${email}: ${otp}`);
+        // TODO: mail service
+
+        return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
+    }
+
+    async register(registerData) {
+        const { email, password, full_name, address, otp } = registerData;
+
+        // Validate đầu vào
+        if (!otp) throw new Error('Vui lòng nhập mã OTP!');
+
+        // Check OTP
+        const otpRecord = await otpRepository.findByEmail(email);
+        
+        if (!otpRecord) {
+            throw new Error('OTP không tồn tại hoặc đã hết hạn!');
+        }
+
+        const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+        if (!isMatch) {
+            throw new Error('Mã OTP không chính xác!');
+        }
+
+        // Check tồn tại user
         const existingUser = await userRepository.findByEmail(email);
         if (existingUser) {
             throw new Error('Email đã tồn tại!');
@@ -43,6 +77,9 @@ class AuthService {
             address: address,
             role: 'bidder' // Mặc định
         });
+
+        // Dọn dẹp OTP
+        await otpRepository.deleteByEmail(email);
 
         // Ẩn mật khẩu
         newUser.password = undefined;
