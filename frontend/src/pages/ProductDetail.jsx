@@ -24,13 +24,13 @@ export default function ProductDetail() {
         const productRes = await productService.getProductDetail(id)
         setProduct(productRes.data)
 
-        // Lấy thông tin category từ categoryService
+        // Lấy thông tin category
         if (productRes.data?.category) {
           try {
             const categoryRes = await categoryService.getAllCategories()
             const fullCategory = categoryRes.data.find(
               cat => cat._id === productRes.data.category._id || 
-                     cat._id === productRes.data.category // nếu category chỉ là ID string
+                     cat._id === productRes.data.category
             )
             setCategoryWithSlug(fullCategory)
           } catch (error) {
@@ -38,7 +38,7 @@ export default function ProductDetail() {
           }
         }
 
-        // Lấy giá đặt thấp nhất nếu user đã đăng nhập
+        // Lấy giá đặt thấp nhất
         if (user) {
           try {
             const priceRes = await productService.getMinValidPrice(id, user._id)
@@ -66,29 +66,30 @@ export default function ProductDetail() {
     fetchProductData()
   }, [id, user])
 
-  // Sử dụng categoryWithSlug nếu có, không thì dùng product.category
   const displayCategory = categoryWithSlug || product?.category
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
+    return <div className="p-10 text-center text-gray-500">Đang tải...</div>
   }
 
   if (!product) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Không tìm thấy sản phẩm</div>
+    return <div className="p-10 text-center text-red-500 font-bold">Không tìm thấy sản phẩm</div>
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="p-5 max-w-7xl mx-auto">
       {/* Breadcrumb */}
-      <nav style={{ marginBottom: '20px', fontSize: '14px' }}>
-        <Link to="/" style={{ color: 'var(--color-primary)' }}>Trang chủ</Link> &gt; 
-        <Link to={`/category/${displayCategory?.slug}`} style={{ color: 'var(--color-primary)' }}>
+      <nav className="mb-6 text-sm text-gray-500">
+        <Link to="/" className="text-blue-600 hover:underline">Trang chủ</Link>
+        <span className="mx-2">&gt;</span>
+        <Link to={`/category/${displayCategory?.slug}`} className="text-blue-600 hover:underline">
           {displayCategory?.category_name}
-        </Link> &gt; 
-        <span style={{ color: 'var(--color-text)' }}>{product.product_name}</span>
+        </Link>
+        <span className="mx-2">&gt;</span>
+        <span className="text-gray-800 font-medium truncate">{product.product_name}</span>
       </nav>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '40px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
         {/* Phần hình ảnh */}
         <ProductImages 
           product={product} 
@@ -130,17 +131,11 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
   return (
     <div>
       {/* Ảnh lớn */}
-      <div style={{ marginBottom: '20px' }}>
+      <div className="mb-5 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <img
           src={allImages[selectedImage]}
           alt={product.product_name}
-          style={{
-            width: '100%',
-            height: '400px',
-            objectFit: 'cover',
-            borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          }}
+          className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
           onError={(e) => {
             e.target.src = '/images/placeholder.jpg'
           }}
@@ -148,21 +143,17 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
       </div>
       
       {/* Danh sách ảnh nhỏ */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <div className="flex gap-3 flex-wrap">
         {allImages.map((image, index) => (
           <img
             key={index}
             src={image}
             alt={`Ảnh ${index + 1}`}
-            style={{
-              width: '80px',
-              height: '80px',
-              objectFit: 'cover',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              border: selectedImage === index ? '3px solid var(--color-accent)' : '1px solid #ddd',
-              transition: 'all 0.2s ease'
-            }}
+            className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${
+              selectedImage === index 
+                ? 'border-blue-600 ring-2 ring-blue-100 scale-105' 
+                : 'border-transparent hover:border-gray-300'
+            }`}
             onClick={() => onSelectImage(index)}
             onError={(e) => {
               e.target.src = '/images/placeholder.jpg'
@@ -224,37 +215,33 @@ function ProductInfo({ product, minValidPrice, user }) {
   }
 
   return (
-    <div style={{ padding: '20px', border: '1px solid var(--color-card-border)', borderRadius: '12px' }}>
-      <h1 style={{ fontSize: '28px', marginBottom: '15px', color: 'var(--color-primary)' }}>
+    <div className="p-6 border border-gray-200 rounded-xl bg-white shadow-sm h-fit">
+      <h1 className="text-3xl font-bold text-blue-900 mb-4 leading-tight">
         {product.product_name}
       </h1>
 
       {/* Trạng thái đấu giá */}
-      <div style={{ 
-        padding: '10px 15px',
-        borderRadius: '6px',
-        marginBottom: '20px',
-        backgroundColor: isAuctionActive() ? '#e8f5e8' : '#ffeaa7',
-        border: `1px solid ${isAuctionActive() ? '#c8e6c9' : '#ffeaa7'}`,
-        color: isAuctionActive() ? '#2e7d32' : '#f57c00',
-        fontWeight: 'bold'
-      }}>
+      <div className={`inline-block px-4 py-2 rounded-full mb-6 text-sm font-bold border ${
+        isAuctionActive() 
+          ? 'bg-green-50 border-green-200 text-green-700' 
+          : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+      }`}>
         {isAuctionActive() ? '🟢 Đang đấu giá' : '🟡 Đã kết thúc'}
       </div>
 
       {/* Giá hiện tại */}
-      <div style={{ marginBottom: '15px' }}>
-        <div style={{ fontSize: '14px', color: 'var(--color-text)', marginBottom: '5px' }}>💰 Giá hiện tại</div>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-accent)' }}>
+      <div className="mb-5 pb-5 border-b border-gray-100">
+        <div className="text-sm text-gray-500 mb-1 font-medium uppercase tracking-wide">💰 Giá hiện tại</div>
+        <div className="text-3xl font-bold text-red-600">
           ₫{formatPrice(product.current_highest_price || product.start_price)}
         </div>
       </div>
 
       {/* Giá mua ngay */}
       {product.buy_it_now_price && product.buy_it_now_price > 0 && (
-        <div style={{ marginBottom: '15px' }}>
-          <div style={{ fontSize: '14px', color: 'var(--color-text)', marginBottom: '5px' }}>🎯 Giá mua ngay</div>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--color-secondary)' }}>
+        <div className="mb-5">
+          <div className="text-sm text-gray-500 mb-1 font-medium">🎯 Giá mua ngay</div>
+          <div className="text-xl font-bold text-blue-600">
             ₫{formatPrice(product.buy_it_now_price)}
           </div>
         </div>
@@ -262,104 +249,73 @@ function ProductInfo({ product, minValidPrice, user }) {
 
       {/* Giá đặt tối thiểu */}
       {minValidPrice > 0 && (
-        <div style={{ marginBottom: '15px' }}>
-          <div style={{ fontSize: '14px', color: 'var(--color-text)', marginBottom: '5px' }}>📊 Giá đặt tối thiểu</div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#e74c3c' }}>
+        <div className="mb-5">
+          <div className="text-sm text-gray-500 mb-1 font-medium">📊 Giá đặt tối thiểu</div>
+          <div className="text-lg font-bold text-gray-800">
             ₫{formatPrice(minValidPrice)}
           </div>
-          <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
+          <div className="text-xs text-gray-500 mt-1">
             Bước giá: ₫{formatPrice(product.bid_increment)}
           </div>
         </div>
       )}
 
       {/* Thông tin đấu giá */}
-      <div style={{ 
-        backgroundColor: isEndingSoon() ? '#fff3cd' : '#e8f5e8',
-        padding: '15px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        border: `1px solid ${isEndingSoon() ? '#ffeaa7' : '#c8e6c9'}`
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontWeight: 'bold' }}>⏳ Thời gian còn lại:</span>
-          <span style={{ 
-            color: isEndingSoon() ? '#e74c3c' : '#27ae60',
-            fontWeight: 'bold'
-          }}>
+      <div className={`p-4 rounded-lg mb-6 border ${
+        isEndingSoon() ? 'bg-orange-50 border-orange-100' : 'bg-gray-50 border-gray-100'
+      }`}>
+        <div className="flex justify-between mb-3 items-center">
+          <span className="font-bold text-gray-700">⏳ Thời gian còn lại:</span>
+          <span className={`font-bold ${isEndingSoon() ? 'text-red-600' : 'text-green-600'}`}>
             {getTimeRemaining(product.auction_end_time)}
           </span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span>🔁 Số lượt ra giá:</span>
-          <span>{product.bid_count || 0}</span>
+        <div className="flex justify-between mb-3 items-center">
+          <span className="text-gray-600">🔁 Số lượt ra giá:</span>
+          <span className="font-semibold text-gray-900">{product.bid_count || 0}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>📈 Bước giá:</span>
-          <span>₫{formatPrice(product.bid_increment)}</span>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">📈 Bước giá:</span>
+          <span className="font-semibold text-gray-900">₫{formatPrice(product.bid_increment)}</span>
         </div>
       </div>
 
       {/* Thông tin người bán */}
-      <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '10px' }}>👤 Người bán</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--color-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold'
-          }}>
-            {product.seller?.full_name?.charAt(0) || 'A'}
-          </div>
-          <div>
-            <div style={{ fontWeight: 'bold' }}>{product.seller?.full_name || "Ẩn danh"}</div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text)' }}>⭐ 4.8/5 (124 đánh giá)</div>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          {product.seller?.full_name?.charAt(0) || 'A'}
+        </div>
+        <div>
+          <div className="text-xs text-gray-500 uppercase font-semibold">👤 Người bán</div>
+          <div className="font-bold text-gray-900">{product.seller?.full_name || "Ẩn danh"}</div>
+          <div className="text-xs text-yellow-500 flex items-center">
+            ⭐ 4.8/5 <span className="text-gray-400 ml-1">(124 đánh giá)</span>
           </div>
         </div>
       </div>
 
       {/* Thông tin người đặt giá cao nhất */}
       {product.current_highest_bidder && (
-        <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '16px', marginBottom: '10px' }}>👑 Người đặt giá cao nhất</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '35px',
-              height: '35px',
-              borderRadius: '50%',
-              backgroundColor: '#f39c12',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '12px'
-            }}>
-              {product.current_highest_bidder.full_name?.charAt(0) || 'B'}
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold' }}>{product.current_highest_bidder.full_name}</div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text)' }}>⭐ 4.5/5 (89 đánh giá)</div>
-            </div>
+        <div className="mb-6 flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+          <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+            {product.current_highest_bidder.full_name?.charAt(0) || 'B'}
+          </div>
+          <div>
+            <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">👑 Người giữ giá cao nhất</div>
+            <div className="font-bold text-gray-900">{product.current_highest_bidder.full_name}</div>
           </div>
         </div>
       )}
 
       {/* Thời gian đăng & kết thúc */}
-      <div style={{ borderTop: '1px solid var(--color-card-border)', paddingTop: '15px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+      <div className="border-t border-gray-100 pt-4 text-sm text-gray-600 space-y-2">
+        <div className="flex justify-between">
           <span>📅 Thời điểm đăng:</span>
-          <span>{formatDate(product.auction_start_time)}</span>
+          <span className="font-medium text-gray-800">{formatDate(product.auction_start_time)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="flex justify-between">
           <span>🕒 Thời điểm kết thúc:</span>
-          <span>{formatDate(product.auction_end_time)}</span>
+          <span className="font-medium text-gray-800">{formatDate(product.auction_end_time)}</span>
         </div>
       </div>
     </div>
@@ -369,23 +325,11 @@ function ProductInfo({ product, minValidPrice, user }) {
 // Component mô tả chi tiết
 function ProductDescription({ product }) {
   return (
-    <div style={{ marginBottom: '40px' }}>
-      <h2 style={{ 
-        fontSize: '24px', 
-        marginBottom: '15px',
-        paddingBottom: '10px',
-        borderBottom: '2px solid var(--color-primary)'
-      }}>
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
         📝 Mô tả chi tiết
       </h2>
-      <div 
-        style={{ 
-          lineHeight: '1.6',
-          fontSize: '16px',
-          color: 'var(--color-text)',
-          whiteSpace: 'pre-wrap'
-        }}
-      >
+      <div className="bg-white p-6 rounded-xl border border-gray-200 text-gray-700 leading-relaxed whitespace-pre-wrap">
         {product.description || 'Chưa có mô tả cho sản phẩm này.'}
       </div>
     </div>
@@ -416,74 +360,46 @@ function BiddingSection({ product, minValidPrice, user }) {
   }
 
   return (
-    <div style={{ marginBottom: '40px' }}>
-      <h2 style={{ 
-        fontSize: '24px', 
-        marginBottom: '15px',
-        paddingBottom: '10px',
-        borderBottom: '2px solid var(--color-primary)'
-      }}>
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
         💰 Đặt giá
       </h2>
       
-      <div style={{ 
-        padding: '20px', 
-        backgroundColor: 'var(--color-card-bg)',
-        borderRadius: '8px',
-        border: '1px solid var(--color-card-border)'
-      }}>
+      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         {user ? (
           <div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            <div className="mb-4">
+              <label className="block mb-2 font-bold text-gray-700">
                 Giá đặt của bạn (₫)
               </label>
-              <input
-                type="number"
-                value={bidAmount}
-                onChange={(e) => setBidAmount(Number(e.target.value))}
-                min={minValidPrice}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '16px'
-                }}
-              />
-              <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '5px' }}>
-                Giá đặt tối thiểu: ₫{formatPrice(minValidPrice)}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(Number(e.target.value))}
+                    min={minValidPrice}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-medium text-gray-900"
+                  />
+                  <div className="text-sm text-gray-500 mt-2 ml-1">
+                    Giá đặt tối thiểu: <span className="font-semibold text-gray-700">₫{formatPrice(minValidPrice)}</span>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleBid}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
+                >
+                  Đặt giá ngay
+                </button>
               </div>
             </div>
-            <button
-              onClick={handleBid}
-              style={{
-                padding: '12px 30px',
-                backgroundColor: 'var(--color-accent)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                width: '100%'
-              }}
-            >
-              Đặt giá ngay - ₫{formatPrice(bidAmount)}
-            </button>
           </div>
         ) : (
-          <div style={{ textAlign: 'center', color: 'var(--color-text)' }}>
-            <p>Vui lòng đăng nhập để tham gia đấu giá</p>
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4 font-medium">Vui lòng đăng nhập để tham gia đấu giá sản phẩm này</p>
             <Link to="/login">
-              <button style={{
-                padding: '10px 20px',
-                backgroundColor: 'var(--color-primary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                marginTop: '10px'
-              }}>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md">
                 Đăng nhập ngay
               </button>
             </Link>
@@ -494,25 +410,14 @@ function BiddingSection({ product, minValidPrice, user }) {
   )
 }
 
-// Component Q&A (Tạm thời để placeholder)
+// Component Q&A
 function ProductQA({ productId }) {
   return (
-    <div style={{ marginBottom: '40px' }}>
-      <h2 style={{ 
-        fontSize: '24px', 
-        marginBottom: '15px',
-        paddingBottom: '10px',
-        borderBottom: '2px solid var(--color-primary)'
-      }}>
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
         ❓ Hỏi & Đáp
       </h2>
-      <div style={{ 
-        padding: '20px', 
-        textAlign: 'center',
-        color: 'var(--color-text)',
-        backgroundColor: 'var(--color-card-bg)',
-        borderRadius: '8px'
-      }}>
+      <div className="bg-white p-10 text-center rounded-xl border border-gray-200 text-gray-500 italic">
         Tính năng đang được phát triển...
       </div>
     </div>
@@ -524,21 +429,11 @@ function RelatedProducts({ products }) {
   if (!products || products.length === 0) return null
 
   return (
-    <div>
-      <h2 style={{ 
-        fontSize: '24px', 
-        marginBottom: '20px',
-        paddingBottom: '10px',
-        borderBottom: '2px solid var(--color-primary)'
-      }}>
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
         🔄 Sản phẩm cùng chuyên mục
       </h2>
-      <div style={{
-        display: 'flex',
-        gap: '20px',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-start'
-      }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}

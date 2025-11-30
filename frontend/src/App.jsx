@@ -12,7 +12,7 @@ import OAuthCallback from './pages/OAuthCallback'
 import CategoryPage from './pages/CategoryPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import SearchPage from './pages/SearchPage'; // Trang tìm kiếm
+import SearchPage from './pages/SearchPage';
 import ProductDetail from './pages/ProductDetail';
 
 // Components

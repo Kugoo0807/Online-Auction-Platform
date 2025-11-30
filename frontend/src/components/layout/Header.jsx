@@ -16,34 +16,31 @@ export default function Header() {
 
   const handleSearch = (query) => {
     if (query.trim()) {
-      // Chuyển hướng sang trang SearchPage kèm từ khóa
       navigate(`/search?keyword=${encodeURIComponent(query.trim())}`);
     }
   };
-  // -------------------------------------------------------------
 
   return (
-    <div style={{ backgroundColor: 'var(--color-primary)', padding: '15px 20px', display: 'flex', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', position: 'relative', zIndex: 500 }}>
-      {/* Logo */}
-      <Link to="/" style={{ 
-        textDecoration: 'none', 
-        color: 'white', 
-        fontSize: '24px', 
-        fontWeight: 'bold', 
-        marginRight: '20px',
-        flexShrink: 0
-      }}>
+    <header className="bg-gray-900 py-4 px-6 flex items-center shadow-lg relative z-50">
+      
+      {/* 1. Logo */}
+      <Link 
+        to="/" 
+        className="text-white text-2xl font-bold mr-6 shrink-0 hover:text-blue-400 transition-colors duration-200"
+      >
         AuctionHub
       </Link>
 
-      {/* Danh mục Button & Dropdown */}
+      {/* 2. Nút Danh mục & Dropdown */}
       <div 
+        className="relative shrink-0"
         onMouseEnter={() => setShowCategories(true)} 
         onMouseLeave={() => setShowCategories(false)} 
-        style={{ position: 'relative', flexShrink: 0 }}>
-        <button style={{ backgroundColor: '#151718ff', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px', cursor: 'pointer', color: 'white', whiteSpace: 'nowrap' }}>
-          📂 Danh mục
+      >
+        <button className="bg-gray-800 text-white text-lg py-2.5 px-6 rounded-full min-w-[150px] hover:bg-gray-700 transition duration-200 flex items-center justify-center whitespace-nowrap border border-gray-700 cursor-pointer">
+          <span className="mr-2">📂</span> Danh mục
         </button>
+        
         <CategoryMenu 
             show={showCategories} 
             onHover={setShowCategories} 
@@ -51,83 +48,50 @@ export default function Header() {
         />
       </div>
 
-      {/* Search Bar */}
-      <div style={{ margin: '0 20px', flex: 1, minWidth: '200px' }}>
+      {/* 3. Search Bar */}
+      <div className="mx-6 flex-1 min-w-[200px]">
         <SearchBar onSearch={handleSearch} />
       </div>
 
-      {/* User Actions */}
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
+      {/* 4. User Actions */}
+      <div className="ml-auto flex items-center gap-4 shrink-0">
         {user ? (
           <>
-             <Link to="/create-auction"><button style={{ padding: '8px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer', backgroundColor: '#e2e8f0', fontWeight: 'bold' }}>➕ Tạo đấu giá</button></Link>
-             <span style={{ color: 'white', fontWeight: '500' }}>👤 {user.name || user.email}</span>
-             <button onClick={handleLogout} style={{ padding: '8px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer', backgroundColor: '#ef4444', color: 'white' }}>Đăng xuất</button>
+            <Link to="/create-auction">
+              <button className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg font-semibold hover:bg-white hover:shadow transition duration-200 flex items-center cursor-pointer">
+                ➕ <span className="hidden sm:inline ml-1">Tạo đấu giá</span>
+              </button>
+            </Link>
+            
+            <span className="text-gray-200 font-medium truncate max-w-[150px]">
+              👤 {user.name || user.email}
+            </span>
+            
+            <button 
+              onClick={handleLogout} 
+              className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition duration-200 cursor-pointer"
+            >
+              Đăng xuất
+            </button>
           </>
         ) : (
           <>
-            <Link to="/login"><button style={{ padding: '8px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer', marginRight: '10px' }}>Đăng nhập</button></Link>
-            <Link to="/signup"><button style={{ padding: '8px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer', backgroundColor: '#3b82f6', color: 'white' }}>Đăng ký</button></Link>
+            
+            <Link to="/login">
+              <button className="bg-gray-800 text-white px-5 py-2 rounded-lg font-medium hover:bg-gray-600 hover:text-white transition duration-200 whitespace-nowrap border border-gray-600 cursor-pointer">
+                Đăng nhập
+              </button>
+            </Link>
+
+
+            <Link to="/signup">
+              <button className="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200 whitespace-nowrap shadow-md shadow-blue-900/20 cursor-pointer">
+                Đăng ký
+              </button>
+            </Link>
           </>
         )}
       </div>
-    </div>
-  );
-
-  const btnStyle = {
-    whiteSpace: 'nowrap',
-    cursor: 'pointer'
-  };
-
-  return (
-    <div style={{ backgroundColor: 'var(--color-primary)', padding: '15px 20px', display: 'flex', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-      {/* Logo */}
-      <Link to="/" style={{ 
-        textDecoration: 'none', 
-        color: 'white', 
-        fontSize: '24px', 
-        fontWeight: 'bold', 
-        marginRight: '20px',
-        flexShrink: 0
-      }}>
-        AuctionHub
-      </Link>
-
-      {/* Danh mục Button & Dropdown */}
-      <div 
-        onMouseEnter={() => setShowCategories(true)} 
-        onMouseLeave={() => setShowCategories(false)} 
-        style={{ position: 'relative', flexShrink: 0 }}>
-        <button style={{ backgroundColor: '#181818ff', fontSize: '18px', border: 'none', padding: '12px 20px', borderRadius: '25px', minWidth: '150px', whiteSpace: 'nowrap' }}>
-          📂 Danh mục
-        </button>
-        <CategoryMenu 
-            show={showCategories} 
-            onHover={setShowCategories} 
-            onClickCategory={(name) => console.log(name)} 
-        />
-      </div>
-
-      {/* Search Bar */}
-      <div style={{ margin: '0 20px', flex: 1, minWidth: '200px' }}>
-        <SearchBar onSearch={handleSearch} />
-      </div>
-
-      {/* User Actions */}
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
-        {user ? (
-          <>
-             <Link to="/create-auction"><button>➕ Tạo đấu giá</button></Link> {/* Thêm style vào nhé */}
-             <span>👤 {user.name || user.email}</span>
-             <button onClick={handleLogout}>Đăng xuất</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login"><button>Đăng nhập</button></Link>
-            <Link to="/signup"><button>Đăng ký</button></Link>
-          </>
-        )}
-      </div>
-    </div>
+    </header>
   );
 }
