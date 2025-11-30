@@ -1,10 +1,8 @@
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
-// import { ratingRepository } from '../repositories/rating.repository.js'; // Mở ra khi làm module Rating
+import { ratingService } from '../services/rating.service.js';
 import { executeTransaction } from '../../db/db.helper.js';
 
 class AuctionResultService {
-
-    // Lấy chi tiết đơn hàng (Dùng chung cho cả 2 bên xem)
     async getOrderDetails(orderId, userId) {
         const order = await auctionResultRepository.findById(orderId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
@@ -20,31 +18,29 @@ class AuctionResultService {
         return order;
     }
 
-    // --- BƯỚC 1: NGƯỜI MUA THANH TOÁN ---
+    // ======= NGƯỜI MUA THANH TOÁN =======
     async submitPayment(userId, productId, address, paymentProofUrl) {
-        // 1. Tìm đơn hàng qua Product ID
         const order = await auctionResultRepository.findByProduct(productId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
-        // 2. Validate quyền hạn
+        // Validate quyền hạn & trạng thái
         if (order.winning_bidder._id.toString() !== userId) {
             throw new Error("Bạn không phải người thắng cuộc của sản phẩm này");
         }
 
-        // 3. Validate trạng thái
         if (order.status !== 'pending_payment') {
             throw new Error("Trạng thái đơn hàng không hợp lệ để thanh toán");
         }
 
-        // 4. Update
         return await auctionResultRepository.updatePaymentInfo(order._id, address, paymentProofUrl);
     }
 
-    // --- BƯỚC 2: SELLER XÁC NHẬN GỬI HÀNG ---
+    // ======= SELLER XÁC NHẬN GỬI HÀNG =======
     async confirmShipment(userId, productId, shippingProofUrl) {
         const order = await auctionResultRepository.findByProduct(productId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
+        // Validate quyền hạn & trạng thái
         if (order.seller._id.toString() !== userId) {
             throw new Error("Bạn không phải người bán sản phẩm này");
         }
@@ -56,11 +52,12 @@ class AuctionResultService {
         return await auctionResultRepository.updateShipmentInfo(order._id, shippingProofUrl);
     }
 
-    // --- BƯỚC 3: NGƯỜI MUA XÁC NHẬN ĐÃ NHẬN HÀNG ---
+    // ======= NGƯỜI MUA XÁC NHẬN ĐÃ NHẬN HÀNG =======
     async confirmReceipt(userId, productId) {
         const order = await auctionResultRepository.findByProduct(productId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
+        // Validate quyền hạn & trạng thái
         if (order.winning_bidder._id.toString() !== userId) {
             throw new Error("Không có quyền thực hiện");
         }
@@ -72,14 +69,13 @@ class AuctionResultService {
         return await auctionResultRepository.completeTransaction(order._id);
     }
 
-    // --- HUỶ GIAO DỊCH (SELLER ONLY) ---
+    // ======= HUỶ GIAO DỊCH (SELLER ONLY) =======
     async cancelTransaction(sellerId, productId, reason) {
-        // Dùng transaction vì cần update đơn hàng VÀ trừ điểm uy tín cùng lúc
         return await executeTransaction(async (session) => {
             const order = await auctionResultRepository.findByProduct(productId);
             if (!order) throw new Error("Đơn hàng không tồn tại");
 
-            // 1. Validate
+            // Validate
             if (order.seller._id.toString() !== sellerId) {
                 throw new Error("Bạn không có quyền huỷ đơn hàng này");
             }
@@ -87,22 +83,16 @@ class AuctionResultService {
                 throw new Error("Không thể huỷ đơn hàng đã hoàn tất hoặc đã huỷ trước đó");
             }
 
-            // 2. Update trạng thái đơn hàng
+            // Update trạng thái đơn hàng & đánh giá -1 cho bidder
             const updatedOrder = await auctionResultRepository.cancelTransaction(order._id, reason, session);
-
-            // 3. Tự động đánh giá -1 cho Bidder (Theo đề bài: Seller huỷ -> phat Seller? Hay Bidder?)
-            // ĐỀ BÀI: "Người bán có thể cancel... và đánh giá -1 cho người thắng cuộc"
-            // -> Tức là Bidder sai (ko trả tiền) nên Seller huỷ và trừ điểm Bidder.
             
-            /* TODO: Mở comment khi đã có Rating Repository
-            await ratingRepository.create({
+            await ratingService.addRating({
                 rater: sellerId,
-                rated_user: order.winning_bidder,
+                rated_user: order.winning_bidder._id,
                 auction_result: order._id,
-                rating_type: -1, // Trừ điểm
+                rating_type: -1,
                 comment: `Giao dịch bị huỷ bởi người bán. Lý do: ${reason}`
             }, session);
-            */
 
             return updatedOrder;
         });

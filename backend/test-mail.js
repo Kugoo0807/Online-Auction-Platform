@@ -4,12 +4,12 @@ dotenv.config();
 import * as mailService from '../backend/services/email.service.js';
 
 
-const TARGET_EMAIL = '<email>@gmail.com'; // Thay bằng email của bạn để test
+const TARGET_EMAIL = '<testmail>@gmail.com'; // Thay bằng email của bạn để test
 const PRODUCT_LINK = 'http://localhost:3000/products/iphone-15-pro-max';
 
 
 const mockData = {
-    productName: 'iPhone 15 Pro Max 256GB VN/A',
+    productName: 'iPhone 13 Pro Max 256GB VN/A',
     price: 28500000,
     bidderName: 'Nguyễn Văn A',
     winnerName: 'Trần Thị B',
@@ -17,6 +17,17 @@ const mockData = {
     question: 'Máy còn bảo hành chính hãng không shop ơi?',
     answer: 'Chào bạn, máy còn bảo hành đến tháng 10/2026 nhé.'
 };
+
+async function runDemo() {
+    try {
+        console.log('5️⃣  Đang test: notifyBidRejected...');
+        await mailService.notifyBidRejected(TARGET_EMAIL, mockData.productName);
+        console.log('   ✅ Done.');
+    } catch (error) {
+        console.error('\n❌ Có lỗi xảy ra trong quá trình test:');
+        console.error(error);
+    }
+}
 
 async function runTest() {
     console.log(`🚀 Bắt đầu test gửi mail đến: ${TARGET_EMAIL}\n`);
@@ -31,11 +42,11 @@ async function runTest() {
         console.log('   ✅ Done.');
 
         console.log('3️⃣  Đang test: notifyBidSuccess...');
-        await mailService.notifyBidSuccess(TARGET_EMAIL, mockData.productName, mockData.price, PRODUCT_LINK);
+        await mailService.notifyBidSuccess(TARGET_EMAIL, mockData.productName, mockData.winnerName, mockData.price, mockData.price + 100000, PRODUCT_LINK);
         console.log('   ✅ Done.');
 
         console.log('4️⃣  Đang test: notifyOutbid...');
-        await mailService.notifyOutbid(TARGET_EMAIL, mockData.productName, mockData.price + 500000, PRODUCT_LINK);
+        await mailService.notifyHolder(TARGET_EMAIL, mockData.productName, mockData.price + 500000, TARGET_EMAIL, PRODUCT_LINK);
         console.log('   ✅ Done.');
 
         console.log('5️⃣  Đang test: notifyBidRejected...');
@@ -74,3 +85,4 @@ async function runTest() {
 
 // Chạy test
 runTest();
+//runDemo();
