@@ -119,7 +119,7 @@ function ProductInfo({ product }) {
       {/* Giá hiện tại */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">📌 Giá hiện tại:</span>
-        <span className="font-medium text-gray-900">₫{formatPrice(product.current_highest_price || product.start_price)}</span>
+        <span className="font-medium text-gray-900">&nbsp;{formatPrice(product.current_highest_price || product.start_price)}₫</span>
       </div>
 
       {/* Người bán */}
@@ -133,7 +133,7 @@ function ProductInfo({ product }) {
         <div className="flex">
           <span className="min-w-[100px] font-bold text-gray-700">💰 Mua ngay:</span>
           <span className="text-blue-600 font-bold">
-            ₫{formatPrice(product.buy_it_now_price)}
+            &nbsp;{formatPrice(product.buy_it_now_price)}₫
           </span>
         </div>
       )}
@@ -141,7 +141,7 @@ function ProductInfo({ product }) {
       {/* Ngày đăng */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">📅 Ngày đăng:</span>
-        <span>{formatDate(product.auction_start_time || product.createdAt)}</span>
+        <span>&nbsp;{formatDate(product.auction_start_time || product.createdAt)}</span>
       </div>
 
       {/* Thời gian còn lại */}
@@ -155,7 +155,7 @@ function ProductInfo({ product }) {
       {/* Số lượt ra giá */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">🔁 Lượt ra giá:</span>
-        <span>{product.bid_count || 0}</span>
+        <span>&nbsp;{product.bid_count || 0}</span>
       </div>
     </div>
   );
