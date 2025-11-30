@@ -77,6 +77,8 @@ class UserRepository {
             { new: true, session }
         );
     }
+  
+  
 }
 
 export const userRepository = new UserRepository();
