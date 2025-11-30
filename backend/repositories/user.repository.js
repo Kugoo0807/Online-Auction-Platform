@@ -78,7 +78,13 @@ class UserRepository {
         );
     }
   
-  
+  async updateRole(userId, newRole) {
+    return await User.findByIdAndUpdate(
+      userId,
+      { role: newRole },
+      { new: true, runValidators: true }
+    );
+  }
 }
 
 export const userRepository = new UserRepository();
