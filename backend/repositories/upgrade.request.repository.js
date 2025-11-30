@@ -2,18 +2,18 @@ import { UpgradeRequest } from '../../db/schema.js';
 
 class UpgradeRequestRepository {
     async create(userId) {
-        return await UpgradeRequest.create(userId);
+        return await UpgradeRequest.create({ bidder: userId });
     }
 
     async findPendingRequests() {
         return await UpgradeRequest.find({ status: 'pending' })
-        .populate('user_upgrade', 'full_name email') 
-        .sort({ createdAt: 1 }); 
+            .populate('bidder', 'full_name email')
+            .sort({ createdAt: 1 });
     }
 
     async findById(id) {
         return await UpgradeRequest.findById(id)
-            .populate('user_upgrade', 'full_name email');
+            .populate('bidder', 'full_name email');
     }
 
     async updateStatus(id, status, approverId) {
@@ -21,7 +21,7 @@ class UpgradeRequestRepository {
             id,
             {
                 status: status,
-                approver: approverId 
+                approver: approverId
             },
             { new: true }
         );
@@ -29,8 +29,8 @@ class UpgradeRequestRepository {
 
     async findPendingByUserId(userId) {
         return await UpgradeRequest.findOne({
-        user_upgrade: userId,
-        status: 'pending'
+            bidder: userId,
+            status: 'pending'
         });
     }
 }
