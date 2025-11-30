@@ -10,6 +10,7 @@ const CategoryPage = () => {
   const [products, setProducts] = useState([]);
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
+  const [parentCategory, setParentCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // 2. CALL API
@@ -24,6 +25,7 @@ const CategoryPage = () => {
         setProducts(result.data || []);
         setCategoryName(result.categoryName || slug);
         setDescription(result.description || ''); 
+        setParentCategory(result.parentCategory || null); 
       } catch (error) {
         console.error("Lỗi tải danh mục:", error);
         setCategoryName("Danh mục không tồn tại");
@@ -35,7 +37,7 @@ const CategoryPage = () => {
     fetchProducts();
   }, [slug]);
 
-  // Thêm logic hiển thị Loading State (nếu cần)
+  // Hiển thị Loading State
   if (loading && !products.length) {
     return (
       <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">
@@ -50,11 +52,28 @@ const CategoryPage = () => {
         
         {/* --- HEADER --- */}
         <div className="mb-12">
-          {/* Breadcrumb */}
-          <div className="text-gray-500 text-sm font-medium mb-3">
+          
+          {/* --- BREADCRUMB (THANH ĐIỀU HƯỚNG) --- */}
+          <div className="text-gray-500 text-sm font-medium mb-3 flex items-center flex-wrap">
             <Link to="/" className="text-gray-500 hover:text-blue-600 transition">TRANG CHỦ</Link>
+            
+            {/* Logic hiển thị: Nếu có cha -> Hiện cha / Hiện con. Nếu không -> Hiện con */}
+            {parentCategory ? (
+                <>
+                    <span className="mx-2"> / </span>
+                    <Link 
+                        to={`/category/${parentCategory.slug}`}
+                        className="uppercase text-gray-500 hover:text-blue-600 transition"
+                    >
+                        {parentCategory.category_name}
+                    </Link>
+                </>
+            ) : null}
+
             <span className="mx-2"> / </span>
-            <span className="uppercase tracking-wider text-gray-400">DANH MỤC</span>
+            <span className="uppercase tracking-wider text-blue-600 font-bold">
+                {categoryName}
+            </span>
           </div>
           
           {/* Tên danh mục */}
