@@ -67,16 +67,29 @@ class UserRepository {
     );
   }
 
+  async clearOtp(userId) {
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        $unset: {
+          otp: 1,
+          otp_expires: 1
+        }
+      },
+      { new: true }
+    );
+  }
+
   async updateRatingStats(userId, score, count, session = null) {
-        return await User.findByIdAndUpdate(
-            userId,
-            { 
-                rating_score: score,
-                rating_count: count
-            },
-            { new: true, session }
-        );
-    }
+  return await User.findByIdAndUpdate(
+    userId,
+    {
+      rating_score: score,
+      rating_count: count
+    },
+    { new: true, session }
+  );
+}
 }
 
 export const userRepository = new UserRepository();

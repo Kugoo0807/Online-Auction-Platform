@@ -1,41 +1,37 @@
+// pages/ResetPassword.js
 import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 
 export default function ResetPassword() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const email = searchParams.get('email');
+  
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get('email');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setMessage('');
 
-    if (!email) {
-      return setMessage('Email không hợp lệ');
-    }
-
     if (newPassword !== confirmPassword) {
-      return setMessage('Mật khẩu không khớp');
+      setMessage('Mật khẩu xác nhận không khớp');
+      setLoading(false);
+      return;
     }
-
-    if (newPassword.length < 6) {
-      return setMessage('Mật khẩu phải có ít nhất 6 ký tự');
-    }
-
-    setLoading(true);
 
     const result = await authService.resetPassword(email, otp, newPassword);
     
     if (result.success) {
       setMessage(result.message);
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } else {
       setMessage(result.message);
     }
