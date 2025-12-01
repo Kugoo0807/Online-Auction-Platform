@@ -76,6 +76,7 @@ class BidService {
             }
 
             // Cập nhật dữ liệu
+            const currentBidCount = product.bid_counts.get(userId) || 0;
             product.bid_counts.set(userId, currentBidCount + 1);
             product.auto_bid_map.set(userId, amount);
             product.bid_count += 1;
