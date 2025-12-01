@@ -158,7 +158,7 @@ class ProductController {
 
     async getMinValidPrice(req, res) {
         try {
-            const user = req.user._id;
+            const user = req.user._id.toString();
             const { id } = req.params;
 
             const result = await productService.getMinValidPrice(id, user);
@@ -174,7 +174,8 @@ class ProductController {
     async banBidder(req, res) {
         try {
             const seller = req.user._id.toString();
-            const { product, bidder } = req.body;
+            const product = req.params.id;
+            const { bidder } = req.body;
             
             const result = await productService.banBidder(seller, product, bidder);
             return res.status(200).json({
@@ -189,13 +190,55 @@ class ProductController {
     async unbanBidder(req, res) {
         try {
             const seller = req.user._id.toString();
-            const { product, bidder } = req.body;
+            const product = req.params.id;
+            const { bidder } = req.body;
             
             const result = await productService.unbanBidder(seller, product, bidder);
             return res.status(200).json({
                 message: "Đã bỏ chặn và khôi phục quyền đấu giá",
                 result
             })
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async toggleWatchList(req, res) {
+        try {
+            const user = req.user._id;
+            const product = req.params.id;
+            
+            const result = await productService.toggleWatchList(user, product);
+            return res.status(200).json(result);
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async getWatchList(req, res) {
+        try {
+            const user = req.user._id;
+            const products = await productService.getWatchList(user);
+
+            return res.status(200).json({
+                message: 'Đã lấy thành công danh sách yêu thích',
+                data: products
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async checkIsWatching(req, res) {
+        try {
+            const user = req.user._id;
+            const product = req.params.id;
+
+            const isWatching = await productService.checkIsWatching(user, product);
+
+            return res.status(200).json({
+                is_watching: isWatching
+            });
         } catch (error) {
             return res.status(400).json({ message: error.message });
         }
