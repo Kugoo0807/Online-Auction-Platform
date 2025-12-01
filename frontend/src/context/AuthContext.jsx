@@ -10,6 +10,33 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    setAuthToken(null);
+    setUser(null);
+    navigate('./login', { replace: true });
+  };
+
+  const fetchCurrentUser = async() => {
+    try {
+      const profileRes = await authService.getProfile();
+      if (profileRes && profileRes.user) {
+        setUser(profileRes.user);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      
+      if (error.response && error.response.status === 401) {
+         console.warn("Phiên đăng nhập hết hạn hoặc không hợp lệ. Đang đăng xuất...");
+         await logout();
+      }
+    }
+  }
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -18,8 +45,7 @@ export function AuthProvider({ children }) {
           const rawToken = data.token.replace('Bearer ', '');
           setAuthToken(rawToken);
 
-          const profileRes = await authService.getProfile();
-          setUser(profileRes.user);
+          await fetchCurrentUser(); 
         }
       } catch (error) {
         setUser(null);
@@ -38,8 +64,8 @@ export function AuthProvider({ children }) {
       const rawToken = data.accessToken.replace('Bearer ', '');
       setAuthToken(rawToken);
 
-      const profileRes = await authService.getProfile();
-      setUser(profileRes.user);
+      await fetchCurrentUser();
+
       return { success: true, data };
     } catch (error) {
         console.error('Login error:', error);
@@ -54,17 +80,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       return { success: false, error: error.response?.data?.message || error.message };
     }
-  };
-
-  const logout = async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    setAuthToken(null);
-    setUser(null);
-    navigate('./login', { replace: true });
   };
 
   return (
