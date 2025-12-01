@@ -98,7 +98,7 @@ const SearchPage = () => {
             <ProductSection products={products} loading={loading} />
 
             {/* --- PHÂN TRANG--- */}
-            {totalPages > 1 && (
+            {totalPages >= 1 && (
               <div className="mt-12 flex justify-center items-center space-x-2 select-none">
                 <button
                   onClick={() => handlePageChange(page - 1)}
