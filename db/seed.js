@@ -49,7 +49,8 @@ const seedDatabase = async () => {
         password: hashedPassword, 
         role: "seller", 
         address: "Hà Nội",
-        phone_number: "0901234567"
+        phone_number: "0901234567",
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
       },
       { 
         full_name: "Trần Thị Buôn (Seller 2)", 
@@ -57,7 +58,8 @@ const seedDatabase = async () => {
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
-        phone_number: "0909888777"
+        phone_number: "0909888777",
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
       },
       { 
         full_name: "Lê Văn Mua (Bidder 1)", 

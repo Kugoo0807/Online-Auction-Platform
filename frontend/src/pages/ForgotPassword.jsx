@@ -79,9 +79,6 @@ export default function ForgotPassword() {
         {emailSent && (
           <div className="mt-6 text-center">
             <p className="text-[#153243] mb-2">📧 OTP đã được gửi đến email của bạn</p>
-            <p className="text-[13px] text-[#153243] mb-4">
-              💡 <strong>Lưu ý Development:</strong> Kiểm tra terminal backend để lấy OTP 6 số
-            </p>
             
             <div className="navigation-buttons">
               <button 
