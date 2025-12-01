@@ -92,7 +92,7 @@ class ProductService {
         const userFloor = product.auto_bid_map.get(userId.toString()) || 0;
 
         return {
-            min_valid_price: Math.max(globalFloor, userFloor + 1)
+            min_valid_price: Math.max(globalFloor, userFloor + product.bid_increment)
         };
     }
 
