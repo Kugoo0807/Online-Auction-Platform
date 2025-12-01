@@ -1,5 +1,5 @@
 import api from './api';
-import { categories as MOCK_CATEGORIES } from '../data/categories';
+import { categories as MOCK_CATEGORIES, MOCK_PRODUCTS } from '../data/categories';
 
 const IS_USE_MOCK = false; 
 
@@ -30,20 +30,49 @@ export const categoryService = {
     }
   },
 
-  // 3. Lấy sản phẩm & Thông tin cha con (UPDATED)
-  getProductsByCategorySlug: async (slug) => {
+  // 3. Lấy sản phẩm & Thông tin cha con
+  getProductsByCategorySlug: async (slug, page = 1, limit = 12) => {
     
     if (IS_USE_MOCK) {
        return new Promise((resolve) => {
-         resolve({ data: [], categoryName: "Mock", description: "", parentCategory: null });
+         // 1. Tìm thông tin danh mục
+         const currentCategory = MOCK_CATEGORIES.find(c => c.slug === slug);
+         let parentCategory = null;
+         
+         if (currentCategory && currentCategory.parent) {
+             const parentId = typeof currentCategory.parent === 'object' ? currentCategory.parent._id : currentCategory.parent;
+             parentCategory = MOCK_CATEGORIES.find(c => c._id === parentId);
+         }
+
+         // 2. Lọc sản phẩm theo Slug
+         const filteredProducts = MOCK_PRODUCTS.filter(p => p.category_slug === slug);
+
+         // 3. Giả lập phân trang
+         const startIndex = (page - 1) * limit;
+         const endIndex = startIndex + limit;
+         const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+         // 4. Trả về kết quả
+         resolve({ 
+            data: paginatedProducts, 
+            pagination: { 
+                totalDocs: filteredProducts.length, 
+                totalPages: Math.ceil(filteredProducts.length / limit), 
+                page: page,
+                limit: limit
+            }, 
+            categoryName: currentCategory ? currentCategory.category_name : "Mock Category", 
+            description: currentCategory ? currentCategory.description : "Mô tả giả lập", 
+            parentCategory: parentCategory 
+        });
        });
     }
 
     // --- REAL API LOGIC ---
     try {
-        console.log(`API Only: Đang tải dữ liệu cho danh mục: ${slug}`);
+        console.log(`API Only: Đang tải dữ liệu cho danh mục: ${slug} | Page: ${page}`);
 
-        // BƯỚC 1: Lấy danh sách Danh mục để tìm tên, mô tả và DANH MỤC CHA
+        // BƯỚC 1: Lấy thông tin danh mục (Tên, Mô tả, Cha)
         let categoryName = slug;
         let description = "";
         let currentCategory = null;
@@ -59,14 +88,11 @@ export const categoryService = {
                 categoryName = currentCategory.category_name;
                 description = currentCategory.description;
 
-                // --- TÌM CHA ---
+                // Tìm Cha
                 if (currentCategory.parent) {
-                    // Kiểm tra xem parent là object (đã populate) hay string ID
                     const parentId = typeof currentCategory.parent === 'object' 
                         ? currentCategory.parent._id 
                         : currentCategory.parent;
-                    
-                    // Tìm object cha trong danh sách categories đã tải
                     parentCategory = allCategories.find(c => c._id === parentId);
                 }
             }
@@ -76,13 +102,38 @@ export const categoryService = {
 
         // BƯỚC 2: Gọi API lấy sản phẩm
         let allProducts = [];
+        let paginationInfo = {
+            totalDocs: 0,
+            totalPages: 1,
+            page: page,
+            limit: limit
+        };
         
         try {
-            // Ưu tiên 1: Gọi API chuyên dụng
+            // Ưu tiên 1: Gọi API chuyên dụng với params
             console.log(`...Gọi API chuyên dụng: /products/category/${slug}`);
-            const res = await api.get(`/products/category/${slug}`);
             
-            allProducts = res.data.docs || res.data.data || res.data || [];
+            // Sử dụng params object của axios để tự động nối chuỗi query (?page=1&limit=12)
+            const res = await api.get(`/products/category/${slug}`, {
+                params: {
+                    page: page,
+                    limit: limit
+                }
+            });
+            
+            // Xử lý dữ liệu trả về
+            if (res.data.docs) {
+                allProducts = res.data.docs;
+                paginationInfo = {
+                    totalDocs: res.data.totalDocs,
+                    totalPages: res.data.totalPages,
+                    page: res.data.page,
+                    limit: res.data.limit
+                };
+            } else {
+                // Trường hợp API trả về mảng phẳng
+                allProducts = res.data.data || res.data || [];
+            }
             
         } catch (err1) {
             console.warn("API chuyên dụng lỗi. Đang thử Fallback...");
@@ -92,17 +143,28 @@ export const categoryService = {
                 const res = await api.get('/products/search?name='); 
                 const rawProducts = res.data.data || res.data || [];
                 
+                let filteredProducts = rawProducts;
                 if (currentCategory) {
                     const childCats = allCategories.filter(c => c.parent && c.parent._id === currentCategory._id);
                     const validIds = [currentCategory._id, ...childCats.map(c => c._id)];
                     
-                    allProducts = rawProducts.filter(p => {
+                    filteredProducts = rawProducts.filter(p => {
                         const pCatId = p.category_id && typeof p.category_id === 'object' ? p.category_id._id : p.category_id;
                         return validIds.includes(pCatId);
                     });
-                } else {
-                    allProducts = rawProducts;
                 }
+                
+                const startIndex = (page - 1) * limit;
+                const endIndex = startIndex + limit;
+                allProducts = filteredProducts.slice(startIndex, endIndex);
+                
+                paginationInfo = {
+                    totalDocs: filteredProducts.length,
+                    totalPages: Math.ceil(filteredProducts.length / limit),
+                    page: page,
+                    limit: limit
+                };
+
             } catch (err2) {
                 console.error("Cả API Category và Search đều thất bại.");
                 allProducts = []; 
@@ -113,6 +175,7 @@ export const categoryService = {
 
         return {
             data: allProducts,
+            pagination: paginationInfo,
             categoryName: categoryName,
             description: description,
             parentCategory: parentCategory
@@ -120,7 +183,13 @@ export const categoryService = {
 
     } catch (error) {
         console.error("Lỗi xử lý category (API Fail):", error);
-        return { data: [], categoryName: "Lỗi tải dữ liệu", description: "", parentCategory: null };
+        return { 
+            data: [], 
+            pagination: { totalDocs: 0, totalPages: 0, page: 1 },
+            categoryName: "Lỗi tải dữ liệu", 
+            description: "", 
+            parentCategory: null 
+        };
     }
   }
 };
