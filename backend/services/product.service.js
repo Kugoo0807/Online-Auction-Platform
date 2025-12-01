@@ -3,7 +3,6 @@ import { categoryRepository } from '../repositories/category.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
-const LIMIT_ITEMS = 8;
 
 class ProductService {
     async createProduct(productData) {
@@ -44,7 +43,7 @@ class ProductService {
         );
     }
 
-    async getProductsByCategorySlug(slug, page = 1) {
+    async getProductsByCategorySlug(slug) {
         const category = await categoryRepository.findBySlug(slug);
         if (!category) {
             throw new Error('Danh mục không tồn tại!');
@@ -53,17 +52,17 @@ class ProductService {
         const allCategoryIds = await categoryRepository.getAllDescendantIds(category._id);
         const filter = { category: {$in: allCategoryIds }};
 
-        return await productRepository.findByCondition(undefined, filter, {}, LIMIT_ITEMS, page);
+        return await productRepository.findByCondition(undefined, filter, {});
     }
 
-    async getProductsBySellerId(seller, page = 1) {
+    async getProductsBySellerId(seller) {
         const filter = { seller: seller };
         const sortOption = { createdAt: -1 };
-        return await productRepository.findByCondition(undefined, filter, sortOption, LIMIT_ITEMS, page);
+        return await productRepository.findByCondition(undefined, filter, sortOption);
     }
 
-    async searchProducts(keyword, page = 1) {
-        return await productRepository.findByCondition(keyword, {}, {}, LIMIT_ITEMS, page);
+    async searchProducts(keyword) {
+        return await productRepository.findByCondition(keyword, {}, {});
     }
 
     async getRandom5ProductsByCategorySlug(slug) {

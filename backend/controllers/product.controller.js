@@ -90,10 +90,8 @@ class ProductController {
     async getProductsByCategory(req, res) {
         try {
             const { slug } = req.params;
-            const { page } = req.query;
-            const pageNumber = parseInt(page) || 1;
 
-            const products = await productService.getProductsByCategorySlug(slug, pageNumber);
+            const products = await productService.getProductsByCategorySlug(slug);
 
             return res.status(200).json({
                 message: 'Lấy danh sách sản phẩm theo thư mục thành công!',
@@ -122,10 +120,7 @@ class ProductController {
         try {
             const sellerId = req.user._id; 
             
-            const { page } = req.query;
-
-            const pageNumber = parseInt(page) || 1;
-            const products = await productService.getProductsBySellerId(sellerId, pageNumber);
+            const products = await productService.getProductsBySellerId(sellerId);
 
             return res.status(200).json({
                 message: 'Lấy danh sách sản phẩm của seller thành công',
@@ -138,14 +133,13 @@ class ProductController {
 
     async searchProducts(req, res) {
         try {
-            const { keyword, page } = req.query;
+            const { keyword } = req.query;
 
             if (!keyword) {
                 return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
             }
 
-            const pageNumber = parseInt(page) || 1;
-            const products = await productService.searchProducts(keyword, pageNumber);
+            const products = await productService.searchProducts(keyword);
 
             return res.status(200).json({
                 message: 'Kết quả tìm kiếm',

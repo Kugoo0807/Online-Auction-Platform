@@ -6,50 +6,81 @@ import ProductSection from '../components/product/ProductSection';
 const CategoryPage = () => {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  // --- STATE QUẢN LÝ DỮ LIỆU ---
-  const [products, setProducts] = useState([]);
+  
+  // --- STATE DỮ LIỆU ---
+  const [allProducts, setAllProducts] = useState([]);
+  const [displayProducts, setDisplayProducts] = useState([]);
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
   const [parentCategory, setParentCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE PHÂN TRANG ---
-  const page = parseInt(searchParams.get('page')) || 1; // Trang hiện tại
-  const [totalPages, setTotalPages] = useState(1); // Tổng số trang
-  const LIMIT = 12;                            // Số sản phẩm mỗi trang
+  // --- CONFIG PHÂN TRANG ---
+  const page = parseInt(searchParams.get('page')) || 1; 
+  const LIMIT = 12;
+  const [totalPages, setTotalPages] = useState(1);
 
-
-  // --- GỌI API ---
+  // --- GỌI API & POLLING ---
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      // Scroll lên đầu trang khi chuyển trang
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Thêm tham số isPolling để xử lý Loading UI "im lặng"
+    const fetchAllData = async (isPolling = false) => {
+      
+      if (!isPolling) setLoading(true);
 
       try {
-        // Truyền thêm tham số page và limit vào hàm service
-        const result = await categoryService.getProductsByCategorySlug(slug, page, LIMIT);
+        const result = await categoryService.getProductsByCategorySlug(slug);
         
-        // Cập nhật dữ liệu
-        setProducts(result.data || []);
+        // Lưu toàn bộ dữ liệu vào state gốc
+        setAllProducts(result.data || []);
+        
         setCategoryName(result.categoryName || slug);
         setDescription(result.description || ''); 
         setParentCategory(result.parentCategory || null); 
 
-        // Cập nhật thông tin phân trang từ API trả về
-        if (result.pagination) {
-            setTotalPages(result.pagination.totalPages);
-        }
+        // Tính tổng số trang
+        const total = Math.ceil((result.data?.length || 0) / LIMIT);
+        setTotalPages(total > 0 ? total : 1);
+
       } catch (error) {
         console.error("Lỗi tải danh mục:", error);
-        setCategoryName("Danh mục không tồn tại");
+        if (!isPolling) setCategoryName("Danh mục không tồn tại");
       } finally {
-        setLoading(false);
+        if (!isPolling) setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, [slug, page]); // <--- Chạy lại khi slug HOẶC page thay đổi
+    fetchAllData(false);
+
+    // Thiết lập Polling: Gọi lại mỗi 5 giây
+    const interval = setInterval(() => {
+        fetchAllData(true); 
+    }, 5000);
+
+    return () => clearInterval(interval);
+
+  }, [slug]);
+
+
+  // --- XỬ LÝ SCROLL ---
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
+
+
+  // --- SLICE ---
+  useEffect(() => {
+    const total = Math.ceil(allProducts.length / LIMIT);
+    setTotalPages(total > 0 ? total : 1);
+
+    const startIndex = (page - 1) * LIMIT;
+    const endIndex = startIndex + LIMIT;
+    
+    const currentSlice = allProducts.slice(startIndex, endIndex);
+    
+    setDisplayProducts(currentSlice);
+
+  }, [page, allProducts]);
+
 
   // Hàm chuyển trang
   const handlePageChange = (newPage) => {
@@ -80,7 +111,7 @@ const CategoryPage = () => {
   };
 
   // --- LOADING UI ---
-  if (loading && !products.length && page === 1) {
+  if (loading && allProducts.length === 0) {
     return (
       <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">
         Đang tải dữ liệu...
@@ -100,71 +131,53 @@ const CategoryPage = () => {
             {parentCategory && (
                 <>
                     <span className="mx-2"> / </span>
-                    <Link 
-                        to={`/category/${parentCategory.slug}`}
-                        className="uppercase text-gray-500 hover:text-blue-600 transition"
-                    >
+                    <Link to={`/category/${parentCategory.slug}`} className="uppercase text-gray-500 hover:text-blue-600 transition">
                         {parentCategory.category_name}
                     </Link>
                 </>
             )}
 
             <span className="mx-2"> / </span>
-            <span className="uppercase tracking-wider text-blue-600 font-bold">
-                {categoryName}
-            </span>
+            <span className="uppercase tracking-wider text-blue-600 font-bold">{categoryName}</span>
           </div>
           
           <h2 className="text-3xl font-extrabold uppercase text-gray-900 tracking-wider border-l-4 border-blue-600 pl-6 leading-none md:text-4xl">
             {categoryName}
           </h2>
 
-          {description && (
-            <p className="mt-4 text-gray-600">{description}</p>
-          )}
+          {description && <p className="mt-4 text-gray-600">{description}</p>}
         </div>
 
         {/* --- LIST SẢN PHẨM --- */}
         <ProductSection
-          title={`${categoryName}`}
-          products={products}
+          title={`${categoryName} (Tổng ${allProducts.length} sản phẩm)`} 
+          products={displayProducts} 
           loading={loading}
         />
 
         {/* --- PHÂN TRANG --- */}
-        {totalPages >= 1 && (
+        {totalPages > 1 && (
           <div className="mt-12 flex justify-center items-center space-x-2 select-none">
             <button
+              onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
               className={`px-4 py-2 border rounded-lg transition-colors ${
-                page === 1 
-                  ? 'text-gray-300 border-gray-200 cursor-not-allowed' 
-                  : 'text-gray-600 border-gray-300 hover:bg-gray-100'
+                page === 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-100'
               }`}
             >
               Trước
             </button>
 
             {getPaginationItems().map((item, index) => {
-              // Trường hợp hiển thị dấu "..."
-              if (item === '...') {
-                return (
-                  <span key={`dots-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-400">
-                    ...
-                  </span>
-                );
-              }
-
-              // Trường hợp hiển thị số trang
+              if (item === '...') return <span key={`dots-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-400">...</span>;
               return (
                 <button
+                  onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
                   key={item}
                   onClick={() => handlePageChange(item)}
                   className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors ${
-                    page === item
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md font-bold'
-                      : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+                    page === item ? 'bg-blue-600 text-white border-blue-600 shadow-md font-bold' : 'text-gray-600 border-gray-300 hover:bg-gray-50'
                   }`}
                 >
                   {item}
@@ -173,12 +186,11 @@ const CategoryPage = () => {
             })}
 
             <button
+              onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages}
               className={`px-4 py-2 border rounded-lg transition-colors ${
-                page === totalPages 
-                  ? 'text-gray-300 border-gray-200 cursor-not-allowed' 
-                  : 'text-gray-600 border-gray-300 hover:bg-gray-100'
+                page === totalPages ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-100'
               }`}
             >
               Sau

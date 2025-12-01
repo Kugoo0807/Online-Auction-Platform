@@ -12,26 +12,17 @@ class ProductService {
     if (IS_USE_MOCK) {
       return new Promise((resolve) => {
         setTimeout(() => {
-          console.log(`[MOCK] Tìm kiếm: "${keyword}" | Page: ${page}`);
+          console.log(`[MOCK] Tìm kiếm: "${keyword}" (Lấy tất cả)`);
           
           const lowerKeyword = (keyword || "").toLowerCase();
           
-          // Logic tìm kiếm: Lọc tên sản phẩm có chứa từ khóa (VD: "sam" -> tìm ra Samsung)
+          // Lọc tìm kiếm giả lập
           const filtered = MOCK_PRODUCTS.filter(p => 
             p.product_name.toLowerCase().includes(lowerKeyword)
           );
 
-          // Logic phân trang client-side
-          const startIndex = (page - 1) * limit;
-          const paginatedDocs = filtered.slice(startIndex, startIndex + limit);
-
-          resolve({
-            docs: paginatedDocs,
-            totalDocs: filtered.length,
-            totalPages: Math.ceil(filtered.length / limit),
-            page: page,
-            limit: limit
-          });
+          // Trả về hết, KHÔNG CẮT ở đây
+          resolve(filtered); 
         }, 500);
       });
     }
@@ -42,25 +33,17 @@ class ProductService {
       const response = await api.get('/products/search', {
         params: {
           keyword, // Tham số query chính
-          name: keyword, // (Fallback) Nếu backend dùng 'name' thay vì 'keyword'
-          page,
-          limit
         }
       });
       
       // Chuẩn hóa dữ liệu trả về để Frontend không bị lỗi
-      const data = response.data;
-      return {
-        docs: data.docs || data.data || [],
-        totalDocs: data.totalDocs || 0,
-        totalPages: data.totalPages || 0,
-        page: data.page || 1,
-        limit: data.limit || limit
-      };
+      const data = response.data.data || response.data || [];
+      
+      return Array.isArray(data) ? data : [];
 
     } catch (error) {
       console.error("Lỗi searchProducts:", error);
-      return { docs: [], totalDocs: 0, totalPages: 0 };
+      return [];
     }
   }
 

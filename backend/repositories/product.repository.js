@@ -30,7 +30,7 @@ class ProductRepository {
         return await Product.find({ product_name: productName });
     }
 
-    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 10, page = 1) {
+    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0) {
         if (keyword) {
             filter.$or = [
                 { product_name: { $regex: keyword, $options: 'i' } },
@@ -39,13 +39,15 @@ class ProductRepository {
         }
 
         const finalSort = Object.keys(sortOption).length ? sortOption : { auction_end_time: 1 };
-        
-        const skip = (page - 1) * limit;
 
-        return await Product.find(filter)
-            .sort(finalSort)
-            .skip(skip)
-            .limit(limit)
+        // Tạo query
+        const query = Product.find(filter).sort(finalSort);
+
+        if (limit > 0) {
+            query.limit(limit);
+        }
+
+        return await query
             .populate('seller', 'full_name rating_score rating_count') 
             .populate('category', 'category_name')
             .populate('current_highest_bidder', 'full_name rating_score rating_count');
