@@ -17,7 +17,7 @@ class BidService {
             if (product.auction_status !== 'active') {
                 throw new Error("Phiên đấu giá này không còn hoạt động (Đã kết thúc, đã bán hoặc bị hủy)");
             }
-            
+
             const now = new Date();
             if (now > product.auction_end_time) {
                 product.auction_status = 'ended';
@@ -42,12 +42,12 @@ class BidService {
             } else {
                 const positiveCount = (bidder.rating_count + bidder.rating_score) / 2;
                 const positiveRatio = positiveCount / bidder.rating_count;
-                
+
                 if (positiveRatio < 0.8) {
                     throw new Error(`Điểm uy tín thấp (${(positiveRatio * 100).toFixed(1)}%). Yêu cầu trên 80% mới được đấu giá.`);
                 }
             }
-            
+
             // LOGIC MUA NGAY HOẶC ĐẤU GIÁ
             let isBuyItNow = false;
 
@@ -55,10 +55,10 @@ class BidService {
             if (product.buy_it_now_price && amount >= product.buy_it_now_price) {
                 isBuyItNow = true;
                 amount = product.buy_it_now_price;
-            } 
+            }
             else {
                 // === VALIDATE GIÁ CHO ĐẤU GIÁ THƯỜNG ===
-                
+
                 // Check giá phải cao hơn giá cũ của chính mình
                 const userCurrentMaxBid = product.auto_bid_map.get(userId);
                 if (userCurrentMaxBid !== undefined && amount <= userCurrentMaxBid) {
@@ -67,7 +67,7 @@ class BidService {
 
                 // Check giá phải cao hơn sàn toàn cục
                 const globalMinPrice = product.bid_count === 0
-                    ? product.start_price 
+                    ? product.start_price
                     : product.current_highest_price + product.bid_increment;
 
                 if (amount < globalMinPrice) {
@@ -76,6 +76,9 @@ class BidService {
             }
 
             // Cập nhật dữ liệu
+            const currentBidCount = product.bid_counts.get(userId) || 0;
+
+
             product.bid_counts.set(userId, currentBidCount + 1);
             product.auto_bid_map.set(userId, amount);
             product.bid_count += 1;
@@ -97,7 +100,7 @@ class BidService {
                 }, session);
             } else {
                 // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
-                
+
                 // Tính toán lại winner và price dựa trên thuật toán
                 recalculateAuctionState(product, userId);
 
@@ -117,7 +120,7 @@ class BidService {
             await bidRepository.create({
                 user: userId,
                 product: productId,
-                price: finalPrice, 
+                price: finalPrice,
                 max_bid_price: amount,
                 holder: finalWinnerId
             }, session);
@@ -152,7 +155,7 @@ class BidService {
                 is_banned: userId ? bannedSet.has(userId.toString()) : false
             }
         })
-        
+
         return result;
     }
 }

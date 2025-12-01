@@ -1,7 +1,7 @@
 import api from './api'; // Dùng chung instance api đã cấu hình Refresh Token
 
 class ProductService {
-  
+
   // --- PUBLIC APIS ---
 
   // 1. Tìm kiếm sản phẩm
@@ -9,12 +9,12 @@ class ProductService {
     try {
       // API của Backend bạn đang sử dụng: /products/search?keyword=...
       const response = await api.get('/products/search', {
-        params: { 
-          keyword, 
-          page 
+        params: {
+          keyword,
+          page
         }
       });
-      return response.data; 
+      return response.data;
     } catch (error) {
       console.error("Lỗi searchProducts:", error);
       return { data: [] };
@@ -105,6 +105,19 @@ class ProductService {
       throw error;
     }
   }
+
+  async getMinValidPrice(productId, userId) {
+    try {
+      const response = await api.get(`/products/${productId}/min-price`, {
+        params: { userId }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getMinValidPrice:", error);
+      throw error;
+    }
+  }
 }
+
 
 export const productService = new ProductService();
