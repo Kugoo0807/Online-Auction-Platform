@@ -357,6 +357,10 @@ function ProductDescription({ product }) {
 function BiddingSection({ product, minValidPrice, user }) {
   const [bidAmount, setBidAmount] = useState(minValidPrice || product.start_price)
 
+  useEffect(() => {
+    setBidAmount(minValidPrice > 0 ? minValidPrice : product.start_price);
+  }, [minValidPrice]);
+
   const handleBid = async () => {
     if (!user) {
       alert('Vui lòng đăng nhập để đặt giá!')
@@ -406,6 +410,7 @@ function BiddingSection({ product, minValidPrice, user }) {
                 </div>
 
                 <button
+                  onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
                   onClick={handleBid}
                   className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
                 >
@@ -418,7 +423,10 @@ function BiddingSection({ product, minValidPrice, user }) {
           <div className="text-center py-8">
             <p className="text-gray-600 mb-4 font-medium">Vui lòng đăng nhập để tham gia đấu giá sản phẩm này</p>
             <Link to="/login">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md">
+              <button
+                onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md"
+              >
                 Đăng nhập ngay
               </button>
             </Link>
