@@ -22,6 +22,12 @@ export function ProductRoutes(productController) {
     router.get('/category/:slug/random', productController.getRandom5ProductsByCategory);
 
 
+    // ======= CẦN CHECK AUTH =======
+
+    // Xem watch list
+    router.get('/watch-list', [checkAuth, checkRole(['seller', 'bidder'])], productController.getWatchList);
+
+
     // ======= CẦN QUYỀN SELLER =======
 
     // Tạo sản phẩm
@@ -40,20 +46,26 @@ export function ProductRoutes(productController) {
     // Lấy sản phẩm của seller
     router.get('/seller', [checkAuth, checkRole('seller')], productController.getSellerProducts);
 
-    // Ban bidder
-    router.post('/seller/ban-bidder', [checkAuth, checkRole('seller')], productController.banBidder);
-
-    // Unban bidder
-    router.post('/seller/unban-bidder', [checkAuth, checkRole('seller')], productController.unbanBidder);
-
 
     // ======= ROUTER ĐỘNG =======
+
+    // Ban bidder
+    router.post('/:id/ban', [checkAuth, checkRole('seller')], productController.banBidder);
+
+    // Unban bidder
+    router.post('/:id/unban', [checkAuth, checkRole('seller')], productController.unbanBidder);
     
     // Lấy chi tiết sản phẩm
     router.get('/:id', productController.getProductDetails);
     
     // Lấy giá trị đặt thấp nhất
-    router.get('/:id/min-price', checkAuth, productController.getMinValidPrice);
+    router.get('/:id/min-price', [checkAuth, checkRole(['seller', 'bidder'])], productController.getMinValidPrice);
+
+    // Toggle watch list
+    router.post('/:id/watch-list', [checkAuth, checkRole(['seller', 'bidder'])], productController.toggleWatchList);
+
+    // Kiểm tra xem có thích sản phẩm không
+    router.get('/:id/watch-list/check', [checkAuth, checkRole(['seller', 'bidder'])], productController.checkIsWatching);
 
     return router;
 }

@@ -2,7 +2,7 @@ import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
-import { watchListRepository } from '../repositories/watchlist.repository.js';
+import { watchListRepository } from '../repositories/watch.list.repository.js';
 const LIMIT_ITEMS = 8;
 
 class ProductService {
@@ -84,6 +84,9 @@ class ProductService {
         if (!product) {
             throw new Error('Sản phẩm không tồn tại!');
         }
+        if (userId === product.seller._id.toString()) {
+            throw new Error('Seller không thể tự đặt giá sản phẩm của mình!');
+        }
 
         const globalFloor = product.bid_count === 0
             ? product.start_price
@@ -161,7 +164,7 @@ class ProductService {
         }
     }
 
-    async getMyWatchList(userId) {
+    async getWatchList(userId) {
         const list = await watchListRepository.getByUserId(userId);
         return list;
     }
