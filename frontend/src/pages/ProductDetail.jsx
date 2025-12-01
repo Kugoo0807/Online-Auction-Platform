@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { productService } from '../services/product.service'
-import { categoryService } from '../services/categoryService' 
+import { categoryService } from '../services/categoryService'
 import { ProductCard } from '../components/product/ProductSection'
 import { useAuth } from '../context/AuthContext'
+import { bidService } from '../services/bid.service'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -16,55 +17,74 @@ export default function ProductDetail() {
   const [minValidPrice, setMinValidPrice] = useState(0)
 
   useEffect(() => {
-    const fetchProductData = async () => {
-      try {
-        setLoading(true)
-        
-        // Lấy chi tiết sản phẩm
-        const productRes = await productService.getProductDetail(id)
-        setProduct(productRes.data)
+    let isMounted = true; // tránh lỗi update unmounted component
 
-        // Lấy thông tin category
+    const fetchProductData = async (initial = false) => {
+      try {
+        if (initial) setLoading(true);
+
+        // Lấy chi tiết sản phẩm
+        const productRes = await productService.getProductDetail(id);
+        if (!isMounted) return;
+        setProduct(productRes.data);
+
+        // Lấy category đầy đủ
         if (productRes.data?.category) {
           try {
-            const categoryRes = await categoryService.getAllCategories()
+            const categoryRes = await categoryService.getAllCategories();
+            if (!isMounted) return;
             const fullCategory = categoryRes.data.find(
-              cat => cat._id === productRes.data.category._id || 
-                     cat._id === productRes.data.category
-            )
-            setCategoryWithSlug(fullCategory)
+              cat =>
+                cat._id === productRes.data.category._id ||
+                cat._id === productRes.data.category
+            );
+            setCategoryWithSlug(fullCategory);
           } catch (error) {
-            console.error('Lỗi khi lấy thông tin category:', error)
+            console.error("Lỗi khi lấy thông tin category:", error);
           }
         }
 
-        // Lấy giá đặt thấp nhất
+        // Lấy giá đặt tối thiểu
         if (user) {
           try {
-            const priceRes = await productService.getMinValidPrice(id, user._id)
-            setMinValidPrice(priceRes.min_valid_price)
+            const priceRes = await productService.getMinValidPrice(id, user._id);
+            if (!isMounted) return;
+            setMinValidPrice(priceRes.min_valid_price);
           } catch (error) {
-            console.error('Lỗi khi lấy thông tin giá:', error)
+            console.error("Lỗi khi lấy thông tin giá:", error);
           }
         }
-        
-        // Lấy sản phẩm cùng danh mục
-        if (categoryWithSlug?.slug) {
-          const relatedRes = await productService.getRelatedProducts(categoryWithSlug.slug)
-          setRelatedProducts(relatedRes.data || [])
-        } else if (productRes.data?.category?.slug) {
-          const relatedRes = await productService.getRelatedProducts(productRes.data.category.slug)
-          setRelatedProducts(relatedRes.data || [])
+
+        // Lấy sản phẩm liên quan
+        const slug =
+          categoryWithSlug?.slug || productRes.data?.category?.slug || null;
+
+        if (slug) {
+          const relatedRes = await productService.getRelatedProducts(slug);
+          if (!isMounted) return;
+          setRelatedProducts(relatedRes.data || []);
         }
       } catch (error) {
-        console.error('Lỗi khi tải chi tiết sản phẩm:', error)
+        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
       } finally {
-        setLoading(false)
+        if (initial) setLoading(false); // chỉ loading lần đầu
       }
-    }
+    };
 
-    fetchProductData()
-  }, [id, user])
+    // Gọi lần đầu → có loading
+    fetchProductData(true);
+
+    // Polling mỗi 5s → không hiện loading
+    const interval = setInterval(() => {
+      fetchProductData(false);
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [id, user]);
+
 
   const displayCategory = categoryWithSlug || product?.category
 
@@ -91,15 +111,15 @@ export default function ProductDetail() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
         {/* Phần hình ảnh */}
-        <ProductImages 
-          product={product} 
+        <ProductImages
+          product={product}
           selectedImage={selectedImage}
           onSelectImage={setSelectedImage}
         />
-        
+
         {/* Phần thông tin sản phẩm */}
-        <ProductInfo 
-          product={product} 
+        <ProductInfo
+          product={product}
           minValidPrice={minValidPrice}
           user={user}
         />
@@ -109,10 +129,10 @@ export default function ProductDetail() {
       <ProductDescription product={product} />
 
       {/* Phần đặt giá & lịch sử đấu giá */}
-      <BiddingSection 
-        product={product} 
-        minValidPrice={minValidPrice} 
-        user={user} 
+      <BiddingSection
+        product={product}
+        minValidPrice={minValidPrice}
+        user={user}
       />
 
       {/* Phần Q&A */}
@@ -141,7 +161,7 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
           }}
         />
       </div>
-      
+
       {/* Danh sách ảnh nhỏ */}
       <div className="flex gap-3 flex-wrap">
         {allImages.map((image, index) => (
@@ -149,11 +169,10 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
             key={index}
             src={image}
             alt={`Ảnh ${index + 1}`}
-            className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${
-              selectedImage === index 
-                ? 'border-blue-600 ring-2 ring-blue-100 scale-105' 
+            className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${selectedImage === index
+                ? 'border-blue-600 ring-2 ring-blue-100 scale-105'
                 : 'border-transparent hover:border-gray-300'
-            }`}
+              }`}
             onClick={() => onSelectImage(index)}
             onError={(e) => {
               e.target.src = '/images/placeholder.jpg'
@@ -175,13 +194,13 @@ function ProductInfo({ product, minValidPrice, user }) {
     const now = new Date()
     const end = new Date(endTime)
     const diff = end - now
-    
+
     if (diff <= 0) return 'Đã kết thúc'
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-    
+
     if (days > 0) {
       return `${days} ngày ${hours} giờ nữa`
     } else if (hours > 0) {
@@ -221,11 +240,10 @@ function ProductInfo({ product, minValidPrice, user }) {
       </h1>
 
       {/* Trạng thái đấu giá */}
-      <div className={`inline-block px-4 py-2 rounded-full mb-6 text-sm font-bold border ${
-        isAuctionActive() 
-          ? 'bg-green-50 border-green-200 text-green-700' 
+      <div className={`inline-block px-4 py-2 rounded-full mb-6 text-sm font-bold border ${isAuctionActive()
+          ? 'bg-green-50 border-green-200 text-green-700'
           : 'bg-yellow-50 border-yellow-200 text-yellow-700'
-      }`}>
+        }`}>
         {isAuctionActive() ? '🟢 Đang đấu giá' : '🟡 Đã kết thúc'}
       </div>
 
@@ -261,9 +279,8 @@ function ProductInfo({ product, minValidPrice, user }) {
       )}
 
       {/* Thông tin đấu giá */}
-      <div className={`p-4 rounded-lg mb-6 border ${
-        isEndingSoon() ? 'bg-orange-50 border-orange-100' : 'bg-gray-50 border-gray-100'
-      }`}>
+      <div className={`p-4 rounded-lg mb-6 border ${isEndingSoon() ? 'bg-orange-50 border-orange-100' : 'bg-gray-50 border-gray-100'
+        }`}>
         <div className="flex justify-between mb-3 items-center">
           <span className="font-bold text-gray-700">⏳ Thời gian còn lại:</span>
           <span className={`font-bold ${isEndingSoon() ? 'text-red-600' : 'text-green-600'}`}>
@@ -353,6 +370,8 @@ function BiddingSection({ product, minValidPrice, user }) {
 
     // TODO: Gọi API đặt giá
     alert(`Đã đặt giá ₫${bidAmount.toLocaleString('vi-VN')}`)
+    const response = await bidService.placeBid(product._id, bidAmount)
+    
   }
 
   const formatPrice = (price) => {
@@ -364,7 +383,7 @@ function BiddingSection({ product, minValidPrice, user }) {
       <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
         💰 Đặt giá
       </h2>
-      
+
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         {user ? (
           <div>
@@ -385,7 +404,7 @@ function BiddingSection({ product, minValidPrice, user }) {
                     Giá đặt tối thiểu: <span className="font-semibold text-gray-700">₫{formatPrice(minValidPrice)}</span>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={handleBid}
                   className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
