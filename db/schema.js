@@ -70,15 +70,6 @@ const upgradeRequestSchema = new Schema({
 // Kích hoạt kiểm tra khóa ngoại
 upgradeRequestSchema.plugin(checkForeignKeys);
 
-// 3. DeletionHistory
-const deletionHistorySchema = new Schema({
-  user_deleted: { type: Schema.Types.ObjectId, required: true },
-  user_deleted_email: { type: String, required: true },
-  user_deleted_name: { type: String, required: true },
-  deleter: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-}, { timestamps: true });
-deletionHistorySchema.plugin(checkForeignKeys);
-
 // 4. WatchList
 const watchListSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -236,7 +227,6 @@ const otpSchema = new Schema({
 // --- KHAI BÁO MODEL ---
 const User = mongoose.model('User', userSchema);
 const UpgradeRequest = mongoose.model('Upgrade_Request', upgradeRequestSchema);
-const DeletionHistory = mongoose.model('Deletion_History', deletionHistorySchema);
 const WatchList = mongoose.model('Watch_List', watchListSchema);
 const Category = mongoose.model('Category', categorySchema);
 const Product = mongoose.model('Product', productSchema);
@@ -245,14 +235,13 @@ const QnA = mongoose.model('QnA', qnaSchema);
 const AuctionResult = mongoose.model('Auction_Result', auctionResultSchema);
 const Rating = mongoose.model('Rating', ratingSchema);
 const RefreshToken = mongoose.model('Refresh_Token', refreshTokenSchema);
-const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+const ChatMessage = mongoose.model('Chat_Message', chatMessageSchema);
 const OtpModel = mongoose.model('Otp', otpSchema);
 
 // --- EXPORT (CommonJS) ---
 module.exports = {
   User,
   UpgradeRequest,
-  DeletionHistory,
   WatchList,
   Category,
   Product,
