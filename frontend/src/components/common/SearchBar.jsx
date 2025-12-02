@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productService } from '../../services/product.service';
-
+import searchIcon from '../../assets/search.png';
 export default function SearchBar({ onSearch }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -128,7 +128,11 @@ export default function SearchBar({ onSearch }) {
         onClick={handleSearch}
         className="bg-blue-700 hover:bg-blue-600 text-white rounded-r-full px-6 flex items-center justify-center transition duration-200 border-l border-blue-800 shadow-sm cursor-pointer"
       >
-        <span className="text-xl">🔍</span>
+        <img 
+            src={searchIcon} 
+            alt="Search" 
+            className="w-6 h-5 invert brightness-0 object-contain" 
+        />
       </button>
 
       {showDropdown && (
