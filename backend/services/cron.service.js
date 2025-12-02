@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import mongoose from 'mongoose';
 import { productRepository } from '../repositories/product.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
 import { notifyAuctionEndedSold, notifyAuctionEndedNoBid } from '../services/email.service.js';
 
 class CronService {
@@ -10,7 +11,6 @@ class CronService {
         cron.schedule('* * * * *', async () => {
             await this.closeEndedAuctions();
         });
-        return
 
         // Chạy mỗi 10 phút: '* * * * *'
         cron.schedule('*/10 * * * *', async () => {
@@ -82,11 +82,10 @@ class CronService {
     async downgradeExpiredSellers() {
         console.log(`[${new Date().toISOString()}] [CRON] Đang quét Seller hết hạn...`);
         try {
-            const now = new Date();
-            const result = await userRepository.downgradeExpiredSellers(now);
+            const result = await userRepository.downgradeExpiredSellers();
             
             if (result.modifiedCount > 0) {
-                console.log(`[CRON] Đã hạ cấp ${result.modifiedCount} seller.`);
+                console.log(`[CRON] Đã hạ cấp ${result.modifiedCount} seller do hết hạn.`);
             }
         } catch (error) {
             console.error('[CRON ERROR] Hạ bậc Seller:', error);

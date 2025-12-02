@@ -6,9 +6,7 @@ class UpgradeRequestService {
         if (existingRequest) {
             throw new Error('Bạn đã có yêu cầu đang chờ phê duyệt. Vui lòng đợi!');
         }
-        return await upgradeRequestRepository.create({
-            user_upgrade: userId
-        });
+        return await upgradeRequestRepository.create(userId);
     }
     
     async getPendingList() {
@@ -25,13 +23,16 @@ class UpgradeRequestService {
         if (!request) throw new Error('Yêu cầu không tồn tại');
         if (request.status !== 'pending') throw new Error('Yêu cầu này đã được xử lý trước đó');
 
-        const updatedRequest = await upgradeRequestRepository.updateStatus(requestId, status, adminId);
-
         if (status === 'approved') {
-            const userIdToUpgrade = request.user_upgrade._id || request.user_upgrade;
-            await userRepository.updateRole(userIdToUpgrade, 'seller');
+            const userIdToUpgrade = request.bidder._id || request.bidder;
+            try {
+                await userRepository.upgradeSeller(userIdToUpgrade);
+            } catch (e) {
+                throw new Error('Lỗi khi nâng cấp user, huỷ thao tác duyệt.');
+            }
         }
 
+        const updatedRequest = await upgradeRequestRepository.updateStatus(requestId, status, adminId);
         return updatedRequest;
     }
 }

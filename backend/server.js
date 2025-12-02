@@ -44,6 +44,10 @@ const { ProductRoutes } = await import('./routes/product.route.js');
 const { bidController } = await import('./controllers/bid.controller.js');
 const { BidRoutes } = await import('./routes/bid.route.js');
 
+// === UPGRADE REQUEST ===
+const { upgradeRequestController } = await import('./controllers/upgrade.request.controller.js');
+const { UpgradeRequestRoutes } = await import('./routes/upgrade.request.route.js');
+
 // === BACKGROUND SERVICES (CRON JOB) ===
 const { cronService } = await import('./services/cron.service.js');
 cronService.start(); 
@@ -64,6 +68,7 @@ app.use('/api/admin', AdminRoutes());
 app.use('/api/products', ProductRoutes(productController));
 app.use('/api/categories', CategoryRoutes(categoryController));
 app.use('/api/bids', BidRoutes(bidController));
+app.use('/api/upgrade-request', UpgradeRequestRoutes(upgradeRequestController));
 
 // START
 app.listen(PORT, () => {
