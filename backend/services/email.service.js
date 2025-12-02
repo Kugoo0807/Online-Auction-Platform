@@ -318,7 +318,7 @@ export async function notifyAuctionEndedNoBid(sellerEmail, productName, productL
     });
 }
 
-export async function notifyNewQuestion(sellerEmail, productName, questionContent, productLink) {
+export async function notifyNewQuestion(sellerEmail, productName, questionContent) {
     return sendMailBase({
         to: sellerEmail,
         subject: `Câu hỏi mới về sản phẩm: ${productName}`,
@@ -336,19 +336,13 @@ export async function notifyNewQuestion(sellerEmail, productName, questionConten
                     </div>
 
                     <p>Việc trả lời nhanh chóng sẽ tăng khả năng chốt đơn của bạn.</p>
-
-                    <div style="text-align: center; margin-top: 25px;">
-                        <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            Trả lời ngay
-                        </a>
-                    </div>
                 </div>
             </div>
         `
     });
 }
 
-export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent, productLink) {
+export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent) {
     // Lưu ý: Dùng bcc để bảo mật danh sách email người nhận
     return transporter.sendMail({
         from: `"AuctionHub Support" <${process.env.MAIL_USER}>`,
@@ -371,10 +365,6 @@ export async function notifyNewAnswer(recipientsEmails, productName, questionCon
                         <span style="background-color: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">TRẢ LỜI TỪ NGƯỜI BÁN</span>
                         <p style="margin-top: 5px; color: #333; font-weight: 500;">${answerContent}</p>
                     </div>
-
-                    <a href="${productLink}" style="color: #007bff; text-decoration: none; font-size: 14px;">
-                        Xem chi tiết cuộc thảo luận →
-                    </a>
                 </div>
             </div>
         `
