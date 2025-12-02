@@ -42,7 +42,7 @@ const seedDatabase = async () => {
 
     // --- 3. TẠO USERS (5 người) ---
     console.log('👤 Đang tạo 5 Users...');
-    const [seller1, seller2, bidder1, bidder2, admin] = await User.create([
+    const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create([
       { 
         full_name: "Nguyễn Văn Bán (Seller 1)", 
         email: "seller1@example.com", 
@@ -62,6 +62,33 @@ const seedDatabase = async () => {
         seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
       },
       { 
+        full_name: "Trần Thị Buôn (Seller 3)", 
+        email: "seller3@example.com", 
+        password: hashedPassword, 
+        role: "seller", 
+        address: "TP.HCM",
+        phone_number: "0909888777",
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+      },
+      { 
+        full_name: "Trần Thị Buôn (Seller 4)", 
+        email: "seller4@example.com", 
+        password: hashedPassword, 
+        role: "seller", 
+        address: "TP.HCM",
+        phone_number: "0909888777",
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+      },
+      { 
+        full_name: "Trần Thị Buôn (Seller 5)", 
+        email: "seller5@example.com", 
+        password: hashedPassword, 
+        role: "seller", 
+        address: "TP.HCM",
+        phone_number: "0909888777",
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+      },
+      { 
         full_name: "Lê Văn Mua (Bidder 1)", 
         email: "bidder1@example.com", 
         password: hashedPassword, 
@@ -72,6 +99,14 @@ const seedDatabase = async () => {
       { 
         full_name: "Phạm Thị Săn (Bidder 2)", 
         email: "bidder2@example.com", 
+        password: hashedPassword, 
+        role: "bidder", 
+        address: "Cần Thơ",
+        phone_number: "0987654321"
+      },
+      { 
+        full_name: "Phạm Thị Săn (Bidder 3)", 
+        email: "bidder3@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Cần Thơ",
@@ -128,32 +163,131 @@ const seedDatabase = async () => {
     ];
 
     const activeProducts = await Product.create([
-      // --- Seller 1 bán Đồ điện tử (4 món) ---
       {
-        product_name: "MacBook Pro M1 2020",
+        product_name: "MacBook Pro 14 M1 2021 – Likenew 99%",
         description: "Máy còn mới 99%, pin sạc ít lần, đầy đủ phụ kiện zin theo máy.",
         start_price: 20000000,
         bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Còn 7 ngày
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller5._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Pro 16 M1 Max 2022 – Bản cao cấp",
+        description: "Hiệu năng cực mạnh, phù hợp cho designer, editor.",
+        start_price: 22000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller5._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Air M1 2023 – Mỏng nhẹ tiện dụng",
+        description: "Thiết kế mỏng nhẹ, pin trâu, phù hợp sinh viên.",
+        start_price: 18000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller5._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Pro 14 M2 2024 – Máy đẹp như mới",
+        description: "Chip M2 mạnh mẽ, màn hình XDR siêu đẹp.",
+        start_price: 24000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller5._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Air M2 2025 – Siêu mỏng nhẹ",
+        description: "Máy rất ít sử dụng, ngoại hình không tì vết.",
+        start_price: 19000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         seller: seller1._id,
         category: catLaptop._id,
         thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
-        product_name: "iPhone 13 Pro Max",
+        product_name: "MacBook Pro 16 M3 2026 – Hàng fullbox",
+        description: "Hiệu năng vô đối, phù hợp dân chuyên nghiệp.",
+        start_price: 26000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Pro 13 M3 2027 – Like new",
+        description: "Máy sử dụng văn phòng nhẹ nhàng, máy đẹp.",
+        start_price: 21000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Air M3 2028 – Chính hãng VN/A",
+        description: "Hàng ít dùng, pin cực ngon.",
+        start_price: 20000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller3._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Pro 14 M2 Pro 2029 – Gần như mới",
+        description: "Máy không trầy xước, cấu hình mạnh mẽ.",
+        start_price: 25000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller3._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+      {
+        product_name: "MacBook Pro 13 Intel 2020 – Máy văn phòng",
+        description: "Máy chạy mượt, phù hợp dân văn phòng.",
+        start_price: 16000000,
+        bid_increment: 500000,
+        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catLaptop._id,
+        thumbnail: sampleThumbnail,
+        images: sampleImages
+      },
+
+      {
+        product_name: "iPhone 13 Pro Max 256GB – Xanh Sierra",
         description: "Bản 256GB màu xanh, trầy nhẹ ở viền, cam kết chưa sửa chữa.",
         start_price: 15000000,
         bid_increment: 200000,
         buy_it_now_price: 18000000,
-        auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Còn 3 ngày
+        auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         seller: seller1._id,
         category: catPhone._id,
         thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
-        product_name: "Laptop Dell XPS 13",
+        product_name: "Laptop Dell XPS 13 – Màn 4K cảm ứng",
         description: "Dòng doanh nhân mỏng nhẹ, màn hình 4K cảm ứng cực đẹp.",
         start_price: 18000000,
         bid_increment: 500000,
@@ -164,8 +298,8 @@ const seedDatabase = async () => {
         images: sampleImages
       },
       {
-        product_name: "Samsung Galaxy S22 Ultra",
-        description: "Bút S-Pen đầy đủ, màn hình bị ám nhẹ, bán giá xác cho anh em.",
+        product_name: "Samsung Galaxy S22 Ultra – Bút S-Pen đầy đủ",
+        description: "Bút S-Pen đầy đủ, màn hình bị ám nhẹ, bán giá xác.",
         start_price: 8000000,
         bid_increment: 100000,
         auction_end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -175,9 +309,9 @@ const seedDatabase = async () => {
         images: sampleImages
       },
 
-      // --- Seller 2 bán Thời trang & Nội thất (6 món) ---
+      // --- Seller 2: Thời trang & Nội thất ---
       {
-        product_name: "Đồng Hồ Rolex (Cấm Newbie)",
+        product_name: "Đồng Hồ Rolex Submariner – Cấm Newbie",
         description: "Chỉ dành cho người có uy tín cao.",
         start_price: 100000000,
         bid_increment: 2000000,
@@ -189,7 +323,7 @@ const seedDatabase = async () => {
         allow_newbie: false
       },
       {
-        product_name: "Giày Nike Air Jordan 1",
+        product_name: "Nike Air Jordan 1 – Size 42, Auth 100%",
         description: "Hàng auth bao check, size 42, mới đi lướt 2 lần.",
         start_price: 3000000,
         bid_increment: 100000,
@@ -200,7 +334,7 @@ const seedDatabase = async () => {
         images: sampleImages
       },
       {
-        product_name: "Giày Adidas Ultraboost",
+        product_name: "Adidas Ultraboost – Fullbox Size 40",
         description: "Chạy bộ cực êm, size 40, full box.",
         start_price: 1500000,
         bid_increment: 50000,
@@ -211,19 +345,19 @@ const seedDatabase = async () => {
         images: sampleImages
       },
       {
-        product_name: "Sofa Da Bò Ý",
+        product_name: "Sofa Da Bò Ý – Cao Cấp Nhập Khẩu",
         description: "Sofa nhập khẩu nguyên chiếc, da thật 100%, ngồi rất êm.",
         start_price: 25000000,
         bid_increment: 1000000,
         auction_end_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         seller: seller2._id,
-        category: catFurniture._id, // Danh mục cha
+        category: catFurniture._id,
         thumbnail: sampleThumbnail,
         images: sampleImages
       },
       {
-        product_name: "Bàn Ăn Gỗ Sồi",
-        description: "Bàn ăn 6 ghế, gỗ sồi nga tự nhiên đã qua xử lý mối mọt.",
+        product_name: "Bàn Ăn Gỗ Sồi 6 Ghế – Hàng cao cấp",
+        description: "Gỗ sồi nga tự nhiên đã qua xử lý mối mọt.",
         start_price: 5000000,
         bid_increment: 200000,
         auction_end_time: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
@@ -233,7 +367,7 @@ const seedDatabase = async () => {
         images: sampleImages
       },
       {
-        product_name: "Giày Tây Nam Da Cá Sấu",
+        product_name: "Giày Tây Da Cá Sấu – Handmade Size 41",
         description: "Hàng thủ công handmade, size 41, lịch lãm sang trọng.",
         start_price: 4000000,
         bid_increment: 100000,
@@ -245,7 +379,7 @@ const seedDatabase = async () => {
         images: sampleImages
       },
       {
-        product_name: "Tủ Quần Áo Gỗ Công Nghiệp",
+        product_name: "Tủ Quần Áo Gỗ Công Nghiệp 4 Cánh – Màu Trắng",
         description: "Tủ 4 cánh, màu trắng hiện đại, tháo lắp dễ dàng.",
         start_price: 2000000,
         bid_increment: 50000,
@@ -256,6 +390,7 @@ const seedDatabase = async () => {
         images: sampleImages
       }
     ]);
+
     const soldProducts = await Product.create([
         {
             product_name: "Sony PlayStation 5 (Đã bán)",

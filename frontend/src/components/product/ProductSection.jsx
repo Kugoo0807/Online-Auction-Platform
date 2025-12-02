@@ -73,53 +73,107 @@ export default function ProductSection({ title, products, loading = false }) {
   );
 }
 
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+
 // Component thẻ sản phẩm
 export function ProductCard({ product }) {
-  return (
-    <div 
-      className="bg-white border border-gray-200 rounded-xl p-3 text-center shadow-md transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-xl flex flex-col h-[500px]"
-    >
-      <img
-        src={product.thumbnail}
-        alt={product.product_name}
-        className="w-full h-[200px] object-cover rounded-lg"
-        onError={(e) => {
-          e.target.src = '/images/placeholder.jpg'; // Fallback image
-        }}
-      />
-      
-      <div className="flex flex-col flex-1 pt-3">
-        <h3 className="text-gray-900 text-lg font-semibold mb-2 line-clamp-2 min-h-14">
-          {product.product_name}
-        </h3>
-        
-        {/* Thông tin sản phẩm */}
-        <ProductInfo product={product} />
-        
-        <div className="mt-auto pt-2">
-          <Link
-            to={`/auction/${product._id}`}
-            className="text-blue-500 font-semibold text-sm inline-block hover:text-blue-700 transition-colors"
-          >
-            Xem chi tiết
-          </Link>
+  const now = Date.now();
+  const startTime = new Date(product.auction_start_time).getTime();
+  const timeSinceStart = now - startTime;
+  if (timeSinceStart >= 0 && timeSinceStart <= THIRTY_MINUTES_MS) {
+    return (
+      <div
+        // 1. Container
+        className="group relative bg-white border-2 border-orange-500 rounded-xl p-3 text-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] flex flex-col h-[500px]"
+      >
+        {/* 2. Badge */}
+        <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg shadow-sm animate-pulse">
+          MỚI ĐĂNG
+        </div>
+
+        <div className="relative overflow-hidden rounded-lg h-[200px]">
+             <img
+              src={product.thumbnail}
+              alt={product.product_name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={(e) => {
+                e.target.src = "/images/placeholder.jpg";
+              }}
+            />
+        </div>
+
+        <div className="flex flex-col flex-1 pt-3">
+          <h3 className="text-orange-900 text-lg font-bold mb-2 line-clamp-2 min-h-14 group-hover:text-orange-600 transition-colors">
+            {product.product_name}
+          </h3>
+
+          {/* Thông tin sản phẩm */}
+          <ProductInfo product={product} />
+
+          <div className="mt-auto pt-2">
+            <Link
+              to={`/auction/${product._id}`}
+              className="block w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
+            >
+              Xem ngay
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } else {
+    return (
+      <div 
+        className="bg-white border border-gray-200 rounded-xl p-3 text-center shadow-md transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-xl flex flex-col h-[500px]"
+      >
+        <img
+          src={product.thumbnail}
+          alt={product.product_name}
+          className="w-full h-[200px] object-cover rounded-lg"
+          onError={(e) => {
+            e.target.src = '/images/placeholder.jpg'; // Fallback image
+          }}
+        />
+        
+        <div className="flex flex-col flex-1 pt-3">
+          <h3 className="text-gray-900 text-lg font-semibold mb-2 line-clamp-2 min-h-14">
+            {product.product_name}
+          </h3>
+          
+          {/* Thông tin sản phẩm */}
+          <ProductInfo product={product} />
+          
+          <div className="mt-auto pt-2">
+            <Link
+              to={`/auction/${product._id}`}
+              className="block w-full bg-blue-400 hover:bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
+            >
+              Xem chi tiết
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 // Component hiển thị thông tin sản phẩm
 function ProductInfo({ product }) {
+  // 1. Logic tính toán trạng thái
   const timeLeft = getTimeRemaining(product.auction_end_time);
-  const isUrgent = timeLeft.includes('phút');
+
+  const now = Date.now();
+  const startTime = new Date(product.auction_start_time || product.createdAt).getTime();
+  const isNew = (now - startTime) <= THIRTY_MINUTES_MS;
 
   return (
     <div className="text-gray-600 text-sm text-left leading-relaxed space-y-1">
       {/* Giá hiện tại */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">📌 Giá hiện tại:</span>
-        <span className="font-medium text-gray-900">&nbsp;{formatPrice(product.current_highest_price || product.start_price)}₫</span>
+        <span className="font-medium text-gray-900">
+          &nbsp;{formatPrice(product.current_highest_price || product.start_price)}₫
+        </span>
       </div>
 
       {/* Người bán */}
@@ -128,26 +182,28 @@ function ProductInfo({ product }) {
         <span className="truncate">{product.seller?.full_name || "Ẩn danh"}</span>
       </div>
 
-      {/* Giá mua ngay - nếu có */}
+      {/* Giá mua ngay */}
       {product.buy_it_now_price && product.buy_it_now_price > 0 && (
         <div className="flex">
           <span className="min-w-[100px] font-bold text-gray-700">💰 Mua ngay:</span>
-          <span className="text-blue-600 font-bold">
+          <span className={`${isNew ? 'text-orange-700 font-bold' : 'text-blue-600 font-bold'}`}>
             &nbsp;{formatPrice(product.buy_it_now_price)}₫
           </span>
         </div>
       )}
 
-      {/* Ngày đăng */}
+      {/* --- NGÀY ĐĂNG --- */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">📅 Ngày đăng:</span>
-        <span>&nbsp;{formatDate(product.auction_start_time || product.createdAt)}</span>
+        <span className={`${isNew ? 'text-orange-700 font-bold' : 'text-blue-600 font-bold'}`}>
+          &nbsp;{formatDate(product.auction_start_time || product.createdAt)}
+        </span>
       </div>
 
       {/* Thời gian còn lại */}
       <div className="flex">
         <span className="min-w-[100px] font-bold text-gray-700">⏳ Còn lại:</span>
-        <span className={`${isUrgent ? 'text-blue-600 font-bold' : ''}`}>
+        <span className={`${isNew ? 'text-orange-700 font-bold' : 'text-blue-600 font-bold'}`}>
           {timeLeft}
         </span>
       </div>
