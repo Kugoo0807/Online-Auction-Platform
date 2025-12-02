@@ -155,10 +155,10 @@ const seedDatabase = async () => {
     console.log('📦 Đang tạo 10 Products...');
     
     // Mảng ảnh mẫu (3 ảnh để thỏa mãn validation)
-    const sampleThumbnail = "https://thanhnien.mediacdn.vn/uploaded/thuthao/2018_11_10/14_ZHRV.jpg";
+    const sampleThumbnail = "https://bizweb.dktcdn.net/thumb/1024x1024/100/116/615/products/mbp-spacegray-select-202206-jpeg.jpg";
     const sampleImages = [
-      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
-      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg",
+      "https://cdn.shopify.com/s/files/1/0456/5070/6581/files/top-23-mau-giay-sneaker-dang-duoc-san-lung-nhat-nam-2022_600x600.jpg",
+      "https://thanhnien.mediacdn.vn/uploaded/thuthao/2018_11_10/14_ZHRV.jpg",
       "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
     ];
 

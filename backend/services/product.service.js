@@ -170,7 +170,7 @@ class ProductService {
 
     async checkIsWatching(userId, productId) {
         const isWatching = await watchListRepository.exists(userId, productId);
-        return { is_watching: isWatching };
+        return isWatching;
     }
 }
 
