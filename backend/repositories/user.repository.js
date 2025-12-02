@@ -81,22 +81,37 @@ class UserRepository {
   }
 
   async updateRatingStats(userId, score, count, session = null) {
-  return await User.findByIdAndUpdate(
-    userId,
-    {
-      rating_score: score,
-      rating_count: count
-    },
-    { new: true, session }
-  );
-}
-  
-  async updateRole(userId, newRole) {
     return await User.findByIdAndUpdate(
       userId,
-      { role: newRole },
+      {
+        rating_score: score,
+        rating_count: count
+      },
+      { new: true, session }
+    );
+  }
+  
+  async upgradeSeller(userId) {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 7);
+
+    return await User.findByIdAndUpdate(
+      userId,
+      { role: 'seller', seller_expiry_date: expiryDate },
       { new: true, runValidators: true }
     );
+  }
+
+  async downgradeExpiredSellers() {
+    const now = new Date();
+
+    return await User.updateMany(
+      { role: 'seller', seller_expiry_date: { $lt: now }},
+      {
+        $set: { role: 'bidder' },
+        $unset: { seller_expiry_date: 1 }
+      }
+    )
   }
 }
 
