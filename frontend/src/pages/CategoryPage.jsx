@@ -30,7 +30,8 @@ const CategoryPage = () => {
       if (!isPolling) setLoading(true); 
       try {
         const result = await categoryService.getProductsByCategorySlug(slug);
-        setAllProducts(result.data || []); 
+        const activeProducts = (result.data || []).filter(p => p.auction_status === 'active');
+        setAllProducts(activeProducts);
         setCategoryName(result.categoryName || slug);
         setDescription(result.description || ''); 
         setParentCategory(result.parentCategory || null); 

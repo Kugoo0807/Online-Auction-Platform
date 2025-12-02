@@ -88,6 +88,45 @@ class ProductService {
     }
   }
 
+  // --- WATCH LIST / FAVORITE APIS ---
+
+  // 6. Lấy danh sách yêu thích
+  async getWatchList() {
+    try {
+      // API: GET /products/watch-list
+      const response = await api.get('/products/watch-list');
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getWatchList:", error);
+      return { data: [] };
+    }
+  }
+
+  // 7. Toggle yêu thích (Thêm/Xóa)
+  async toggleWatchList(id) {
+    try {
+      // API: POST /products/:id/watch-list
+      const response = await api.post(`/products/${id}/watch-list`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi toggleWatchList:", error);
+      throw error;
+    }
+  }
+
+  // 8. Kiểm tra trạng thái yêu thích của 1 sản phẩm
+  async checkIsWatching(id) {
+    try {
+      // API: GET /products/:id/watch-list/check
+      const response = await api.get(`/products/${id}/watch-list/check`);
+      // Giả sử server trả về { isWatching: true/false }
+      return response.data; 
+    } catch (error) {
+      // Nếu lỗi (ví dụ chưa đăng nhập), mặc định là false
+      return { isWatching: false };
+    }
+  }
+
   // --- SELLER API ---
 
   async createProduct(productData) {
