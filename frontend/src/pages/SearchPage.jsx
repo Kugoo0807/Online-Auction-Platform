@@ -27,11 +27,12 @@ const SearchPage = () => {
   useEffect(() => {
     const fetchSearchResults = async (isPolling = false) => {
       if (!keyword) return;
-      if (!isPolling) setLoading(true); // Chỉ loading lần đầu
+      if (!isPolling) setLoading(true);
 
       try {
         const results = await productService.searchProducts(keyword);
-        setAllProducts(results || []);
+        const activeProducts = (results || []).filter(p => p.auction_status === 'active');
+        setAllProducts(activeProducts);
       } catch (error) {
         console.error("Lỗi search:", error);
         if (!isPolling) setAllProducts([]);

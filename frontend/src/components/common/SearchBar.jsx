@@ -32,7 +32,12 @@ export default function SearchBar({ onSearch }) {
             console.error("Lỗi lấy trending:", error);
         }
     };
+
     fetchTrending();
+
+    // Cập nhật ngầm mỗi 5 giây
+    const interval = setInterval(() => { fetchTrending(); }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // --- 2. Quản lý Lịch sử ---
@@ -67,7 +72,8 @@ export default function SearchBar({ onSearch }) {
       try {
         const res = await productService.searchProducts(query);
         const results = res.data || res || [];
-        setSuggestions(results.slice(0, 5));
+        const activeProducts = (results || []).filter(p => p.auction_status === 'active');
+        setSuggestions(activeProducts.slice(0, 5));
       } catch (error) {
         console.error("Lỗi gợi ý:", error);
       }
