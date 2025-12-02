@@ -1,8 +1,4 @@
 import api from './api';
-import { MOCK_PRODUCTS } from '../data/products';
-
-// true = Dùng Mock Data | false = Dùng API thật
-const IS_USE_MOCK = true;
 
 export const auctionService = {
 
