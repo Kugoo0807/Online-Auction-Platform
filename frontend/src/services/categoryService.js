@@ -1,13 +1,9 @@
 import api from './api';
-import { categories as MOCK_CATEGORIES, MOCK_PRODUCTS } from '../data/categories';
-
-const IS_USE_MOCK = false; 
 
 export const categoryService = {
 
   // 1. Lấy danh sách danh mục
   getAllCategories: async () => {
-    if (IS_USE_MOCK) return { data: MOCK_CATEGORIES };
 
     try {
       const response = await api.get('/categories');
@@ -20,7 +16,6 @@ export const categoryService = {
 
   // 2. Lấy chi tiết danh mục
   getCategoryById: async (id) => {
-    if (IS_USE_MOCK) return { data: MOCK_CATEGORIES.find(c => c._id === id) };
     try {
       const response = await api.get(`/categories/${id}`);
       return response.data;
@@ -32,29 +27,6 @@ export const categoryService = {
 
   // 3. Lấy sản phẩm & Thông tin cha con
   getProductsByCategorySlug: async (slug) => {
-    
-    // --- MOCK LOGIC ---
-    if (IS_USE_MOCK) {
-       return new Promise((resolve) => {
-         const currentCategory = MOCK_CATEGORIES.find(c => c.slug === slug);
-         let parentCategory = null;
-         
-         if (currentCategory && currentCategory.parent) {
-             const parentId = typeof currentCategory.parent === 'object' ? currentCategory.parent._id : currentCategory.parent;
-             parentCategory = MOCK_CATEGORIES.find(c => c._id === parentId);
-         }
-
-         const filteredProducts = MOCK_PRODUCTS.filter(p => p.category_slug === slug);
-
-         resolve({ 
-            data: filteredProducts, 
-            categoryName: currentCategory ? currentCategory.category_name : "Mock Category", 
-            description: currentCategory ? currentCategory.description : "Mô tả giả lập", 
-            parentCategory: parentCategory 
-        });
-       });
-    }
-
     // --- REAL API LOGIC ---
     try {
         console.log(`API Only: Đang tải TOÀN BỘ dữ liệu cho danh mục: ${slug}`);
