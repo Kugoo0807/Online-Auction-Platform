@@ -20,7 +20,7 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'google_secret'
 const googleClient = new OAuth2Client(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    'postmessage'
+    'http://localhost:5173/oauth/callback'
 );
 
 class AuthService {
@@ -109,14 +109,14 @@ class AuthService {
 
         const googleProfile = {
             email: payload.email,
-            name: payload.name,
-            provider: 'google',
-            providerId: payload.sub, // ID duy nhất của Google
+            full_name: payload.name,
+            auth_provider: 'google',
+            provider_id: payload.sub, // ID duy nhất của Google
         };
 
         let user = await userRepository.findByProviderId(
-            googleProfile.provider,
-            googleProfile.providerId
+            googleProfile.auth_provider,
+            googleProfile.provider_id
         );
 
         if (!user) {
@@ -134,8 +134,8 @@ class AuthService {
 
                 await userRepository.linkSocialAccount(
                     existingUser.id,
-                    googleProfile.provider,
-                    googleProfile.providerId
+                    googleProfile.auth_provider,
+                    googleProfile.provider_id
                 )
                 user = existingUser;
             }
