@@ -12,8 +12,25 @@ const setRefreshTokenCookie = (res, token) => {
 }
 
 class AuthController {
+    async sendOtp(req, res) {
+        try {
+            const { email } = req.body;
+            
+            if (!email) {
+                throw new Error('Vui lòng cung cấp email!');
+            }
+
+            const result = await authService.sendRegisterOtp(email);
+
+            res.status(200).json(result);
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
     async register(req, res) {
         try {
+            // { email, password, full_name, address, otp }
             const registerData = req.body;
 
             const newUser = await authService.register(registerData);
@@ -60,7 +77,6 @@ class AuthController {
         try {
             const oldRefreshToken = req.cookies.refreshToken;
             if (!oldRefreshToken) {
-                console.log('..Đã vào refresh');
                 return res.status(401).json({ message: 'Không tìm thấy refresh token!' });
             }
 

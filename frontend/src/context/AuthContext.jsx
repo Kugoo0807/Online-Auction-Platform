@@ -10,22 +10,44 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    setAuthToken(null);
+    setUser(null);
+    navigate('./login', { replace: true });
+  };
+
+  const fetchCurrentUser = async() => {
+    try {
+      const profileRes = await authService.getProfile();
+      if (profileRes && profileRes.user) {
+        setUser(profileRes.user);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      
+      if (error.response && error.response.status === 401) {
+         console.warn("Phiên đăng nhập hết hạn hoặc không hợp lệ. Đang đăng xuất...");
+         await logout();
+      }
+    }
+  }
+
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // lấy token mới từ refresh token
         const data = await authService.refreshToken();
         if (data.token) {
           const rawToken = data.token.replace('Bearer ', '');
-          // lưu vào ram
           setAuthToken(rawToken);
 
-          // có token rồi thì lấy profile
-          const profileRes = await authService.getProfile();
-          setUser(profileRes.user);
+          await fetchCurrentUser(); 
         }
       } catch (error) {
-        // không có token hoặc lỗi gì thì coi như chưa đăng nhập
         setUser(null);
       } finally {
         setLoading(false);
@@ -37,16 +59,13 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      // Lấy token
       const data = await authService.login(credentials.email, credentials.password);
 
-      // Lưu token vào ram
       const rawToken = data.accessToken.replace('Bearer ', '');
       setAuthToken(rawToken);
 
-      // Lấy profile sau khi login
-      const profileRes = await authService.getProfile();
-      setUser(profileRes.user);
+      await fetchCurrentUser();
+
       return { success: true, data };
     } catch (error) {
         console.error('Login error:', error);
@@ -63,35 +82,17 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    setAuthToken(null); // xóa token ram
-    setUser(null);
-    navigate('./login', { replace: true });
-  };
-
   return (
     <AuthContext.Provider value={{ 
       user,
-      setUser, //OAuth sẽ sử dụng
+      setUser,
       login, 
       register, 
       logout,
       loading 
     }}>
       {loading ? (
-        <div style={{
-          height: '100vh', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          fontSize: '1.2rem',
-          color: '#555'
-        }}>
+        <div className="h-screen flex justify-center items-center text-[1.2rem] text-[#555]">
           Running App...
         </div>
       ) : (

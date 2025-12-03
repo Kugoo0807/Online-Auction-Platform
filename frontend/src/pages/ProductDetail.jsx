@@ -1,0 +1,470 @@
+import { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { productService } from '../services/product.service'
+import { categoryService } from '../services/categoryService'
+import { ProductCard } from '../components/product/ProductSection'
+import { useAuth } from '../context/AuthContext'
+import { bidService } from '../services/bid.service'
+
+export default function ProductDetail() {
+  const { id } = useParams()
+  const { user } = useAuth()
+  const [product, setProduct] = useState(null)
+  const [categoryWithSlug, setCategoryWithSlug] = useState(null)
+  const [relatedProducts, setRelatedProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [minValidPrice, setMinValidPrice] = useState(0)
+
+  useEffect(() => {
+    let isMounted = true; // tránh lỗi update unmounted component
+
+    const fetchProductData = async (initial = false) => {
+      try {
+        if (initial) setLoading(true);
+
+        // Lấy chi tiết sản phẩm
+        const productRes = await productService.getProductDetail(id);
+        if (!isMounted) return;
+        setProduct(productRes.data);
+
+        // Lấy category đầy đủ
+        if (productRes.data?.category) {
+          try {
+            const categoryRes = await categoryService.getAllCategories();
+            if (!isMounted) return;
+            const fullCategory = categoryRes.data.find(
+              cat =>
+                cat._id === productRes.data.category._id ||
+                cat._id === productRes.data.category
+            );
+            setCategoryWithSlug(fullCategory);
+          } catch (error) {
+            console.error("Lỗi khi lấy thông tin category:", error);
+          }
+        }
+
+        // Lấy giá đặt tối thiểu
+        if (user) {
+          try {
+            const priceRes = await productService.getMinValidPrice(id, user._id);
+            if (!isMounted) return;
+            setMinValidPrice(priceRes.min_valid_price);
+          } catch (error) {
+            console.error("Lỗi khi lấy thông tin giá:", error);
+          }
+        }
+
+        // Lấy sản phẩm liên quan
+        const slug =
+          categoryWithSlug?.slug || productRes.data?.category?.slug || null;
+
+        if (slug) {
+          const relatedRes = await productService.getRelatedProducts(slug);
+          if (!isMounted) return;
+          setRelatedProducts(relatedRes.data || []);
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+      } finally {
+        if (initial) setLoading(false); // chỉ loading lần đầu
+      }
+    };
+
+    // Gọi lần đầu → có loading
+    fetchProductData(true);
+
+    // Polling mỗi 5s → không hiện loading
+    const interval = setInterval(() => {
+      fetchProductData(false);
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [id, user]);
+
+
+  const displayCategory = categoryWithSlug || product?.category
+
+  if (loading) {
+    return <div className="p-10 text-center text-gray-500">Đang tải...</div>
+  }
+
+  if (!product) {
+    return <div className="p-10 text-center text-red-500 font-bold">Không tìm thấy sản phẩm</div>
+  }
+
+  return (
+    <div className="p-5 max-w-7xl mx-auto">
+      {/* Breadcrumb */}
+      <nav className="mb-6 text-sm text-gray-500">
+        <Link to="/" className="text-blue-600 hover:underline">Trang chủ</Link>
+        <span className="mx-2">&gt;</span>
+        <Link to={`/category/${displayCategory?.slug}`} className="text-blue-600 hover:underline">
+          {displayCategory?.category_name}
+        </Link>
+        <span className="mx-2">&gt;</span>
+        <span className="text-gray-800 font-medium truncate">{product.product_name}</span>
+      </nav>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+        {/* Phần hình ảnh */}
+        <ProductImages
+          product={product}
+          selectedImage={selectedImage}
+          onSelectImage={setSelectedImage}
+        />
+
+        {/* Phần thông tin sản phẩm */}
+        <ProductInfo
+          product={product}
+          minValidPrice={minValidPrice}
+          user={user}
+        />
+      </div>
+
+      {/* Phần mô tả chi tiết */}
+      <ProductDescription product={product} />
+
+      {/* Phần đặt giá & lịch sử đấu giá */}
+      <BiddingSection
+        product={product}
+        minValidPrice={minValidPrice}
+        user={user}
+      />
+
+      {/* Phần Q&A */}
+      <ProductQA productId={id} />
+
+      {/* Sản phẩm cùng chuyên mục */}
+      <RelatedProducts products={relatedProducts} />
+    </div>
+  )
+}
+
+// Component hiển thị hình ảnh
+function ProductImages({ product, selectedImage, onSelectImage }) {
+  const allImages = [product.thumbnail, ...(product.images || [])]
+
+  return (
+    <div>
+      {/* Ảnh lớn */}
+      <div className="mb-5 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <img
+          src={allImages[selectedImage]}
+          alt={product.product_name}
+          className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = '/images/placeholder.jpg'
+          }}
+        />
+      </div>
+
+      {/* Danh sách ảnh nhỏ */}
+      <div className="flex gap-3 flex-wrap">
+        {allImages.map((image, index) => (
+          <img
+            key={index}
+            src={image}
+            alt={`Ảnh ${index + 1}`}
+            className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${selectedImage === index
+                ? 'border-blue-600 ring-2 ring-blue-100 scale-105'
+                : 'border-transparent hover:border-gray-300'
+              }`}
+            onClick={() => onSelectImage(index)}
+            onError={(e) => {
+              e.target.src = '/images/placeholder.jpg'
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Component thông tin sản phẩm
+function ProductInfo({ product, minValidPrice, user }) {
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN').format(price)
+  }
+
+  const getTimeRemaining = (endTime) => {
+    const now = new Date()
+    const end = new Date(endTime)
+    const diff = end - now
+
+    if (diff <= 0) return 'Đã kết thúc'
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+    if (days > 0) {
+      return `${days} ngày ${hours} giờ nữa`
+    } else if (hours > 0) {
+      return `${hours} giờ ${minutes} phút nữa`
+    } else {
+      return `${minutes} phút nữa`
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const isEndingSoon = () => {
+    const now = new Date()
+    const end = new Date(product.auction_end_time)
+    const diff = end - now
+    return diff < (3 * 24 * 60 * 60 * 1000) // 3 ngày
+  }
+
+  const isAuctionActive = () => {
+    const now = new Date()
+    const end = new Date(product.auction_end_time)
+    return end > now && product.auction_status === 'active'
+  }
+
+  return (
+    <div className="p-6 border border-gray-200 rounded-xl bg-white shadow-sm h-fit">
+      <h1 className="text-3xl font-bold text-blue-900 mb-4 leading-tight">
+        {product.product_name}
+      </h1>
+
+      {/* Trạng thái đấu giá */}
+      <div className={`inline-block px-4 py-2 rounded-full mb-6 text-sm font-bold border ${isAuctionActive()
+          ? 'bg-green-50 border-green-200 text-green-700'
+          : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+        }`}>
+        {isAuctionActive() ? '🟢 Đang đấu giá' : '🟡 Đã kết thúc'}
+      </div>
+
+      {/* Giá hiện tại */}
+      <div className="mb-5 pb-5 border-b border-gray-100">
+        <div className="text-sm text-gray-500 mb-1 font-medium uppercase tracking-wide">💰 Giá hiện tại</div>
+        <div className="text-3xl font-bold text-red-600">
+          ₫{formatPrice(product.current_highest_price || product.start_price)}
+        </div>
+      </div>
+
+      {/* Giá mua ngay */}
+      {product.buy_it_now_price && product.buy_it_now_price > 0 && (
+        <div className="mb-5">
+          <div className="text-sm text-gray-500 mb-1 font-medium">🎯 Giá mua ngay</div>
+          <div className="text-xl font-bold text-blue-600">
+            ₫{formatPrice(product.buy_it_now_price)}
+          </div>
+        </div>
+      )}
+
+      {/* Giá đặt tối thiểu */}
+      {minValidPrice > 0 && (
+        <div className="mb-5">
+          <div className="text-sm text-gray-500 mb-1 font-medium">📊 Giá đặt tối thiểu</div>
+          <div className="text-lg font-bold text-gray-800">
+            ₫{formatPrice(minValidPrice)}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Bước giá: ₫{formatPrice(product.bid_increment)}
+          </div>
+        </div>
+      )}
+
+      {/* Thông tin đấu giá */}
+      <div className={`p-4 rounded-lg mb-6 border ${isEndingSoon() ? 'bg-orange-50 border-orange-100' : 'bg-gray-50 border-gray-100'
+        }`}>
+        <div className="flex justify-between mb-3 items-center">
+          <span className="font-bold text-gray-700">⏳ Thời gian còn lại:</span>
+          <span className={`font-bold ${isEndingSoon() ? 'text-red-600' : 'text-green-600'}`}>
+            {getTimeRemaining(product.auction_end_time)}
+          </span>
+        </div>
+        <div className="flex justify-between mb-3 items-center">
+          <span className="text-gray-600">🔁 Số lượt ra giá:</span>
+          <span className="font-semibold text-gray-900">{product.bid_count || 0}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">📈 Bước giá:</span>
+          <span className="font-semibold text-gray-900">₫{formatPrice(product.bid_increment)}</span>
+        </div>
+      </div>
+
+      {/* Thông tin người bán */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          {product.seller?.full_name?.charAt(0) || 'A'}
+        </div>
+        <div>
+          <div className="text-xs text-gray-500 uppercase font-semibold">👤 Người bán</div>
+          <div className="font-bold text-gray-900">{product.seller?.full_name || "Ẩn danh"}</div>
+          <div className="text-xs text-yellow-500 flex items-center">
+            ⭐ 4.8/5 <span className="text-gray-400 ml-1">(124 đánh giá)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Thông tin người đặt giá cao nhất */}
+      {product.current_highest_bidder && (
+        <div className="mb-6 flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+          <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+            {product.current_highest_bidder.full_name?.charAt(0) || 'B'}
+          </div>
+          <div>
+            <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">👑 Người giữ giá cao nhất</div>
+            <div className="font-bold text-gray-900">{product.current_highest_bidder.full_name}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Thời gian đăng & kết thúc */}
+      <div className="border-t border-gray-100 pt-4 text-sm text-gray-600 space-y-2">
+        <div className="flex justify-between">
+          <span>📅 Thời điểm đăng:</span>
+          <span className="font-medium text-gray-800">{formatDate(product.auction_start_time)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>🕒 Thời điểm kết thúc:</span>
+          <span className="font-medium text-gray-800">{formatDate(product.auction_end_time)}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Component mô tả chi tiết
+function ProductDescription({ product }) {
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+        📝 Mô tả chi tiết
+      </h2>
+      <div className="bg-white p-6 rounded-xl border border-gray-200 text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {product.description || 'Chưa có mô tả cho sản phẩm này.'}
+      </div>
+    </div>
+  )
+}
+
+// Component đặt giá & lịch sử
+function BiddingSection({ product, minValidPrice, user }) {
+  const [bidAmount, setBidAmount] = useState(minValidPrice || product.start_price)
+
+  useEffect(() => {
+    setBidAmount(minValidPrice > 0 ? minValidPrice : product.start_price);
+  }, [minValidPrice]);
+
+  const handleBid = async () => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để đặt giá!')
+      return
+    }
+
+    if (bidAmount < minValidPrice) {
+      alert(`Giá đặt phải tối thiểu ₫${minValidPrice.toLocaleString('vi-VN')}`)
+      return
+    }
+
+    // TODO: Gọi API đặt giá
+    alert(`Đã đặt giá ₫${bidAmount.toLocaleString('vi-VN')}`)
+    const response = await bidService.placeBid(product._id, bidAmount)
+    
+  }
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN').format(price)
+  }
+
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+        💰 Đặt giá
+      </h2>
+
+      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        {user ? (
+          <div>
+            <div className="mb-4">
+              <label className="block mb-2 font-bold text-gray-700">
+                Giá đặt của bạn (₫)
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(Number(e.target.value))}
+                    min={minValidPrice}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-medium text-gray-900"
+                  />
+                  <div className="text-sm text-gray-500 mt-2 ml-1">
+                    Giá đặt tối thiểu: <span className="font-semibold text-gray-700">₫{formatPrice(minValidPrice)}</span>
+                  </div>
+                </div>
+
+                <button
+                  onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
+                  onClick={handleBid}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
+                >
+                  Đặt giá ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4 font-medium">Vui lòng đăng nhập để tham gia đấu giá sản phẩm này</p>
+            <Link to="/login">
+              <button
+                onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md"
+              >
+                Đăng nhập ngay
+              </button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Component Q&A
+function ProductQA({ productId }) {
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+        ❓ Hỏi & Đáp
+      </h2>
+      <div className="bg-white p-10 text-center rounded-xl border border-gray-200 text-gray-500 italic">
+        Tính năng đang được phát triển...
+      </div>
+    </div>
+  )
+}
+
+// Component sản phẩm liên quan
+function RelatedProducts({ products }) {
+  if (!products || products.length === 0) return null
+
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+        🔄 Sản phẩm cùng chuyên mục
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map((product) => (
+          <ProductCard key={product._id} product={product} />
+        ))}
+      </div>
+    </div>
+  )
+}

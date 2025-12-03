@@ -4,10 +4,10 @@ export const authService = {
   // Đăng nhập - backend trả về { token: "Bearer <accessToken>" }
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-    
+
     // Backend trả về { token: "Bearer <accessToken>" }
     return {
-      accessToken: response.data.token  
+      accessToken: response.data.token
     };
   },
 
@@ -42,7 +42,7 @@ export const authService = {
       await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
-    } 
+    }
   },
 
   // Đăng nhập Google - backend expect code
@@ -54,5 +54,48 @@ export const authService = {
   // Xử lý callback OAuth
   handleOAuthCallback: () => {
     return true;
+  },
+
+  // services/authService.js
+  forgotPassword: async (email) => {
+    try {
+      console.log('=== FRONTEND: Calling forgot-password ===');
+      console.log('Email:', email);
+
+      const response = await api.post('/auth/forgot-password', { email });
+
+      console.log('=== FRONTEND: Response received ===');
+      console.log('Status:', response.status);
+      console.log('Data:', response.data);
+
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      console.log('=== FRONTEND: Error occurred ===');
+      console.log('Error:', error);
+      console.log('Error response:', error.response);
+      console.log('Error message:', error.message);
+
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Có lỗi xảy ra'
+      };
+    }
+  },
+  
+  resetPassword: async (email, otp, newPassword) => {
+    try {
+      const response = await api.post('/auth/reset-password', {
+        email,
+        otp,
+        newPassword
+      });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Có lỗi xảy ra'
+      };
+    }
   }
+
 };

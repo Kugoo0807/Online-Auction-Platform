@@ -18,6 +18,10 @@ class CategoryService {
         return await categoryRepository.findById(id);
     }
 
+    async getCategoryByName(category_name) {
+        return await categoryRepository.findByName(category_name);
+    }
+
     async updateCategory(id, updateData) {
         const category = await categoryRepository.findById(id);
         if (!category) {

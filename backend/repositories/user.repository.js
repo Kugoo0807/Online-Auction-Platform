@@ -22,28 +22,6 @@ class UserRepository {
     );
   }
 
-  async saveOtp(userId, hashedOtp, expiry) {
-    return await User.findByIdAndUpdate(
-      userId,
-      {
-        password_otp: hashedOtp,
-        otp_expired: expiry,
-      },
-      { new: true }
-    );
-  }
-
-  async clearOtp(userId) {
-    return await User.findByIdAndUpdate(
-      userId,
-      {
-        password_otp: null,
-        otp_expired: null,
-      },
-      { new: true }
-    );
-  }
-
   async findByProviderId(provider, providerId) {
     return await User.findOne({ auth_provider: provider, provider_id: providerId });
   }
@@ -87,6 +65,53 @@ class UserRepository {
       { $set: cleaned },
       { new: true, runValidators: true }
     );
+  }
+
+  async clearOtp(userId) {
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        $unset: {
+          otp: 1,
+          otp_expires: 1
+        }
+      },
+      { new: true }
+    );
+  }
+
+  async updateRatingStats(userId, score, count, session = null) {
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        rating_score: score,
+        rating_count: count
+      },
+      { new: true, session }
+    );
+  }
+  
+  async upgradeSeller(userId) {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 7);
+
+    return await User.findByIdAndUpdate(
+      userId,
+      { role: 'seller', seller_expiry_date: expiryDate },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async downgradeExpiredSellers() {
+    const now = new Date();
+
+    return await User.updateMany(
+      { role: 'seller', seller_expiry_date: { $lt: now }},
+      {
+        $set: { role: 'bidder' },
+        $unset: { seller_expiry_date: 1 }
+      }
+    )
   }
 }
 

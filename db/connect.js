@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const DB_URI = process.env.MONGODB_URI || "mongodb+srv://Web:1111@database.b0lr6f1.mongodb.net/onlineauction?retryWrites=true&w=majority";
+const DB_URI = process.env.MONGODB_URI;
 
 const connectDB = async () => {
   if (!DB_URI) {
@@ -9,7 +9,11 @@ const connectDB = async () => {
   }
 
   try {
-    await mongoose.connect(DB_URI);
+    await mongoose.connect(DB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        family: 4
+    });
 
     console.log(`[MONGOOSE] Kết nối MongoDB Atlas thành công!`);
     console.log(`[MONGOOSE] Host: ${mongoose.connection.host}`);

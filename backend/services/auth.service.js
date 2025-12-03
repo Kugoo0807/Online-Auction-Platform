@@ -5,6 +5,7 @@ import crypto from 'crypto';
 
 import { userRepository } from '../repositories/user.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
+import { otpRepository } from '../repositories/otp.repository.js';
 
 import { sendOtp } from './email.service.js';
 
@@ -23,10 +24,43 @@ const googleClient = new OAuth2Client(
 );
 
 class AuthService {
-    async register(registerData) {
-        const { email, password, full_name, address, phone_number } = registerData;
+    async sendRegisterOtp(email) {
+        const existingUser = await userRepository.findByEmail(email);
+        if (existingUser) {
+            throw new Error('Email đã tồn tại trong hệ thống!');
+        }
 
-        // Kiểm tra tồn tại
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const salt = await bcrypt.genSalt(10);
+        const hashedOtp = await bcrypt.hash(otp, salt);
+
+        await otpRepository.createOrUpdateOtp(email, hashedOtp);
+
+        console.log(`[REGISTER OTP] Gửi tới ${email}: ${otp}`);
+        // TODO: mail service
+
+        return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
+    }
+
+    async register(registerData) {
+        const { email, password, full_name, address, otp } = registerData;
+
+        // Validate đầu vào
+        if (!otp) throw new Error('Vui lòng nhập mã OTP!');
+
+        // Check OTP
+        const otpRecord = await otpRepository.findByEmail(email);
+        
+        if (!otpRecord) {
+            throw new Error('OTP không tồn tại hoặc đã hết hạn!');
+        }
+
+        const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+        if (!isMatch) {
+            throw new Error('Mã OTP không chính xác!');
+        }
+
+        // Check tồn tại user
         const existingUser = await userRepository.findByEmail(email);
         if (existingUser) {
             throw new Error('Email đã tồn tại!');
@@ -41,9 +75,11 @@ class AuthService {
             password: hashedPassword,
             full_name: full_name,
             address: address,
-            phone_number: phone_number || undefined,
             role: 'bidder' // Mặc định
         });
+
+        // Dọn dẹp OTP
+        await otpRepository.deleteByEmail(email);
 
         // Ẩn mật khẩu
         newUser.password = undefined;
@@ -150,12 +186,10 @@ class AuthService {
             throw new Error('Refresh Token không hợp lệ!');
         }
 
-        console.log(payload.id);
         const user = await userRepository.findById(payload.id);
         if (!user) {
             throw new Error('Không tìm thấy người dùng ứng với Token!');
         }
-        console.log(user.id);
 
         // Xóa Refresh Token cũ và tạo Tokens mới
         await tokenRepository.deleteRefreshToken(oldRefreshToken);
@@ -190,7 +224,9 @@ class AuthService {
 
     async forgotPassword(email) {
         const user = await userRepository.findByEmail(email);
-        
+        if (!user) {
+            throw new Error('Email không tồn tại trong hệ thống!');
+        }
         if (user) {
             try {
                 // Tạo OTP (6 số) và hash OTP trước khi đưa cho Database
@@ -202,13 +238,13 @@ class AuthService {
                 const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
                 // Lưu OTP
-                await userRepository.saveOtp(user.id, hashedOtp, expiry);
+                await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
                 // Gửi OTP (chưa hash) cho người dùng
                 //await emailService.sendOtp(email, otp);
-                console.log('OTP: ' + otp);
+                console.log('[FORGOT PASSWORD OTP]: ' + otp);
             } catch (e) {
-                console.error('Lỗi khi xử lý forgotPassword: ' + e);
+                throw new Error('Lỗi khi xử lý forgotPassword: ' + e);
             }
         }
 
@@ -216,22 +252,22 @@ class AuthService {
     }
     
     async resetPassword(email, otp, newPassword) {
+        const otpRecord = await otpRepository.findByEmail(email);
+
+       // Kiểm tra OTP có tồn tại không
+        if (!otpRecord) {
+            throw new Error('Mã OTP không tồn tại hoặc đã hết hạn!');
+        }
+
+        // So sánh mã OTP (hash)
+        const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+        if (!isMatch) {
+            throw new Error('Mã OTP không chính xác!');
+        }
+
         const user = await userRepository.findByEmail(email);
-
-        // Kiểm tra user và OTP
-        if (!user || !user.passwordOtp || !user.otpExpires) {
-            throw new Error('Yêu cầu không hợp lệ!');
-        }
-
-        // Kiểm tra OTP hết hạn
-        if (user.otpExpires < new Date()) {
-            throw new Error('OTP đã hết hạn!');
-        }
-
-        // Kiểm tra OTP (so sánh với bản đã hash trong DB)
-        const isOtpMatch = await bcrypt.compare(otp, user.passwordOtp);
-        if (!isOtpMatch) {
-            throw new Error('OTP không chính xác!');
+        if (!user) {
+            throw new Error('Người dùng không tồn tại!');
         }
 
         // Hash mật khẩu mới

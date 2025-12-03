@@ -3,20 +3,29 @@ import slugify from 'slugify'
 
 class CategoryRepository {
     async create(data) {
-        const parentId = data.parent_id || null;
+        const parentId = data.parent || null;
 
         const slug = await this.generateSlug(data.category_name);
-        const categoryData = { ...data, parent_id: parentId, slug };
+        const categoryData = { ...data, parent: parentId, slug };
         const category = new Category(categoryData);
         return await category.save();
     }
 
     async findAll() {
-        return await Category.find().populate("parent_id", "category_name").sort({ category_name: 1 });             
+        return await Category.find().populate("parent", "category_name").sort({ category_name: 1 });             
     }
 
     async findById(id) {
-        return await Category.findById(id).populate("parent_id", "category_name");
+        return await Category.findById(id).populate("parent", "category_name");
+    }
+
+    async findByName(name) {
+        return await Category.findOne({
+            category_name: {
+                $regex: `^${name}$`,
+                $options: 'i'
+            }
+        });
     }
 
     async update(id, updateData) {
@@ -26,15 +35,15 @@ class CategoryRepository {
             }
         });
 
-        // parent_id
-        if ('parent_id' in updateData) {
-            const pid = updateData.parent_id;
+        // parent
+        if ('parent' in updateData) {
+            const pid = updateData.parent;
 
             // Các giá trị biểu thị "Xóa danh mục cha"
             const emptyValues = [null, "", "null"]; 
 
             if (emptyValues.includes(pid)) {
-                updateData.parent_id = null; 
+                updateData.parent = null; 
             } 
             else {
                 if (pid.toString() === id.toString()) {
@@ -52,7 +61,7 @@ class CategoryRepository {
             id,
             updateData,
             { new: true, runValidators: true }
-        ).populate("parent_id", "category_name");
+        ).populate("parent", "category_name");
     }
 
     async delete(id) {
@@ -60,7 +69,7 @@ class CategoryRepository {
     }
 
     async findBySlug(slug) {
-        return await Category.findOne({ slug }).populate("parent_id", "category_name");
+        return await Category.findOne({ slug }).populate("parent", "category_name");
     }
 
     async findByName(name) {
@@ -91,13 +100,13 @@ class CategoryRepository {
     }
 
     async hasChildren(id) {
-        const children = await Category.exists({ parent_id: categoryId });
+        const children = await Category.exists({ parent: id });
         return !!children;
     }
 
     async getAllDescendantIds(id) {
         let ids = [id];
-        const children = await Category.find({ parent_id: id }).select('_id');
+        const children = await Category.find({ parent: id }).select('_id');
 
         for (const child of children) {
             const descendantIds = await this.getAllDescendantIds(child._id);

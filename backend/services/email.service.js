@@ -3,41 +3,370 @@ dotenv.config();
 
 import nodemailer from "nodemailer";
 
+// Cấu hình Transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,       // smtp.gmail.com
+  host: process.env.MAIL_HOST,
   port: Number(process.env.MAIL_PORT),
   secure: process.env.MAIL_SECURE === "true",
   auth: {
-    user: process.env.MAIL_USER,     // your@gmail.com
-    pass: process.env.MAIL_PASS      // app password
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
   }
 });
 
-export async function sendOtp(email, otp) {
-    console.log(process.env.MAIL_USER)
-    try {
-        const info = await transporter.sendMail({
-        from: process.env.MAIL_FROM,
-        to: email,
-        subject: "Mã xác thực OTP",
-        html: `
-        <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-            <div style="margin:50px auto;width:70%;padding:20px 0">
-            <div style="border-bottom:1px solid #eee">
-                <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Xác thực tài khoản</a>
-            </div>
-            <p>Xin chào,</p>
-            <p>Mã xác thực OTP của bạn là: <strong style="font-size: 1.2em;">${otp}</strong></p>
-            <p>Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này cho người khác.</p>
-            <hr style="border:none;border-top:1px solid #eee" />
-            </div>
-        </div>
-        ` 
-        });
+const maskName = (name) => {
+  if (!name) return 'Người dùng ẩn danh';
+  if (name.length <= 2) return "****" + name.slice(-1);
+  const visibleLength = Math.min(name.length - 1, 4); 
+  return "****" + name.slice(-visibleLength);
+};
 
-        return info;
-    } catch (error) {
-        console.error("Gửi mail thất bại:", error);
-        throw error;
+async function sendMailBase({ to, subject, html }) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"Online Auction" <${process.env.MAIL_USER}>`, 
+      to: to, 
+      subject: subject,
+      html: html
+    });
+    console.log(`Mail sent to ${to}: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`Gửi mail thất bại đến ${to}:`, error);
+  }
+}
+
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+
+export async function sendOtp(email, otp) {
+  return sendMailBase({
+    to: email,
+    subject: "Mã xác thực OTP - Online Auction",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #167bffff; color: white; padding: 20px; text-align: center;">
+          <h2>Xác thực tài khoản</h2>
+        </div>
+        <div style="padding: 20px;">
+          <p>Mã OTP của bạn là: <strong style="font-size: 1.5em; color: #c0341d;">${otp}</strong></p>
+          <p>Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này.</p>
+        </div>
+      </div>
+    `
+  });
+}
+
+export async function notifyNewBidToSeller(sellerEmail, productName, newPrice, bidderName, productLink) {
+  const maskBidderName = maskName(bidderName);
+
+  return sendMailBase({
+    to: sellerEmail,
+    subject: `[Thông báo] Sản phẩm "${productName}" có lượt ra giá mới`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #167bffff; color: white; padding: 20px; text-align: center;">
+          <h2>Sản phẩm <strong>${productName}</strong> của bạn vừa nhận được lượt ra giá mới.</h2>
+        </div>
+        <div style="padding: 20px;">
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p>Người đặt: <strong>${maskBidderName}</strong></p>
+            <p style="margin: 5px 0; color: #666;">Giá hiện tại:</p>
+            <p style="margin: 0; font-size: 24px; font-weight: bold; color: #167bffff;">
+                ${formatCurrency(newPrice)}
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+              <center>
+                <a href="${productLink}" style="background-color: #167bffff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                  Xem chi tiết sản phẩm
+                </a>
+              </center>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+export async function notifyBidSuccess(bidderEmail, productName, holderName, bidderPrice, currentPrice, productLink) {
+  const maskHolderName = maskName(holderName);
+
+  return sendMailBase({
+    to: bidderEmail,
+    subject: `[Xác nhận] Bạn đã ra giá thành công cho "${productName}"`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #06b231ff; color: white; padding: 20px; text-align: center;">
+          <h2>Bạn đã đặt giá thành công cho sản phẩm <strong>${productName}</strong>.</h2>
+        </div>
+        <div style="padding: 20px;">
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 5px 0; color: #666;">Giá đặt của bạn:</p>
+            <p style="margin: 0; font-size: 24px; font-weight: bold; color: #167bffff;">
+                ${formatCurrency(bidderPrice)}
+            </p>
+            <p style="margin: 5px 0; color: #666;">Giá hiện tại:</p>
+            <p style="margin: 0; font-size: 24px; font-weight: bold; color: #167bffff;">
+                ${formatCurrency(currentPrice)}
+            </p>
+            <p>Người giữ giá hiện tại: <strong>${maskHolderName}</strong></p>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <center>
+              <a href="${productLink}" style="background-color: #06b231ff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                  Theo dõi sản phẩm
+              </a>
+            </center>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+export async function notifyHolder(holderEmail, productName, currentPrice, top1Email, productLink) {
+  const isStillWinning = holderEmail === top1Email;
+
+    // Cấu hình nội dung dựa trên trạng thái
+    let subject = '';
+    let title = '';
+    let message = '';
+    let color = '';
+    let actionText = '';
+
+    if (isStillWinning) {
+        // VẪN LÀ NGƯỜI GIỮ GIÁ
+        subject = `[Cập nhật] Giá sản phẩm "${productName}" vừa thay đổi`;
+        title = 'Hệ thống đấu giá tự động';
+        color = '#17a2b8';
+        message = `
+            <p>Đã có người ra giá mới cho sản phẩm này.</p>
+            <p>Tuy nhiên, hệ thống <strong>Đấu giá tự động</strong> đã giúp bạn nâng mức giá lên để tiếp tục dẫn đầu.</p>
+            <p>Hãy chú ý theo dõi phiên đấu giá nhé!</p>
+        `;
+        actionText = 'Xem chi tiết sản phẩm';
+    } else {
+        // BỊ VƯỢT GIÁ
+        subject = `[CẢNH BÁO] Bạn đã bị vượt giá món "${productName}"`;
+        title = 'Bạn không còn là người giữ giá cao nhất!';
+        color = '#dc3545';
+        message = `
+            <p>Rất tiếc, một người dùng khác đã đặt mức giá cao hơn bạn.</p>
+            <p>Để sở hữu sản phẩm này, bạn cần ra mức giá mới ngay lập tức.</p>
+        `;
+        actionText = 'Đấu giá lại ngay';
     }
+
+    return sendMailBase({
+        to: holderEmail,
+        subject: subject,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: ${color}; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">${title}</h2>
+                </div>
+
+                <div style="padding: 20px;">
+                    <h3 style="color: #333;">Sản phẩm: ${productName}</h3>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p style="margin: 5px 0; color: #666;">Giá hiện tại:</p>
+                        <p style="margin: 0; font-size: 24px; font-weight: bold; color: ${color};">
+                            ${formatCurrency(currentPrice)}
+                        </p>
+                    </div>
+
+                    <div style="color: #444; line-height: 1.6;">
+                        ${message}
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: ${color}; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            ${actionText}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyBidRejected(bidderEmail, productName) {
+    return sendMailBase({
+        to: bidderEmail,
+        subject: `[Thông báo] Quyền đấu giá bị từ chối: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">Người bán đã từ chối quyền tham gia đấu giá của bạn</h2>
+                </div>
+
+                <div style="padding: 20px;">
+                    <h3 style="color: #333;">Sản phẩm: ${productName}</h3>
+
+                    <div style="color: #444; line-height: 1.6;">
+                        Các lượt ra giá trước đó của bạn (nếu có) đã bị vô hiệu hóa.
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyAuctionWinner(winnerEmail, productName, finalPrice, checkoutLink) {
+    return sendMailBase({
+        to: winnerEmail,
+        subject: `CHÚC MỪNG! BẠN ĐÃ THẮNG SẢN PHẨM: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+                <div style="background-color: #28a745; color: white; padding: 30px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px;">CHÚC MỪNG BẠN!</h1>
+                </div>
+                
+                <div style="padding: 30px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px; color: #333;">Bạn đã xuất sắc trở thành người thắng cuộc trong phiên đấu giá sản phẩm:</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center;">
+                        <h3 style="margin: 0 0 10px 0; color: #000;">${productName}</h3>
+                        <p style="margin: 0; color: #666;">Mức giá đấu thành công</p>
+                        <p style="margin: 5px 0 0 0; font-size: 28px; font-weight: bold; color: #28a745;">${formatCurrency(finalPrice)}</p>
+                    </div>
+
+                    <p style="color: #666; text-align: center; margin-bottom: 30px;">
+                        Bước cuối cùng: Vui lòng hoàn tất thủ tục thanh toán và cung cấp địa chỉ giao hàng.
+                    </p>
+
+                    <div style="text-align: center;">
+                        <a href="${checkoutLink}" style="background-color: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
+                            THANH TOÁN & NHẬN HÀNG NGAY
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #888;">
+                    Cảm ơn bạn đã tham gia đấu giá tại AuctionHub.
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyAuctionEndedSold(sellerEmail, productName, winnerName, finalPrice, productLink) {
+    return sendMailBase({
+        to: sellerEmail,
+        subject: `[KẾT THÚC] Sản phẩm "${productName}" đã được bán!`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #007bff; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">ĐẤU GIÁ THÀNH CÔNG</h2>
+                </div>
+
+                <div style="padding: 25px;">
+                    <p>Chào bạn,</p>
+                    <p>Phiên đấu giá sản phẩm <strong>"${productName}"</strong> của bạn đã kết thúc thành công</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px 0; color: #666;">Người mua:</td>
+                            <td style="padding: 10px 0; font-weight: bold; text-align: right;">${winnerName}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px 0; color: #666;">Giá chốt:</td>
+                            <td style="padding: 10px 0; font-weight: bold; text-align: right; color: #28a745; font-size: 18px;">${formatCurrency(finalPrice)}</td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Xem chi tiết giao dịch
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyAuctionEndedNoBid(sellerEmail, productName, productLink) {
+    return sendMailBase({
+        to: sellerEmail,
+        subject: `[KẾT THÚC] Sản phẩm "${productName}" không có người mua`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #6c757d; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">KẾT THÚC KHÔNG NGƯỜI MUA</h2>
+                </div>
+
+                <div style="padding: 25px; text-align: center;">
+                    <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                        Rất tiếc, phiên đấu giá sản phẩm <strong>"${productName}"</strong> đã kết thúc nhưng chưa có lượt ra giá nào.
+                    </p>
+                    
+                    <div style="background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0; font-size: 14px;">
+                        💡 <strong>Mẹo:</strong> Hãy thử điều chỉnh giá khởi điểm thấp hơn hoặc bổ sung hình ảnh hấp dẫn hơn khi đăng lại.
+                    </div>
+
+                    <a href="${productLink}" style="display: inline-block; margin-top: 15px; color: #007bff; text-decoration: none;">
+                        Xem lại sản phẩm →
+                    </a>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyNewQuestion(sellerEmail, productName, questionContent) {
+    return sendMailBase({
+        to: sellerEmail,
+        subject: `Câu hỏi mới về sản phẩm: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #17a2b8; color: white; padding: 15px 25px;">
+                    <h3 style="margin: 0;">Bạn có câu hỏi mới!</h3>
+                </div>
+                
+                <div style="padding: 25px;">
+                    <p>Khách hàng quan tâm đến sản phẩm <strong>"${productName}"</strong> vừa gửi một câu hỏi:</p>
+                    
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; font-style: italic; color: #555; margin: 20px 0;">
+                        "${questionContent}"
+                    </div>
+
+                    <p>Việc trả lời nhanh chóng sẽ tăng khả năng chốt đơn của bạn.</p>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent) {
+    // Lưu ý: Dùng bcc để bảo mật danh sách email người nhận
+    return transporter.sendMail({
+        from: `"AuctionHub Support" <${process.env.MAIL_USER}>`,
+        bcc: recipientsEmails, 
+        subject: `[Cập nhật] Người bán đã trả lời về: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid #eee;">
+                    <h3 style="margin: 0; color: #333;">Cập nhật thảo luận sản phẩm</h3>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${productName}</p>
+                </div>
+
+                <div style="padding: 25px;">
+                    <div style="margin-bottom: 20px;">
+                        <span style="background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">CÂU HỎI</span>
+                        <p style="margin-top: 5px; color: #333;">${questionContent}</p>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <span style="background-color: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">TRẢ LỜI TỪ NGƯỜI BÁN</span>
+                        <p style="margin-top: 5px; color: #333; font-weight: 500;">${answerContent}</p>
+                    </div>
+                </div>
+            </div>
+        `
+    });
 }
