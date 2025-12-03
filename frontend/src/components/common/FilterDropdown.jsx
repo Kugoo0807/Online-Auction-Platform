@@ -11,7 +11,7 @@ const FilterDropdown = ({ label, options, selectedValue, onSelect }) => {
     <div className="relative inline-block text-left w-full sm:w-auto font-sans z-20">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full sm:w-56 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        className="flex items-center justify-between w-full sm:w-56 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
       >
         <span className="truncate flex items-center">
           <span className="text-gray-500 mr-2 text-sm font-medium">{label}:</span>

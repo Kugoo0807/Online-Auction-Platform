@@ -176,10 +176,9 @@ const CategoryPage = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-gray-200">
-                <span className="text-gray-700 font-bold mr-2 hidden lg:block self-center">Xếp:</span>
-                <FilterDropdown label="Thứ tự" options={sortOptions} selectedValue={sortOrder} onSelect={(val) => { setSortOrder(val); setSearchParams({ page: 1 }); }} />
+                <FilterDropdown label="Sắp xếp" options={sortOptions} selectedValue={sortOrder} onSelect={(val) => { setSortOrder(val); setSearchParams({ page: 1 }); }} />
                 {(priceFilter !== 'ALL' || timeFilter !== 'ALL' || sortOrder !== 'default') && (
-                    <button onClick={() => { setPriceFilter('ALL'); setTimeFilter('ALL'); setSortOrder('default'); setSearchParams({ page: 1 }); }} className="text-sm text-red-500 hover:underline font-medium ml-auto lg:ml-2 self-center whitespace-nowrap">Xóa bộ lọc</button>
+                    <button onClick={() => { setPriceFilter('ALL'); setTimeFilter('ALL'); setSortOrder('default'); setSearchParams({ page: 1 }); }} className="text-sm text-red-500 hover:underline font-medium ml-auto lg:ml-2 self-center whitespace-nowrap cursor-pointer">Xóa bộ lọc</button>
                 )}
             </div>
         </div>
