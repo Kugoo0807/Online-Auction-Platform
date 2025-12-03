@@ -22,6 +22,9 @@ export function AuthRoutes(authController) {
     
     // Đăng nhập bằng google
     router.post("/google/login", authController.loginWithGoogle);
+
+    // Đăng nhập bằng facebook
+    router.post("/facebook/login", authController.loginWithFacebook);
     
     // Quên mật khẩu
     router.post('/forgot-password', authController.forgotPassword);
