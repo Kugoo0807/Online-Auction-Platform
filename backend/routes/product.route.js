@@ -25,7 +25,7 @@ export function ProductRoutes(productController) {
     // ======= CẦN CHECK AUTH =======
 
     // Xem watch list
-    router.get('/watch-list', [checkAuth, checkRole(['seller', 'bidder'])], productController.getWatchList);
+    router.get('/watch-list', checkAuth, productController.getWatchList);
 
 
     // ======= CẦN QUYỀN SELLER =======
