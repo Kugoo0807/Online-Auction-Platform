@@ -147,6 +147,12 @@ class ProductService {
         if (!product) {
             throw new Error('Sản phẩm không tồn tại');
         }
+
+        // Validate seller
+        if (product.seller._id.toString() === userId.toString()) {
+            throw new Error('Bạn không thể tự thêm sản phẩm của mình vào yêu thích!')
+        }
+        
         const isExist = await watchListRepository.exists(userId, productId);
         if (isExist) {
             await watchListRepository.remove(userId, productId);

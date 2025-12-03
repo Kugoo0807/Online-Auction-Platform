@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { toast } from "react-toastify";
 import { productService } from '../../services/product.service'
 import LoginRequestModal from '../common/LoginRequestModal';
 import { useAuth } from '../../context/AuthContext';
@@ -147,7 +148,19 @@ export function ProductCard({ product }) {
       // Đảo ngược state UI
       setIsFavorite((prev) => !prev);
     } catch (error) {
-      toast.error("Có lỗi xảy ra, thử lại sau!");
+      const message = error?.response?.data?.message || "Có lỗi xảy ra, thử lại sau!";
+      console.log(message);
+      toast.error(
+        <div className="flex items-center gap-2">
+          <i className="ri-error-warning-fill text-red-500 text-xl" />
+          <span>{message}</span>
+        </div>,
+        {
+          position: "bottom-right",
+          autoClose: 3000,
+          className: "rounded-xl shadow-lg bg-white text-gray-800 border border-red-100"
+        }
+      );
     } finally {
       setIsLoading(false);
     }
