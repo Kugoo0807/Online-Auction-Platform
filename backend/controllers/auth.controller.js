@@ -73,6 +73,25 @@ class AuthController {
         }
     }
 
+    async loginWithFacebook(req, res) {
+        try {
+            const { code } = req.body;
+            console.log("👉 Backend received Facebook Code:", code);
+
+            if (!code) {
+                return res.status(400).json({ message: 'Không có mã ủy quyền (code)!' });
+            }
+
+            const { accessToken, refreshToken } = await authService.loginWithFacebook(code);
+
+            setRefreshTokenCookie(res, refreshToken);
+            res.status(200).json({ token: accessToken });
+        } catch (e) {
+            console.error("❌ FACEBOOK LOGIN ERROR:", e.response?.data || e.message);
+            res.status(500).json({ message: e.message || 'Lỗi đăng nhập Facebook!' });
+        }
+    }
+
     async refresh(req, res) {
         try {
             const oldRefreshToken = req.cookies.refreshToken;

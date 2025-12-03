@@ -11,45 +11,63 @@ export default function OAuthCallback() {
   const processedRef = useRef(false)
 
   useEffect(() => {
-    const code = searchParams.get('code')
+    const code = searchParams.get('code');
+    const state = searchParams.get('state'); // Lấy state để phân biệt
 
     if (code && !processedRef.current) {
-      processedRef.current = true; 
+      processedRef.current = true;
 
-      const handleGoogleCallback = async () => {
+      const handleCallback = async () => {
         try {
-          console.log("Received Google Code:", code);
+          let data;
           
-          // send code to Backend
-          const data = await authService.loginWithGoogle(code);
-          
-          // save Access Token to RAM (via api.js helper)
+          // Kiểm tra xem là Facebook hay Google
+          if (state === 'facebook') {
+             console.log("Processing Facebook Login...");
+             data = await authService.loginWithFacebook(code);
+          } else if (state === 'google') {
+             console.log("Processing Google Login...");
+             data = await authService.loginWithGoogle(code);
+          } else if (state === 'github') {
+             console.log("Processing GitHub Login...");
+             data = await authService.loginWithGitHub(code);
+          } else {
+             // Nếu state không rõ, cố gắng mặc định fallback gọi google
+             console.log("Processing login from unknown provider (no state).");
+             data = await authService.loginWithGoogle(code);
+          }
+
+          // Đoạn dưới giữ nguyên (Lưu token, lấy profile, redirect)
           const rawToken = data.accessToken.replace('Bearer ', '');
           setAuthToken(rawToken);
-
-          // get User Profile immediately
           const profileRes = await authService.getProfile();
           setUser(profileRes.user);
-
-          // redirect to Dashboard
           navigate('/dashboard', { replace: true });
-        } catch (error) {
-          console.error("Google Login Failed:", error);
-          navigate('/login', { state: { error: 'Google Login failed. Please try again.' } });
-        }
-      }
 
-      handleGoogleCallback();
+        } catch (error) {
+          console.error("Login Failed:", error);
+          navigate('/login', { state: { error: 'Login failed. Please try again.' } });
+        }
+      };
+
+      handleCallback();
     } else if (!code) {
-      // go back to login if no code found
       navigate('/login');
     }
   }, [searchParams, navigate, setUser]);
 
+  // Lấy provider từ state để hiển thị message động; nếu không có state thì dùng neutral label
+  const providerState = new URLSearchParams(window.location.search).get('state');
+  const providerLabel =
+    providerState === 'facebook' ? 'Facebook' :
+    providerState === 'google' ? 'Google' :
+    providerState === 'github' ? 'GitHub' :
+    'OAuth provider';
+
   return (
     <div className="flex justify-center items-center h-screen flex-col bg-[#c7dbe6] font-sans text-[#153243]">
       <div className="w-[50px] h-[50px] border-[5px] border-[#b5bec6] border-t-[#284b63] rounded-full animate-spin"></div>
-      <h3 className="mt-5 font-semibold">Processing Google Login...</h3>
+      <h3 className="mt-5 font-semibold">Processing {providerLabel} Login...</h3>
     </div>
   )
 }

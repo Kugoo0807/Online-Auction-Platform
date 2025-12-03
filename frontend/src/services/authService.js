@@ -56,6 +56,11 @@ export const authService = {
     return true;
   },
 
+  loginWithFacebook: async (code) => {
+    const response = await api.post('/auth/facebook/login', { code });
+    return { accessToken: response.data.token };
+  },
+
   // services/authService.js
   forgotPassword: async (email) => {
     try {
