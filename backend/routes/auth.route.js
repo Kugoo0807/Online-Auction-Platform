@@ -25,6 +25,9 @@ export function AuthRoutes(authController) {
 
     // Đăng nhập bằng facebook
     router.post("/facebook/login", authController.loginWithFacebook);
+
+    // Đăng nhập bằng github
+    router.post("/github/login", authController.loginWithGitHub);
     
     // Quên mật khẩu
     router.post('/forgot-password', authController.forgotPassword);

@@ -60,6 +60,8 @@ class AuthController {
     async loginWithGoogle(req, res) {
         try {
             const { code } = req.body; // Mã ủy quyền
+            console.log("Backend received Google Code:", code);
+            
             if (!code) {
                 return res.status(400).json({ message: 'Không có mã ủy quyền (code)!' });
             }
@@ -69,6 +71,7 @@ class AuthController {
             setRefreshTokenCookie(res, refreshToken);
             res.status(200).json({ token: accessToken });
         } catch (e) {
+            console.error("GOOGLE LOGIN ERROR:", e.response?.data || e.message);
             res.status(500).json({ message: e.message || 'Lỗi đăng nhập Google!' });
         }
     }
@@ -76,7 +79,7 @@ class AuthController {
     async loginWithFacebook(req, res) {
         try {
             const { code } = req.body;
-            console.log("👉 Backend received Facebook Code:", code);
+            console.log("Backend received Facebook Code:", code);
 
             if (!code) {
                 return res.status(400).json({ message: 'Không có mã ủy quyền (code)!' });
@@ -87,8 +90,27 @@ class AuthController {
             setRefreshTokenCookie(res, refreshToken);
             res.status(200).json({ token: accessToken });
         } catch (e) {
-            console.error("❌ FACEBOOK LOGIN ERROR:", e.response?.data || e.message);
+            console.error("FACEBOOK LOGIN ERROR:", e.response?.data || e.message);
             res.status(500).json({ message: e.message || 'Lỗi đăng nhập Facebook!' });
+        }
+    }
+
+    async loginWithGitHub(req, res) {
+        try {
+            const { code } = req.body;
+            console.log("Backend received GitHub Code:", code);
+
+            if (!code) {
+                return res.status(400).json({ message: 'Không có mã ủy quyền (code)!' });
+            }
+
+            const { accessToken, refreshToken } = await authService.loginWithGitHub(code);
+
+            setRefreshTokenCookie(res, refreshToken);
+            res.status(200).json({ token: accessToken });
+        } catch (e) {
+            console.error("GITHUB LOGIN ERROR:", e.response?.data || e.message);
+            res.status(500).json({ message: e.message || 'Lỗi đăng nhập GitHub!' });
         }
     }
 

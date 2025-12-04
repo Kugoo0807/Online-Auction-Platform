@@ -64,7 +64,18 @@ export default function Login() {
   };
 
   const handleGitHubLogin = () => {
-    authService.loginWithGitHub();
+    const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI;
+    const state = "github"; // Đánh dấu đây là login github
+
+    if (!githubClientId || githubClientId.includes('placeholder')) {
+      alert("Note: You are using a placeholder Client ID.");
+    }
+
+    // GitHub cần scope user:email để lấy email người dùng
+    const targetUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+
+    window.location.href = targetUrl;
   };
 
   return (

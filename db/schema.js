@@ -55,7 +55,7 @@ const userSchema = new Schema({
   date_of_birth: Date,
   phone_number: { type: String, sparse: true },
   address: { type: String },
-  auth_provider: { type: String, enum: ['local', 'google', 'facebook'], default: 'local' },
+  auth_provider: { type: String, enum: ['local', 'google', 'facebook', 'github'], default: 'local' },
   provider_id: { type: String, default: null },
   rating_score: { type: Number, default: 0 }, // Tổng điểm: cứ +1 hoặc -1
   rating_count: { type: Number, default: 0 }, // Tổng số lần được đánh giá
