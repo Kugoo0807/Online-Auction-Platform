@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
@@ -11,16 +11,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (window.location.pathname === '/oauth/callback') {
-      const isOAuthCallback = authService.handleOAuthCallback();
-      if (isOAuthCallback) {
-        const from = location.state?.from || "/dashboard";
-        navigate(from, { replace: true });
-      }
-    }
-  }, [navigate, location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -46,6 +36,7 @@ export default function Login() {
   const handleGoogleLogin = () => {
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+    const state = "google"; // Đánh dấu đây là login google
 
     if (!googleClientId || googleClientId.includes('placeholder')) {
       alert("Note: You are using a placeholder Client ID.");
@@ -53,13 +44,23 @@ export default function Login() {
 
     const targetUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${encodeURIComponent(
       redirectUri
-    )}&prompt=consent&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile&access_type=offline`;
+    )}&prompt=consent&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile&access_type=offline&state=${state}`;
 
     window.location.href = targetUrl;
   };
 
   const handleFacebookLogin = () => {
-    authService.loginWithFacebook();
+    const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    const redirectUri = import.meta.env.VITE_FACEBOOK_REDIRECT_URI;
+    const state = "facebook"; // Đánh dấu đây là login facebook
+
+    if (!facebookAppId || facebookAppId.includes('placeholder')) {
+      alert("Note: You are using a placeholder Client ID.");
+    }
+
+    const targetUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=email,public_profile`;
+
+    window.location.href = targetUrl;
   };
 
   const handleGitHubLogin = () => {

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import axios from 'axios'; // added axios
 
 import { userRepository } from '../repositories/user.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
@@ -16,11 +17,38 @@ const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || 'access_secret';
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'refresh_secret';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'google_id';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'google_secret';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5173/oauth/callback';
 
+// Facebook dùng trực tiếp API qua axios (không có OAuth2Client tương tự google-auth-library)
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID || 'facebook_app_id';
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET || 'facebook_app_secret';
+const FACEBOOK_REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI || 'http://localhost:5173/oauth/callback';
+
+// GitHub OAuth config
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || 'github_client_id';
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || 'github_client_secret';
+const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || 'http://localhost:5173/oauth/callback';
+
+// Warn if placeholders detected to make testing easier
+if (GOOGLE_CLIENT_ID.includes('google') || GOOGLE_CLIENT_SECRET.includes('google')) {
+    console.warn('[AUTH SERVICE] Google client id/secret look like placeholders. Check env vars.');
+}
+if (FACEBOOK_APP_ID.includes('facebook') || FACEBOOK_APP_SECRET.includes('facebook')) {
+    console.warn('[AUTH SERVICE] Facebook app id/secret look like placeholders. Check env vars.');
+}
+if (GITHUB_CLIENT_ID.includes('github') || GITHUB_CLIENT_SECRET.includes('github')) {
+    console.warn('[AUTH SERVICE] GitHub client id/secret look like placeholders. Check env vars.');
+}
+if (GOOGLE_REDIRECT_URI.includes('localhost') || FACEBOOK_REDIRECT_URI.includes('localhost') || GITHUB_REDIRECT_URI.includes('localhost')) {
+    console.info('[AUTH SERVICE] Redirect URIs are set to localhost; ensure frontend redirect URIs match these and match provider app settings.');
+}
+
+// Google: sử dụng OAuth2Client để lấy/verify id_token.
+// OAuth2Client được khởi tạo kèm redirect URI (dùng để exchange code và verify).
 const googleClient = new OAuth2Client(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    'postmessage'
+    GOOGLE_REDIRECT_URI
 );
 
 class AuthService {
@@ -109,14 +137,14 @@ class AuthService {
 
         const googleProfile = {
             email: payload.email,
-            name: payload.name,
-            provider: 'google',
-            providerId: payload.sub, // ID duy nhất của Google
+            full_name: payload.name,
+            auth_provider: 'google',
+            provider_id: payload.sub, // ID duy nhất của Google
         };
 
         let user = await userRepository.findByProviderId(
-            googleProfile.provider,
-            googleProfile.providerId
+            googleProfile.auth_provider,
+            googleProfile.provider_id
         );
 
         if (!user) {
@@ -134,9 +162,152 @@ class AuthService {
 
                 await userRepository.linkSocialAccount(
                     existingUser.id,
-                    googleProfile.provider,
-                    googleProfile.providerId
+                    googleProfile.auth_provider,
+                    googleProfile.provider_id
                 )
+                user = existingUser;
+            }
+        }
+
+        return this.generateToken(user);
+    }
+
+    async loginWithFacebook(code) {
+        const tokenUrl = `https://graph.facebook.com/v19.0/oauth/access_token`;
+        const { data: tokenData } = await axios.get(tokenUrl, {
+            params: {
+                client_id: FACEBOOK_APP_ID,
+                client_secret: FACEBOOK_APP_SECRET,
+                redirect_uri: FACEBOOK_REDIRECT_URI,
+                code: code,
+            },
+        });
+
+        const accessToken = tokenData.access_token;
+        if (!accessToken) {
+            throw new Error('Không thể lấy Access Token từ Facebook!');
+        }
+
+        // Lấy thông tin User
+        const userUrl = `https://graph.facebook.com/me`;
+        const { data: profile } = await axios.get(userUrl, {
+            params: {
+                fields: 'id,name,email,picture',
+                access_token: accessToken,
+            },
+        });
+
+        const fbProfile = {
+            email: profile.email,
+            full_name: profile.name,
+            auth_provider: 'facebook',
+            provider_id: profile.id,
+        };
+
+        // Nếu FB không trả về email (do đăng ký bằng số điện thoại), báo lỗi
+        if (!fbProfile.email) {
+            throw new Error('Facebook không trả về email cho tài khoản này. Vui lòng sử dụng phương thức đăng nhập khác.');
+        }
+
+        let user = await userRepository.findByProviderId(
+            fbProfile.auth_provider,
+            fbProfile.provider_id
+        );
+
+        if (!user) {
+            // Kiểm tra xem mail có tồn tại không
+            const existingUser = await userRepository.findByEmail(fbProfile.email);
+            if (!existingUser) {
+                // Tạo mới
+                user = await userRepository.createSocialUser(fbProfile);
+            } else {
+                // Kiểm tra xem tài khoản có liên kết với nhà cung cấp khác không
+                if (existingUser.auth_provider !== 'local') {
+                    throw new Error('Email này đã liên kết với nhà cung cấp khác!');
+                }
+                await userRepository.linkSocialAccount(
+                    existingUser.id,
+                    fbProfile.auth_provider,
+                    fbProfile.provider_id
+                );
+                user = existingUser;
+            }
+        }
+
+        return this.generateToken(user);
+    }
+
+    // New: GitHub login flow (exchange code -> fetch profile -> find/create/link -> generate tokens)
+    async loginWithGitHub(code) {
+        // 1. Exchange code for access token
+        const tokenUrl = `https://github.com/login/oauth/access_token`;
+        const { data: tokenData } = await axios.post(tokenUrl, {
+            client_id: GITHUB_CLIENT_ID,
+            client_secret: GITHUB_CLIENT_SECRET,
+            code: code,
+            redirect_uri: GITHUB_REDIRECT_URI,
+        }, {
+            headers: { Accept: 'application/json' }
+        });
+
+        const accessToken = tokenData.access_token;
+        if (!accessToken) {
+            throw new Error('Không thể lấy Access Token từ GitHub!');
+        }
+
+        // 2. Lấy thông tin user từ GitHub
+        const { data: profile } = await axios.get('https://api.github.com/user', {
+            headers: { Authorization: `token ${accessToken}`, Accept: 'application/vnd.github.v3+json' }
+        });
+
+        // GitHub may not provide email in /user; fetch emails endpoint
+        let email = profile.email;
+        if (!email) {
+            try {
+                const { data: emails } = await axios.get('https://api.github.com/user/emails', {
+                    headers: { Authorization: `token ${accessToken}`, Accept: 'application/vnd.github.v3+json' }
+                });
+                // Prefer primary & verified
+                const primary = Array.isArray(emails) && (emails.find(e => e.primary && e.verified) || emails.find(e => e.verified) || emails[0]);
+                email = primary?.email;
+            } catch (e) {
+                // continue, email may remain undefined
+            }
+        }
+
+        const ghProfile = {
+            email: email,
+            full_name: profile.name || profile.login,
+            auth_provider: 'github',
+            provider_id: profile.id.toString(),
+        };
+
+        // If no email, require the user to use other sign-in (consistent with FB handling)
+        if (!ghProfile.email) {
+            throw new Error('GitHub không trả về email cho tài khoản này. Vui lòng sử dụng phương thức đăng nhập khác hoặc đảm bảo scope user:email.');
+        }
+
+        // 3. Find or create/link user (same logic as Google/Facebook)
+        let user = await userRepository.findByProviderId(
+            ghProfile.auth_provider,
+            ghProfile.provider_id
+        );
+
+        if (!user) {
+            const existingUser = await userRepository.findByEmail(ghProfile.email);
+            if (!existingUser) {
+                // Tạo user mới
+                user = await userRepository.createSocialUser(ghProfile);
+            } else {
+                // Link tài khoản nếu email trùng
+                if (existingUser.auth_provider !== 'local') {
+                    throw new Error('Email này đã liên kết với nhà cung cấp khác!');
+                }
+                await userRepository.linkSocialAccount(
+                    existingUser.id,
+                    ghProfile.auth_provider,
+                    ghProfile.provider_id
+                );
                 user = existingUser;
             }
         }
