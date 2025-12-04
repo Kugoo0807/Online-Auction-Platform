@@ -23,17 +23,17 @@ export default function OAuthCallback() {
           
           // Kiểm tra xem là Facebook hay Google
           if (state === 'facebook') {
-             console.log("Processing Facebook Login...");
+             console.log("Đang đăng nhập Facebook...");
              data = await authService.loginWithFacebook(code);
           } else if (state === 'google') {
-             console.log("Processing Google Login...");
+             console.log("Đang đăng nhập Google...");
              data = await authService.loginWithGoogle(code);
           } else if (state === 'github') {
-             console.log("Processing GitHub Login...");
+             console.log("Đang đăng nhập GitHub...");
              data = await authService.loginWithGitHub(code);
           } else {
              // Nếu state không rõ, cố gắng mặc định fallback gọi google
-             console.log("Processing login from unknown provider (no state).");
+             console.log("Đang đăng nhập từ nhà cung cấp không xác định (không có state).");
              data = await authService.loginWithGoogle(code);
           }
 
@@ -46,7 +46,8 @@ export default function OAuthCallback() {
 
         } catch (error) {
           console.error("Login Failed:", error);
-          navigate('/login', { state: { error: 'Login failed. Please try again.' } });
+          const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+          navigate('/login', { state: { error: errorMessage } });
         }
       };
 
@@ -67,7 +68,7 @@ export default function OAuthCallback() {
   return (
     <div className="flex justify-center items-center h-screen flex-col bg-[#c7dbe6] font-sans text-[#153243]">
       <div className="w-[50px] h-[50px] border-[5px] border-[#b5bec6] border-t-[#284b63] rounded-full animate-spin"></div>
-      <h3 className="mt-5 font-semibold">Processing {providerLabel} Login...</h3>
+      <h3 className="mt-5 font-semibold">Đang đăng nhập {providerLabel}...</h3>
     </div>
   )
 }
