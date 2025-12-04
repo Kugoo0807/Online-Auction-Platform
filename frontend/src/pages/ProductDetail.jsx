@@ -5,6 +5,8 @@ import { categoryService } from '../services/categoryService'
 import { ProductCard } from '../components/product/ProductSection'
 import { useAuth } from '../context/AuthContext'
 import { bidService } from '../services/bid.service'
+import LoginRequestModal from '../components/common/LoginRequestModal' 
+import ToastNotification from '../components/common/ToastNotification' 
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -170,8 +172,8 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
             src={image}
             alt={`Ảnh ${index + 1}`}
             className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${selectedImage === index
-                ? 'border-blue-600 ring-2 ring-blue-100 scale-105'
-                : 'border-transparent hover:border-gray-300'
+              ? 'border-blue-600 ring-2 ring-blue-100 scale-105'
+              : 'border-transparent hover:border-gray-300'
               }`}
             onClick={() => onSelectImage(index)}
             onError={(e) => {
@@ -186,6 +188,81 @@ function ProductImages({ product, selectedImage, onSelectImage }) {
 
 // Component thông tin sản phẩm
 function ProductInfo({ product, minValidPrice, user }) {
+  // State cho yêu thích
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Kiểm tra trạng thái yêu thích
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (user && product._id) {
+        try {
+          const result = await productService.checkIsWatching(product._id);
+          if (result && result.is_watching) {
+            setIsFavorite(true);
+          }
+        } catch (error) {
+          console.error("Lỗi check favorite:", error);
+        }
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [user, product._id]);
+
+  // Hàm toggle yêu thích
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+      await productService.toggleWatchList(product._id);
+      setIsFavorite((prev) => !prev);
+
+      // Thông báo thành công
+      ToastNotification(
+        isFavorite ? "Đã bỏ theo dõi sản phẩm" : "Đã thêm vào danh sách theo dõi",
+        'success'
+      );
+    } catch (error) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra, thử lại sau!";
+      ToastNotification(message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Component nút yêu thích
+  const FavoriteButton = () => (
+    <button
+      type="button"
+      disabled={isLoading}
+      onClick={handleToggleFavorite}
+      title={isFavorite ? "Bỏ theo dõi" : "Theo dõi sản phẩm"}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50"
+      style={{
+        backgroundColor: isFavorite ? '#FEE2E2' : '#F3F4F6',
+        borderColor: isFavorite ? '#FCA5A5' : '#D1D5DB',
+        color: isFavorite ? '#DC2626' : '#4B5563'
+      }}
+    >
+      <img
+        src={isFavorite ? "/red_heart.png" : "/white_heart.png"}
+        alt="Favorite Icon"
+        className="w-5 h-5 object-contain"
+      />
+      <span className="font-semibold">
+        {isFavorite ? "Đang theo dõi" : "Theo dõi sản phẩm"}
+      </span>
+    </button>
+  );
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN').format(price)
   }
@@ -235,14 +312,21 @@ function ProductInfo({ product, minValidPrice, user }) {
 
   return (
     <div className="p-6 border border-gray-200 rounded-xl bg-white shadow-sm h-fit">
-      <h1 className="text-3xl font-bold text-blue-900 mb-4 leading-tight">
-        {product.product_name}
-      </h1>
+      <div className="flex justify-between items-start mb-4">
+        <h1 className="text-3xl font-bold text-blue-900 mb-4 leading-tight">
+          {product.product_name}
+        </h1>
+
+        {/* Nút yêu thích */}
+        <div className="ml-4">
+          <FavoriteButton />
+        </div>
+      </div>
 
       {/* Trạng thái đấu giá */}
       <div className={`inline-block px-4 py-2 rounded-full mb-6 text-sm font-bold border ${isAuctionActive()
-          ? 'bg-green-50 border-green-200 text-green-700'
-          : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+        ? 'bg-green-50 border-green-200 text-green-700'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-700'
         }`}>
         {isAuctionActive() ? '🟢 Đang đấu giá' : '🟡 Đã kết thúc'}
       </div>
@@ -335,6 +419,11 @@ function ProductInfo({ product, minValidPrice, user }) {
           <span className="font-medium text-gray-800">{formatDate(product.auction_end_time)}</span>
         </div>
       </div>
+      <LoginRequestModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
+        productName={product.product_name}
+      />
     </div>
   )
 }
@@ -375,7 +464,7 @@ function BiddingSection({ product, minValidPrice, user }) {
     // TODO: Gọi API đặt giá
     alert(`Đã đặt giá ₫${bidAmount.toLocaleString('vi-VN')}`)
     const response = await bidService.placeBid(product._id, bidAmount)
-    
+
   }
 
   const formatPrice = (price) => {

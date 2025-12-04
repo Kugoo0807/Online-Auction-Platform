@@ -2,20 +2,7 @@ import { Product } from '../../db/schema.js';
 
 class ProductRepository { 
     async create(productData) { 
-        const product = new Product({
-            product_name: productData.product_name,
-            start_price: productData.start_price,
-            bid_increment: productData.bid_increment,
-            buy_it_now_price: productData.buy_it_now_price ?? undefined,
-            thumbnail: productData.thumbnail,
-            images: productData.images,
-            auction_end_time: productData.auction_end_time,
-            seller: productData.seller,
-            category: productData.category,
-            description: productData.description,
-            auto_renew: productData.auto_renew,
-            allow_newbie: productData.allow_newbie
-            });
+        const product = new Product(productData);
         return await product.save();
     }
     
@@ -33,9 +20,9 @@ class ProductRepository {
     async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0) {
         if (keyword) {
             filter.$or = [
-                { product_name: { $regex: keyword, $options: 'i' } },
-                { description: { $regex: keyword, $options: 'i' } }
-            ]; 
+                { product_name: { $regex: keyword, $options: 'i' } }, 
+                { description_current: { $regex: keyword, $options: 'i' } } 
+            ];
         }
 
         const finalSort = Object.keys(sortOption).length ? sortOption : { auction_end_time: 1 };
@@ -50,7 +37,8 @@ class ProductRepository {
         return await query
             .populate('seller', 'full_name rating_score rating_count') 
             .populate('category', 'category_name')
-            .populate('current_highest_bidder', 'full_name rating_score rating_count');
+            .populate('current_highest_bidder', 'full_name rating_score rating_count')
+            .lean();
     }
 
     async findRandom(filter, limit) {
@@ -115,8 +103,26 @@ class ProductRepository {
         return foundProduct ? foundProduct.banned_bidder : [];
     }
 
-    async updateProductInfo(product, updateData) {
-        return await Product.findByIdAndUpdate(product, updateData, { new: true, runValidators: true });
+    async updateProductInfo(productId, updateData) {
+        const product = await Product.findById(productId);
+        if (!product) return null;
+
+        Object.assign(product, updateData);
+
+        return await product.save();
+    }
+
+    async appendDescription(productId, newDescriptionContent) {
+        const product = await Product.findById(productId);
+        if (!product) return null;
+
+        // Push vào mảng history
+        product.description_history.push({
+            content: newDescriptionContent,
+            timestamp: new Date()
+        });
+
+        return await product.save();
     }
     
     async existsInCategories(categoryIds) {
