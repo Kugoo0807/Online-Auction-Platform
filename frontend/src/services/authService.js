@@ -61,6 +61,11 @@ export const authService = {
     return { accessToken: response.data.token };
   },
 
+  loginWithGitHub: async (code) => {
+    const response = await api.post('/auth/github/login', { code });
+    return { accessToken: response.data.token };
+  },
+
   // services/authService.js
   forgotPassword: async (email) => {
     try {
