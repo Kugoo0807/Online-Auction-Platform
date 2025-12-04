@@ -17,6 +17,10 @@ export default function SignUp() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []); 
+
+  useEffect(() => {
     if (window.location.pathname === '/oauth/callback') {
       const isOAuthCallback = authService.handleOAuthCallback();
       if (isOAuthCallback) {
