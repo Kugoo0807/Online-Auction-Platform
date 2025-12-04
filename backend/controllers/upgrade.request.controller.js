@@ -10,7 +10,7 @@ class UpgradeRequestController {
                 data: created
             })
         } catch(error) {
-            return res.status(400).json({ message: 'Lỗi khi tạo upgrade request: ' + error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 
@@ -22,7 +22,7 @@ class UpgradeRequestController {
                 data: list
             })
         } catch(error) {
-            return res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
+            return res.status(500).json({ message: error.message });
         }
     }
 
@@ -39,7 +39,7 @@ class UpgradeRequestController {
                 data: approved
             })
         } catch(error) {
-            return res.status(400).json({ message: 'Lỗi khi đang cập nhật upgrade request: ' + error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 }
