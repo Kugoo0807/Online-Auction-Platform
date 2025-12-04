@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const sanitizeHtml = require('sanitize-html');
 const { Schema } = mongoose;
 
 // Helper validate số lượng ảnh
@@ -46,7 +46,7 @@ const checkForeignKeys = (schema) => {
 // 1. User
 const userSchema = new Schema({
   full_name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, index: true },
+  email: { type: String, required: true, unique: true, lowercase: true, index: true },
   password: { type: String },
   // Role & Permissions
   role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
@@ -89,9 +89,30 @@ const categorySchema = new Schema({
 categorySchema.plugin(checkForeignKeys);
 
 // 6. Product
+// --- Cấu hình santilize ---
+const sanitizeOptions = {
+  allowedTags: [ 
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+    'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
+    'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'img' 
+  ],
+  allowedAttributes: {
+    'a': [ 'href', 'name', 'target' ],
+    'img': [ 'src', 'alt', 'width', 'height' ],
+    '*': ['style', 'class'] 
+  },
+  allowedSchemes: [ 'http', 'https', 'data' ]
+};
+
 const productSchema = new Schema({
   product_name: { type: String, required: true, index: true },
-  description: { type: String, required: true }, // Mới thêm
+  
+  description_history: [{
+    content: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+  }],
+  description_current: { type: String, default: '', select: false },
+
   start_price: { type: Number, required: true, default: 0 },
   bid_increment: { type: Number, default: 10000 },
   buy_it_now_price: { type: Number },
@@ -135,9 +156,32 @@ const productSchema = new Schema({
   // Cho phép newbie (chưa có đánh giá) được đấu giá
   allow_newbie: { type: Boolean, default: true },
 }, { timestamps: true });
+
 // Full-text search index
-productSchema.index({ product_name: 'text', description: 'text' });
+productSchema.index(
+  { product_name: 'text', description_current: 'text' },
+  { weights: { product_name: 10, description_current: 5 } },
+);
 productSchema.plugin(checkForeignKeys);
+
+// --- Xử lý description ---
+productSchema.pre('save', function(next) {
+  if (this.isModified('description_history')) {
+    this.description_history.forEach(item => {
+        item.content = sanitizeHtml(item.content, sanitizeOptions);
+    });
+
+    const fullHtml = this.description_history.map(item => item.content).join(' ');
+
+    // Clear thẻ HTML, chỉ lấy chữ (Plain Text)
+    this.description_current = sanitizeHtml(fullHtml, {
+      allowedTags: [],
+      allowedAttributes: {}
+    });
+  }
+  
+  next();
+});
 
 // 7. Bid
 const bidSchema = new Schema({

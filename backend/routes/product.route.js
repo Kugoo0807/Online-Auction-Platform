@@ -49,6 +49,9 @@ export function ProductRoutes(productController) {
 
     // ======= ROUTER ĐỘNG =======
 
+    // Cập nhật mô tả
+    router.post('/:id/description', [checkAuth, checkRole('seller')], productController.appendDescription);
+
     // Ban bidder
     router.post('/:id/ban', [checkAuth, checkRole('seller')], productController.banBidder);
 

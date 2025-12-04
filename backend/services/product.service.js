@@ -6,7 +6,29 @@ import { watchListRepository } from '../repositories/watch.list.repository.js';
 
 class ProductService {
     async createProduct(productData) {
-        return await productRepository.create(productData);
+        const { description, ...restData } = productData;
+
+        const newProductData = {
+            ...restData,
+            description_history: [{
+                content: description || '',
+                timestamp: new Date()
+            }]
+        };
+
+        return await productRepository.create(newProductData);
+    }
+
+    async appendDescription(userId, productId, newContent) {
+        const product = await productRepository.findById(productId);
+        if (!product) throw new Error('Sản phẩm không tồn tại!');
+
+        // Validate seller
+        if (product.seller._id.toString() !== userId.toString()) {
+            throw new Error('Bạn không có quyền sửa sản phẩm này!');
+        }
+        
+        return await productRepository.appendDescription(productId, newContent);
     }
 
     async findProductDetails(productId) {
