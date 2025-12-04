@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { productService } from '../../services/product.service'
 import LoginRequestModal from '../common/LoginRequestModal';
 import { useAuth } from '../../context/AuthContext';
+import ToastNotification from '../common/ToastNotification';
 
 function maskName(name) {
     if (!name) return '';
@@ -147,7 +148,8 @@ export function ProductCard({ product }) {
       // Đảo ngược state UI
       setIsFavorite((prev) => !prev);
     } catch (error) {
-      toast.error("Có lỗi xảy ra, thử lại sau!");
+      const message = error?.response?.data?.message || "Có lỗi xảy ra, thử lại sau!";
+      ToastNotification(message, 'error');
     } finally {
       setIsLoading(false);
     }
