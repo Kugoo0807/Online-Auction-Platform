@@ -30,6 +30,30 @@ class ProductController {
         }
     }
 
+    async appendDescription(req, res) {
+        try {
+            const seller = req.user._id;
+            const productId = req.params.id;
+            const { content } = req.body;
+
+            if (!content) {
+                return res.status(400).json({ message: 'Vui lòng nhập nội dung mô tả bổ sung!' });
+            }
+
+            const updatedProduct = await productService.appendDescription(seller, productId, content);
+
+            return res.status(200).json({
+                message: 'Cập nhật mô tả thành công!',
+                data: updatedProduct
+            });
+        } catch (error) {
+            return res.status(400).json({ 
+                message: 'Cập nhật mô tả thất bại', 
+                error: error.message 
+            });
+        }
+    }
+
     async getProductDetails(req, res) {
         try {
             const { id } = req.params; // Lấy ID từ URL
