@@ -22,21 +22,49 @@ class UserRepository {
     );
   }
 
-  async findByProviderId(provider, providerId) {
-    return await User.findOne({ auth_provider: provider, provider_id: providerId });
+  async findByEmailAndProvider(email, provider) {
+    return await User.findOne({
+      email,
+      providers: {
+        $elemMatch: { provider }
+      }
+    });
   }
 
-  async createSocialUser(profile) {
-    const user = new User(profile);
-    return await user.save();
+  async hasProvider(userId, provider) {
+    return await User.exists({
+      _id: userId,
+      providers: { $elemMatch: { provider } }
+    });
   }
 
-  async linkSocialAccount(userId, provider, providerId) {
+  async findByProvider(provider, providerId) {
+    return await User.findOne({
+        "providers.provider": provider,
+        "providers.provider_id": providerId
+    });
+  }
+
+  async addProvider(userId, provider, providerId) {
     return await User.findByIdAndUpdate(
-      userId,
-      { auth_provider: provider, provider_id: providerId },
-      { new: true }
+        userId,
+        {
+            $addToSet: {
+                providers: { provider, provider_id: providerId }
+            }
+        },
+        { new: true }
     );
+  }
+
+  async createSocialUser({ full_name, email, provider, provider_id }) {
+    const user = new User({
+      full_name,
+      email,
+      password: null,
+      providers: [{ provider, provider_id }],
+    });
+    return await user.save();
   }
 
   async updateData(userId, updateData) {
@@ -90,7 +118,7 @@ class UserRepository {
       { new: true, session }
     );
   }
-  
+
   async upgradeSeller(userId) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 7);

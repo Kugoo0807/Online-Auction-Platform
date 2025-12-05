@@ -48,15 +48,23 @@ const userSchema = new Schema({
   full_name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true, index: true },
   password: { type: String },
+
   // Role & Permissions
   role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
   seller_expiry_date: { type: Date, default: null },
+  
   // Profile Info
   date_of_birth: Date,
   phone_number: { type: String, sparse: true },
   address: { type: String },
-  auth_provider: { type: String, enum: ['local', 'google', 'facebook', 'github'], default: 'local' },
-  provider_id: { type: String, default: null },
+  
+  // Provider
+  providers: [{
+    provider: { type: String, enum: ['local', 'google', 'facebook', 'github'], required: true },
+    provider_id: { type: String }, // id do provider cung cấp
+  }],
+  
+  // Rating
   rating_score: { type: Number, default: 0 }, // Tổng điểm: cứ +1 hoặc -1
   rating_count: { type: Number, default: 0 }, // Tổng số lần được đánh giá
 }, { timestamps: true });
