@@ -61,6 +61,20 @@ class ProductRepository {
             auction_end_time: { $lt: now }
         });
     }
+
+    async findActive(userId) {
+        return await Product.find({
+            seller: userId,
+            auction_status: 'active'
+        });
+    }
+
+    async findProductsUserIsLeading(userId) {
+        return await Product.find({
+            current_highest_bidder: userId,
+            auction_status: 'active'
+        })
+    }
     
     async removeProduct(product) {
         return await Product.findByIdAndDelete(product);

@@ -1,10 +1,30 @@
-export const recalculateAuctionState = (product, latestBidderId = null) => {
+import { User } from '../../db/schema.js';
+
+export const recalculateAuctionState = async (product, latestBidderId = null, session = null) => {
     const allBids = Array.from(product.auto_bid_map.entries())
         .map(([uid, price]) => ({ userId: uid.toString(), price }));
 
+    if (allBids.length === 0) {
+        product.current_highest_price = product.start_price;
+        product.current_highest_bidder = null;
+        return product;
+    }
+
+    // Danh sách bidder đã bị xóa khỏi hệ thống
+    const bidderIds = allBids.map(b => b.userId);
+    
+    const deletedUsers = await User.find({
+        _id: { $in: bidderIds },
+        is_deleted: true
+    }).session(session).select('_id');
+
     // Lọc bidder
+    const deletedSet = new Set(deletedUsers.map(u => u._id.toString()));
     const bannedIds = new Set(product.banned_bidder.map(id => id.toString()));
-    const activeIds = allBids.filter(bid => !bannedIds.has(bid.userId));
+    const activeIds = allBids.filter(bid => 
+        !bannedIds.has(bid.userId) && 
+        !deletedSet.has(bid.userId)
+    );
 
     // Sort
     activeIds.sort((a, b) => {

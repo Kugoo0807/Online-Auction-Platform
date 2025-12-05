@@ -4,7 +4,7 @@ import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
 import * as mailService from './email.service.js';
-import SendmailTransport from 'nodemailer/lib/sendmail-transport/index.js';
+
 class ProductService {
     async createProduct(productData) {
         const { description, ...restData } = productData;
@@ -137,7 +137,7 @@ class ProductService {
                 return { success: true, message: "Người dùng đã bị cấm trước đó" };
             }
 
-            recalculateAuctionState(product);
+            await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
             return { success: true };
@@ -158,7 +158,7 @@ class ProductService {
                 id => id.toString() !== bidderIdToUnban
             );
 
-            recalculateAuctionState(product);
+            await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
             return { success: true };
@@ -217,6 +217,10 @@ class ProductService {
         }
         
         return await productRepository.cancelProduct(productId);
+    }
+
+    async getActiveProduct(userId) {
+        return await productRepository.findActive(userId);
     }
 }
 export const productService = new ProductService();
