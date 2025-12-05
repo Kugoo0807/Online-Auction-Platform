@@ -5,12 +5,11 @@ class RatingController {
         try {
             const { rated_user, auction_result, rating_type, comment } = req.body;
             const rater = req.user._id; // Từ auth middleware
-
             const data = {
                 rater,
                 rated_user,
                 auction_result,
-                rating_type, // 'positive' hoặc 'negative'
+                rating_type, 
                 comment,
             };
 
