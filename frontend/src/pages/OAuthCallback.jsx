@@ -7,7 +7,7 @@ import { setAuthToken } from '../services/api'
 export default function OAuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { setUser } = useAuth()
+  const { user, setUser } = useAuth()
   const processedRef = useRef(false)
 
   useEffect(() => {
@@ -42,7 +42,8 @@ export default function OAuthCallback() {
           setAuthToken(rawToken);
           const profileRes = await authService.getProfile();
           setUser(profileRes.user);
-          navigate('/dashboard', { replace: true });
+          if (profileRes.user?.role === 'admin') navigate('/dashboard', { replace: true });
+          else navigate('/', { replace: true });
 
         } catch (error) {
           console.error("Login Failed:", error);
