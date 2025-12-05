@@ -1,5 +1,5 @@
 // pages/ForgotPassword.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 
@@ -9,6 +9,10 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault();

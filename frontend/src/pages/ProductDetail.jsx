@@ -82,6 +82,8 @@ export default function ProductDetail() {
       }
     }
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // Gọi lần đầu → có loading và load sản phẩm liên quan
     fetchProductData(true)
 

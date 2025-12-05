@@ -1,5 +1,5 @@
 // pages/ResetPassword.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 
@@ -13,6 +13,10 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
