@@ -12,7 +12,7 @@ class UserService {
         // Kiểm tra cập nhật Email
         if (email && email !== currentUser.email) {
             // Kiểm tra sự tồn tại của Email mới
-            const existingUser = await userRepository.findByMail(email);
+            const existingUser = await userRepository.findByEmail(email);
             if (!existingUser) {
                 throw new Error('Email này đã được sử dụng bởi tài khoản khác!');
             }
@@ -26,7 +26,7 @@ class UserService {
         if (email) updateData.email = email;
 
         // Cập nhật
-        const updateUser = await userRepository.update(userId, updateData);
+        const updateUser = await userRepository.updateData(userId, updateData);
         if (!updateUser) {
             throw new Error('Cập nhật thất bại!');
         }

@@ -82,6 +82,8 @@ export default function ProductDetail() {
       }
     }
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // Gọi lần đầu → có loading và load sản phẩm liên quan
     fetchProductData(true)
 
@@ -232,12 +234,6 @@ function ProductInfo({ product, minValidPrice, user }) {
       setIsLoading(true);
       await productService.toggleWatchList(product._id);
       setIsFavorite((prev) => !prev);
-
-      // Thông báo thành công
-      ToastNotification(
-        isFavorite ? "Đã bỏ theo dõi sản phẩm" : "Đã thêm vào danh sách theo dõi",
-        'success'
-      );
     } catch (error) {
       const message = error?.response?.data?.message || "Có lỗi xảy ra, thử lại sau!";
       ToastNotification(message, 'error');
@@ -253,7 +249,7 @@ function ProductInfo({ product, minValidPrice, user }) {
       disabled={isLoading}
       onClick={handleToggleFavorite}
       title={isFavorite ? "Bỏ theo dõi" : "Theo dõi sản phẩm"}
-      className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50"
+      className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50 cursor-pointer"
       style={{
         backgroundColor: isFavorite ? '#FEE2E2' : '#F3F4F6',
         borderColor: isFavorite ? '#FCA5A5' : '#D1D5DB',
@@ -493,8 +489,6 @@ function BiddingSection({ product, minValidPrice, user }) {
       setLoadingHistory(true);
       const history = await bidService.getBidHistory(product._id);
 
-      const response = await bidService.getBidHistory(product._id);
-
       const list = Array.isArray(history) ? history : (history?.data || []);
       setBidHistory(list);
       setShowHistory(true);
@@ -556,7 +550,7 @@ function BiddingSection({ product, minValidPrice, user }) {
         <button
           onClick={fetchBidHistory}
           disabled={loadingHistory}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg border border-blue-200 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg border border-blue-200 transition-colors disabled:opacity-50 cursor-pointer"
         >
           {loadingHistory ? (
             <>
@@ -596,7 +590,7 @@ function BiddingSection({ product, minValidPrice, user }) {
 
                 <button
                   onClick={handleBid}
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px] cursor-pointer"
                 >
                   Đặt giá ngay
                 </button>
@@ -608,7 +602,7 @@ function BiddingSection({ product, minValidPrice, user }) {
             <p className="text-gray-600 mb-4 font-medium">Vui lòng đăng nhập để tham gia đấu giá sản phẩm này</p>
             <Link to="/login">
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md cursor-pointer"
               >
                 Đăng nhập ngay
               </button>
@@ -626,7 +620,7 @@ function BiddingSection({ product, minValidPrice, user }) {
             </h3>
             <button
               onClick={() => setShowHistory(false)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 cursor-pointer"
             >
               ✕
             </button>
@@ -644,18 +638,20 @@ function BiddingSection({ product, minValidPrice, user }) {
                     <tr>
                       <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Thời điểm</th>
                       <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người đấu giá</th>
-                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Giá đặt</th>
+                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Giá vào sản phẩm</th>
+                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người giữ giá</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bidHistory.map((bid, index) => {
-                      // Lấy tên từ holder hoặc user
-                      const bidderName = bid.holder?.full_name ||
-                        bid.user?.full_name ||
-                        'Ẩn danh';
+                      // Lấy tên bidder
+                      const bidderName = bid.user?.full_name || 'Ẩn danh';
+
+                      // Lấy tên holder
+                      const holderName = bid.holder?.full_name || 'Ẩn danh';
 
                       // Lấy giá từ price
-                      const bidAmount = bid.max_bid_price || 0;
+                      const bidAmount = bid.price || 0;
 
                       // Lấy thời gian từ createdAt hoặc date
                       const createdAt = bid.createdAt || bid.date || '';
@@ -683,6 +679,16 @@ function BiddingSection({ product, minValidPrice, user }) {
                           <td className="py-3 px-4 border-b">
                             <div className="font-bold text-red-600 text-lg">
                               ₫{formatPrice(bidAmount)}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 border-b">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                {holderName?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                              <span className="font-medium text-gray-800">
+                                {maskName(holderName)}
+                              </span>
                             </div>
                           </td>
                         </tr>

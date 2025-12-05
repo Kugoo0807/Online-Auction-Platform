@@ -132,7 +132,7 @@ const CategoryPage = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [page]); 
+  }, [page, slug]); 
 
   // Hàm chuyển trang
   const handlePageChange = (newPage) => {

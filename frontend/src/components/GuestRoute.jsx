@@ -8,9 +8,10 @@ export default function GuestRoute({ children }) {
   // đang trong quá trình xác thực
   if (loading) return <div>Loading auth...</div>;
 
-  // nếu đã đăng nhập -> đẩy về Home
+  // nếu đã đăng nhập
   if (user) {
-    return <Navigate to="/" replace />;
+    if (user.role === 'admin') return <Navigate to="/dashboard" replace />;
+    else return <Navigate to="/" replace />;
   }
 
   // nếu chưa đăng nhập -> cho phép truy cập (render children hoặc Outlet)

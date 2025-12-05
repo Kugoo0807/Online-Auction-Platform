@@ -30,6 +30,8 @@ export default function HomePage() {
       }
     }
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     fetchHomepageData()
   }, [])
 
