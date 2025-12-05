@@ -14,10 +14,10 @@ class ProductService {
           keyword, // Tham số query chính
         }
       });
-      
+
       // Chuẩn hóa dữ liệu trả về để Frontend không bị lỗi
       const data = response.data.data || response.data || [];
-      
+
       return Array.isArray(data) ? data : [];
 
     } catch (error) {
@@ -84,6 +84,7 @@ class ProductService {
       const response = await api.get(`/products/category/${slug}/random`);
       return response.data;
     } catch (error) {
+      console.error(`Lỗi getRandomProductsByCategory (${slug}):`, error);
       return { data: [] };
     }
   }
@@ -120,7 +121,7 @@ class ProductService {
       // API: GET /products/:id/watch-list/check
       const response = await api.get(`/products/${id}/watch-list/check`);
       // Giả sử server trả về { isWatching: true/false }
-      return response.data; 
+      return response.data;
     } catch (error) {
       // Nếu lỗi (ví dụ chưa đăng nhập), mặc định là false
       return { isWatching: false };
@@ -162,5 +163,15 @@ class ProductService {
     }
   }
 }
+
+const getRandomProductsByCategory = async (slug) => {
+  try {
+    const response = await apiClient.get(`/products/category/${slug}/random`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 export const productService = new ProductService();
