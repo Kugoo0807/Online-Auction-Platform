@@ -429,7 +429,7 @@ class AuthService {
         await userRepository.updatePassword(user.id, newHashedPassword);
 
         // Xóa OTP
-        await userRepository.clearOtp(user.id);
+        await otpRepository.deleteByEmail(email);
 
         return { message: 'Mật khẩu đã được reset thành công.' };
     }
