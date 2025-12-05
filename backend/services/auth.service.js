@@ -393,7 +393,7 @@ class AuthService {
                 await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
                 // Gửi OTP (chưa hash) cho người dùng
-                //await emailService.sendOtp(email, otp);
+                await sendOtp(email, otp);
                 console.log('[FORGOT PASSWORD OTP]: ' + otp);
             } catch (e) {
                 throw new Error('Lỗi khi xử lý forgotPassword: ' + e);

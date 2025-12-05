@@ -67,7 +67,7 @@ export default function OAuthCallback() {
     'OAuth provider';
 
   return (
-    <div className="flex justify-center items-center h-screen flex-col bg-[#c7dbe6] font-sans text-[#153243]">
+    <div className="flex justify-center items-center h-screen flex-col bg-white font-sans text-[#153243]">
       <div className="w-[50px] h-[50px] border-[5px] border-[#b5bec6] border-t-[#284b63] rounded-full animate-spin"></div>
       <h3 className="mt-5 font-semibold">Đang đăng nhập {providerLabel}...</h3>
     </div>
