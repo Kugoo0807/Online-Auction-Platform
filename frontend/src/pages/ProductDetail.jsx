@@ -5,8 +5,8 @@ import { categoryService } from '../services/categoryService'
 import { ProductCard } from '../components/product/ProductSection'
 import { useAuth } from '../context/AuthContext'
 import { bidService } from '../services/bid.service'
-import LoginRequestModal from '../components/common/LoginRequestModal' 
-import ToastNotification from '../components/common/ToastNotification' 
+import LoginRequestModal from '../components/common/LoginRequestModal'
+import ToastNotification from '../components/common/ToastNotification'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -264,8 +264,12 @@ function ProductInfo({ product, minValidPrice, user }) {
   );
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN').format(price)
-  }
+    if (!price || isNaN(price)) {
+      console.warn("Giá không hợp lệ:", price);
+      return '0';
+    }
+    return new Intl.NumberFormat('vi-VN').format(price);
+  };
 
   const getTimeRemaining = (endTime) => {
     const now = new Date()
@@ -419,8 +423,8 @@ function ProductInfo({ product, minValidPrice, user }) {
           <span className="font-medium text-gray-800">{formatDate(product.auction_end_time)}</span>
         </div>
       </div>
-      <LoginRequestModal 
-        isOpen={showLoginModal} 
+      <LoginRequestModal
+        isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         productName={product.product_name}
       />
@@ -445,10 +449,54 @@ function ProductDescription({ product }) {
 // Component đặt giá & lịch sử
 function BiddingSection({ product, minValidPrice, user }) {
   const [bidAmount, setBidAmount] = useState(minValidPrice || product.start_price)
+  const [bidHistory, setBidHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     setBidAmount(minValidPrice > 0 ? minValidPrice : product.start_price);
   }, [minValidPrice]);
+
+  const formatDateTime = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Hàm lấy lịch sử đấu giá
+  const fetchBidHistory = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (loadingHistory) return;
+
+    try {
+      setLoadingHistory(true);
+      const history = await bidService.getBidHistory(product._id);
+
+      const response = await bidService.getBidHistory(product._id);
+
+      const list = Array.isArray(history) ? history : (history?.data || []);
+      setBidHistory(list);
+      setShowHistory(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy lịch sử đấu giá:", error);
+      ToastNotification("Không thể tải lịch sử đấu giá", 'error');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleBid = async () => {
     if (!user) {
@@ -465,7 +513,25 @@ function BiddingSection({ product, minValidPrice, user }) {
     alert(`Đã đặt giá ₫${bidAmount.toLocaleString('vi-VN')}`)
     const response = await bidService.placeBid(product._id, bidAmount)
 
+    fetchBidHistory();
+
   }
+
+  // Hàm mask tên - giữ nguyên từ cuối cùng, bỏ phần trong ngoặc
+  const maskName = (name) => {
+    if (!name || typeof name !== 'string') return '**** danh';
+
+    // Lấy phần trước dấu ngoặc
+    const mainName = name.split('(')[0].trim();
+    if (!mainName) return '**** danh';
+
+    // Lấy từ cuối cùng
+    const words = mainName.split(/\s+/);
+    const lastWord = words[words.length - 1];
+    if (!lastWord) return '**** danh';
+
+    return '****' + lastWord;
+  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN').format(price)
@@ -473,11 +539,33 @@ function BiddingSection({ product, minValidPrice, user }) {
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
-        💰 Đặt giá
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+          💰 Đặt giá & Lịch sử đấu giá
+        </h2>
 
-      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        {/* Nút xem lịch sử */}
+        <button
+          onClick={fetchBidHistory}
+          disabled={loadingHistory}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg border border-blue-200 transition-colors disabled:opacity-50"
+        >
+          {loadingHistory ? (
+            <>
+              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></span>
+              Đang tải...
+            </>
+          ) : (
+            <>
+              <span>📋</span>
+              Xem lịch sử đấu giá
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Phần đặt giá */}
+      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6">
         {user ? (
           <div>
             <div className="mb-4">
@@ -499,7 +587,6 @@ function BiddingSection({ product, minValidPrice, user }) {
                 </div>
 
                 <button
-                  onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
                   onClick={handleBid}
                   className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px]"
                 >
@@ -513,7 +600,6 @@ function BiddingSection({ product, minValidPrice, user }) {
             <p className="text-gray-600 mb-4 font-medium">Vui lòng đăng nhập để tham gia đấu giá sản phẩm này</p>
             <Link to="/login">
               <button
-                onMouseOver={(e) => e.currentTarget.style.cursor = "pointer"}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md"
               >
                 Đăng nhập ngay
@@ -522,8 +608,93 @@ function BiddingSection({ product, minValidPrice, user }) {
           </div>
         )}
       </div>
+
+      {/* Phần lịch sử đấu giá */}
+      {showHistory && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-gray-800">
+              📜 Lịch sử đấu giá ({bidHistory.length} lượt)
+            </h3>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            {bidHistory.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Chưa có lượt đấu giá nào
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Thời điểm</th>
+                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người đấu giá</th>
+                      <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Giá đặt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bidHistory.map((bid, index) => {
+                      // Lấy tên từ holder hoặc user
+                      const bidderName = bid.holder?.full_name ||
+                        bid.user?.full_name ||
+                        'Ẩn danh';
+
+                      // Lấy giá từ price
+                      const bidAmount = bid.max_bid_price || 0;
+
+                      // Lấy thời gian từ createdAt hoặc date
+                      const createdAt = bid.createdAt || bid.date || '';
+
+                      return (
+                        <tr
+                          key={bid._id || index}
+                          className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                        >
+                          <td className="py-3 px-4 border-b">
+                            <div className="font-medium text-gray-900">
+                              {formatDateTime(createdAt)}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 border-b">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                {bidderName?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                              <span className="font-medium text-gray-800">
+                                {maskName(bidderName)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 border-b">
+                            <div className="font-bold text-red-600 text-lg">
+                              ₫{formatPrice(bidAmount)}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal yêu cầu đăng nhập */}
+      <LoginRequestModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </div>
-  )
+  );
 }
 
 // Component Q&A
