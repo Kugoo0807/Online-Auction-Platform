@@ -9,7 +9,7 @@ class RatingService {
         if (!externalSession) session.startTransaction();
 
         try {
-            const { rater, rated_user, auction_result, rating_type } = data;
+            const { rater, rated_user, auction_result, rating_type, comment } = data;
 
             const existing = await ratingRepository.findByAuctionAndRater(auction_result, rater);
             if (existing) {
@@ -51,6 +51,22 @@ class RatingService {
         } finally {
             if (!externalSession) session.endSession();
         }
+    }
+
+    async getReviewsGiven(userId) {
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            throw new Error('Người dùng không tồn tại!');
+        }
+        return await ratingRepository.getReviewsGiven(userId);
+    }
+
+    async getReviewsReceived(userId) {
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            throw new Error('Người dùng không tồn tại!');
+        }
+        return await ratingRepository.getReviewsReceived(userId);
     }
 }
 
