@@ -15,78 +15,86 @@ export default function ProductDetail() {
   const [categoryWithSlug, setCategoryWithSlug] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingRelated, setLoadingRelated] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
   const [minValidPrice, setMinValidPrice] = useState(0)
 
   useEffect(() => {
-    let isMounted = true; // tránh lỗi update unmounted component
+    let isMounted = true // tránh lỗi update unmounted component
 
     const fetchProductData = async (initial = false) => {
       try {
-        if (initial) setLoading(true);
+        if (initial) setLoading(true)
 
         // Lấy chi tiết sản phẩm
-        const productRes = await productService.getProductDetail(id);
-        if (!isMounted) return;
-        setProduct(productRes.data);
+        const productRes = await productService.getProductDetail(id)
+        if (!isMounted) return
+        setProduct(productRes.data)
 
         // Lấy category đầy đủ
         if (productRes.data?.category) {
           try {
-            const categoryRes = await categoryService.getAllCategories();
-            if (!isMounted) return;
+            const categoryRes = await categoryService.getAllCategories()
+            if (!isMounted) return
             const fullCategory = categoryRes.data.find(
               cat =>
                 cat._id === productRes.data.category._id ||
                 cat._id === productRes.data.category
-            );
-            setCategoryWithSlug(fullCategory);
+            )
+            setCategoryWithSlug(fullCategory)
+            
+            // GỌI API LIÊN QUAN NGAY SAU KHI CÓ CATEGORY (CHỈ LẦN ĐẦU)
+            if (initial && fullCategory?.slug) {
+              setLoadingRelated(true)
+              const relatedRes = await productService.getRelatedProducts(fullCategory.slug)
+              if (!isMounted) return
+
+              const productsArray = Array.isArray(relatedRes)
+                ? relatedRes
+                : Array.isArray(relatedRes?.data)
+                  ? relatedRes.data
+                  : []
+
+              console.log("Related products fetched:", productsArray) // Debug
+              setRelatedProducts(productsArray)
+              setLoadingRelated(false)
+            }
           } catch (error) {
-            console.error("Lỗi khi lấy thông tin category:", error);
+            console.error("Lỗi khi lấy thông tin category:", error)
+            setLoadingRelated(false)
           }
         }
 
-        // Lấy giá đặt tối thiểu
+        // Lấy giá đặt tối thiểu (vẫn polling mỗi 5s)
         if (user) {
           try {
-            const priceRes = await productService.getMinValidPrice(id, user._id);
-            if (!isMounted) return;
-            setMinValidPrice(priceRes.min_valid_price);
+            const priceRes = await productService.getMinValidPrice(id, user._id)
+            if (!isMounted) return
+            setMinValidPrice(priceRes.min_valid_price)
           } catch (error) {
-            console.error("Lỗi khi lấy thông tin giá:", error);
+            console.error("Lỗi khi lấy thông tin giá:", error)
           }
         }
-
-        // Lấy sản phẩm liên quan
-        const slug =
-          categoryWithSlug?.slug || productRes.data?.category?.slug || null;
-
-        if (slug) {
-          const relatedRes = await productService.getRelatedProducts(slug);
-          if (!isMounted) return;
-          setRelatedProducts(relatedRes.data || []);
-        }
       } catch (error) {
-        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+        console.error("Lỗi khi tải chi tiết sản phẩm:", error)
       } finally {
-        if (initial) setLoading(false); // chỉ loading lần đầu
+        if (initial) setLoading(false) // chỉ loading lần đầu
       }
-    };
+    }
 
-    // Gọi lần đầu → có loading
-    fetchProductData(true);
+    // Gọi lần đầu → có loading và load sản phẩm liên quan
+    fetchProductData(true)
 
-    // Polling mỗi 5s → không hiện loading
+    // Polling mỗi 5s → chỉ cập nhật product, giá, KHÔNG load lại sản phẩm liên quan
     const interval = setInterval(() => {
-      fetchProductData(false);
-    }, 5000);
+      fetchProductData(false)
+    }, 5000)
 
     return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [id, user]);
-
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [id, user])
 
   const displayCategory = categoryWithSlug || product?.category
 
@@ -141,7 +149,7 @@ export default function ProductDetail() {
       <ProductQA productId={id} />
 
       {/* Sản phẩm cùng chuyên mục */}
-      <RelatedProducts products={relatedProducts} />
+      <RelatedProducts products={relatedProducts} loading={loadingRelated} />
     </div>
   )
 }
@@ -712,13 +720,43 @@ function ProductQA({ productId }) {
 }
 
 // Component sản phẩm liên quan
-function RelatedProducts({ products }) {
-  if (!products || products.length === 0) return null
+function RelatedProducts({ products, loading = false }) {
+  if (loading) {
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+          🔄 Sản phẩm cùng chuyên mục
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-lg mb-3"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!products?.length) {
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
+          🔄 Sản phẩm cùng chuyên mục
+        </h2>
+        <div className="text-center py-8 text-gray-500 italic">
+          Chưa có sản phẩm nào cùng chuyên mục
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
-        🔄 Sản phẩm cùng chuyên mục
+        🔄 Sản phẩm cùng chuyên mục ({products.length} sản phẩm)
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
@@ -726,5 +764,5 @@ function RelatedProducts({ products }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
