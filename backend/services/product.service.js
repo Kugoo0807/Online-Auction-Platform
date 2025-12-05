@@ -3,6 +3,7 @@ import { categoryRepository } from '../repositories/category.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
+import * as mailService from './email.service.js';
 
 class ProductService {
     async createProduct(productData) {
@@ -136,7 +137,7 @@ class ProductService {
                 return { success: true, message: "Người dùng đã bị cấm trước đó" };
             }
 
-            recalculateAuctionState(product);
+            await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
             return { success: true };
@@ -157,7 +158,7 @@ class ProductService {
                 id => id.toString() !== bidderIdToUnban
             );
 
-            recalculateAuctionState(product);
+            await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
             return { success: true };
@@ -200,6 +201,26 @@ class ProductService {
         const isWatching = await watchListRepository.exists(userId, productId);
         return isWatching;
     }
-}
 
+    async cancelProduct(productId) {
+        const product = await productRepository.findById(productId);
+        if (!product) {
+            throw new Error('Sản phẩm không tồn tại!');
+        }
+        
+        if (product.seller?.email) {
+            await mailService.notifyAuctionCancelled(product.seller.email, product.product_name);
+        }
+        
+        if (product.current_highest_bidder?.email) {
+            await mailService.notifyAuctionCancelled(product.current_highest_bidder.email, product.product_name);
+        }
+        
+        return await productRepository.cancelProduct(productId);
+    }
+
+    async getActiveProduct(userId) {
+        return await productRepository.findActive(userId);
+    }
+}
 export const productService = new ProductService();

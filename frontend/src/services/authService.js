@@ -25,7 +25,7 @@ export const authService = {
 
   // Lấy profile user
   getProfile: async () => {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/users/profile');
     return response.data;
   },
 
@@ -58,6 +58,11 @@ export const authService = {
 
   loginWithFacebook: async (code) => {
     const response = await api.post('/auth/facebook/login', { code });
+    return { accessToken: response.data.token };
+  },
+
+  loginWithGitHub: async (code) => {
+    const response = await api.post('/auth/github/login', { code });
     return { accessToken: response.data.token };
   },
 

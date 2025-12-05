@@ -66,16 +66,49 @@ export default function SignUp() {
   }
 
   const handleGoogleSignUp = () => {
-    authService.loginWithGoogle()
-  }
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+    const state = "google"; // Đánh dấu đây là login google
+
+    if (!googleClientId || googleClientId.includes('placeholder')) {
+      alert("Note: You are using a placeholder Client ID.");
+    }
+
+    const targetUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&prompt=consent&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile&access_type=offline&state=${state}`;
+
+    window.location.href = targetUrl;
+  };
 
   const handleFacebookSignUp = () => {
-    authService.loginWithFacebook()
-  }
+    const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    const redirectUri = import.meta.env.VITE_FACEBOOK_REDIRECT_URI;
+    const state = "facebook"; // Đánh dấu đây là login facebook
+
+    if (!facebookAppId || facebookAppId.includes('placeholder')) {
+      alert("Note: You are using a placeholder Client ID.");
+    }
+
+    const targetUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=email,public_profile`;
+
+    window.location.href = targetUrl;
+  };
 
   const handleGitHubSignUp = () => {
-    authService.loginWithGitHub()
-  }
+    const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI;
+    const state = "github"; // Đánh dấu đây là login github
+
+    if (!githubClientId || githubClientId.includes('placeholder')) {
+      alert("Note: You are using a placeholder Client ID.");
+    }
+
+    // GitHub cần scope user:email để lấy email người dùng
+    const targetUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+
+    window.location.href = targetUrl;
+  };
 
   return (
     <div className="bg-[#c7dbe6] min-h-screen flex justify-center py-[60px] font-sans text-[#153243]">

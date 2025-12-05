@@ -24,10 +24,12 @@ class BidService {
   async getBidHistory(productId) {
     try {
       const response = await api.get(`/bids/${productId}/history`);
-      return response.data;
+      // API shape: { message: '', data: [ ... ] }
+      // Return the inner data array so callers can use `.map` directly.
+      return response.data?.data || [];
     } catch (error) {
       console.error("Lỗi getBidHistory:", error);
-      return { data: [] };
+      return [];
     }
   }
 

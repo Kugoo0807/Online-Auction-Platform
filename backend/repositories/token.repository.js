@@ -22,6 +22,13 @@ class TokenRepository {
             { new: true }
         );
     }
+
+    async deleteAllTokensByUser(userId) {
+        return await RefreshToken.updateMany(
+            { user: userId, is_revoked: false },
+            { is_revoked: true }
+        );
+    }
 }
 
 export const tokenRepository = new TokenRepository();

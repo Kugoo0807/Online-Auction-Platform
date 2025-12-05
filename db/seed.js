@@ -44,73 +44,97 @@ const seedDatabase = async () => {
     console.log('👤 Đang tạo 5 Users...');
     const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create([
       { 
-        full_name: "Nguyễn Văn Bán (Seller 1)", 
+        full_name: "Seller Một", 
         email: "seller1@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "Hà Nội",
         phone_number: "0901234567",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 2)", 
+        full_name: "Seller Hai", 
         email: "seller2@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 3)", 
+        full_name: "Seller Ba", 
         email: "seller3@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 4)", 
+        full_name: "Seller Bốn", 
         email: "seller4@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 5)", 
+        full_name: "Seller Năm", 
         email: "seller5@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Lê Văn Mua (Bidder 1)", 
+        full_name: "Bidder Một", 
         email: "bidder1@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Đà Nẵng",
-        phone_number: "0912345678"
+        phone_number: "0912345678",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Phạm Thị Săn (Bidder 2)", 
+        full_name: "Bidder Hai", 
         email: "bidder2@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Cần Thơ",
-        phone_number: "0987654321"
+        phone_number: "0987654321",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Phạm Thị Săn (Bidder 3)", 
+        full_name: "Bidder Ba", 
         email: "bidder3@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Cần Thơ",
-        phone_number: "0987654321"
+        phone_number: "0987654321",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
         full_name: "Admin Quản Trị", 
@@ -118,7 +142,10 @@ const seedDatabase = async () => {
         password: hashedPassword, 
         role: "admin", 
         address: "Server",
-        phone_number: "0000000000"
+        phone_number: "0000000000",
+        providers: [
+          { provider: 'local' }
+        ],
       }
     ]);
 
