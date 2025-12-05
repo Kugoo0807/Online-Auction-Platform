@@ -3,7 +3,8 @@ import { categoryRepository } from '../repositories/category.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
-
+import * as mailService from './email.service.js';
+import SendmailTransport from 'nodemailer/lib/sendmail-transport/index.js';
 class ProductService {
     async createProduct(productData) {
         const { description, ...restData } = productData;
@@ -200,6 +201,22 @@ class ProductService {
         const isWatching = await watchListRepository.exists(userId, productId);
         return isWatching;
     }
-}
 
+    async cancelProduct(productId) {
+        const product = await productRepository.findById(productId);
+        if (!product) {
+            throw new Error('Sản phẩm không tồn tại!');
+        }
+        
+        if (product.seller?.email) {
+            await mailService.notifyAuctionCancelled(product.seller.email, product.product_name);
+        }
+        
+        if (product.current_highest_bidder?.email) {
+            await mailService.notifyAuctionCancelled(product.current_highest_bidder.email, product.product_name);
+        }
+        
+        return await productRepository.cancelProduct(productId);
+    }
+}
 export const productService = new ProductService();

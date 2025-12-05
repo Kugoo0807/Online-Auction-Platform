@@ -129,6 +129,14 @@ class ProductRepository {
         const result = await Product.exists({ category: { $in: categoryIds } });
         return !!result;
     }
+
+    async cancelProduct(productId) {
+        return await Product.findByIdAndUpdate(
+            productId,
+            { auction_status: 'cancelled' },
+            { new: true }
+        );
+    }
 }
 
 export const productRepository = new ProductRepository();
