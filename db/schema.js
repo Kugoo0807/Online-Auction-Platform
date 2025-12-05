@@ -46,8 +46,12 @@ const checkForeignKeys = (schema) => {
 // 1. User
 const userSchema = new Schema({
   full_name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true, index: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
   password: { type: String },
+
+  // Delete
+  is_deleted: { type: Boolean, default: false, index: true },
+  deleted_at: { type: Date, default: null },
 
   // Role & Permissions
   role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
@@ -68,6 +72,10 @@ const userSchema = new Schema({
   rating_score: { type: Number, default: 0 }, // Tổng điểm: cứ +1 hoặc -1
   rating_count: { type: Number, default: 0 }, // Tổng số lần được đánh giá
 }, { timestamps: true });
+userSchema.index(
+  { email: 1 }, 
+  { unique: true, partialFilterExpression: { is_deleted: false } }
+);
 
 // 2. UpgradeRequest
 const upgradeRequestSchema = new Schema({

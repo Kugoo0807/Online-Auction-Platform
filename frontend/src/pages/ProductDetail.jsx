@@ -55,7 +55,6 @@ export default function ProductDetail() {
                   ? relatedRes.data
                   : []
 
-              console.log("Related products fetched:", productsArray) // Debug
               setRelatedProducts(productsArray)
               setLoadingRelated(false)
             }
@@ -627,7 +626,7 @@ function BiddingSection({ product, minValidPrice, user }) {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            {bidHistory.length === 0 ? (
+            {(bidHistory.length === 0) ? (
               <div className="text-center py-8 text-gray-500">
                 Chưa có lượt đấu giá nào
               </div>
@@ -644,11 +643,13 @@ function BiddingSection({ product, minValidPrice, user }) {
                   </thead>
                   <tbody>
                     {bidHistory.map((bid, index) => {
-                      // Lấy tên bidder
-                      const bidderName = bid.user?.full_name || 'Ẩn danh';
+                      // Lấy bidder
+                      const bidderName = bid.user?.full_name;
+                      const invalidBidder = !bid.is_valid;
 
-                      // Lấy tên holder
-                      const holderName = bid.holder?.full_name || 'Ẩn danh';
+                      // Lấy holder
+                      const holderName = bid.holder?.full_name;
+                      const invalidHolder = bid.invalid_holder;
 
                       // Lấy giá từ price
                       const bidAmount = bid.price || 0;
@@ -668,11 +669,23 @@ function BiddingSection({ product, minValidPrice, user }) {
                           </td>
                           <td className="py-3 px-4 border-b">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                                  invalidBidder
+                                    ? 'bg-gray-200 text-gray-500'
+                                    : 'bg-blue-100 text-blue-600'
+                                }`}
+                              >
                                 {bidderName?.charAt(0)?.toUpperCase() || '?'}
                               </div>
-                              <span className="font-medium text-gray-800">
-                                {maskName(bidderName)}
+                              <span
+                                className={`font-medium ${
+                                  invalidBidder
+                                    ? 'text-gray-400 line-through italic'
+                                    : 'text-gray-800'
+                                }`}
+                              >
+                                {bidderName ? maskName(bidderName) : 'Ẩn Danh'}
                               </span>
                             </div>
                           </td>
@@ -683,11 +696,23 @@ function BiddingSection({ product, minValidPrice, user }) {
                           </td>
                           <td className="py-3 px-4 border-b">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                                  invalidHolder
+                                    ? 'bg-gray-200 text-gray-500'
+                                    : 'bg-blue-100 text-indigo-600'
+                                }`}
+                              >
                                 {holderName?.charAt(0)?.toUpperCase() || '?'}
                               </div>
-                              <span className="font-medium text-gray-800">
-                                {maskName(holderName)}
+                              <span
+                                className={`font-medium ${
+                                  invalidHolder
+                                    ? 'text-gray-400 line-through italic'
+                                    : 'text-gray-800'
+                                }`}
+                              >
+                                {holderName ? maskName(holderName) : 'Ẩn Danh'}
                               </span>
                             </div>
                           </td>
