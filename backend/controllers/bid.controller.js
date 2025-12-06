@@ -10,7 +10,7 @@ class BidController {
             const result = await bidService.placeBid(user, id, amount);
             return res.status(200).json(result);
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ message: error.message });
         }
     }
 
@@ -24,7 +24,7 @@ class BidController {
                 data: history
             });
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ message: error.message });
         }
     }
 }

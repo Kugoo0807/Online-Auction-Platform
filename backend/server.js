@@ -78,12 +78,12 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', AuthRoutes(authController));
 app.use('/api/users', UserRoutes(userController));
 app.use('/api/admin', AdminRoutes());
-app.use('/api/products', ProductRoutes(productController));
+app.use('/api/products', ProductRoutes(productController, qnaController));
 app.use('/api/categories', CategoryRoutes(categoryController));
 app.use('/api/bids', BidRoutes(bidController));
-app.use('/api/upgrade-request', UpgradeRequestRoutes(upgradeRequestController));
-app.use('/api/rating', RatingRoutes(ratingController));
-app.use('/api/qna', QnARoutes(qnaController));
+app.use('/api/upgrade-requests', UpgradeRequestRoutes(upgradeRequestController));
+app.use('/api/ratings', RatingRoutes(ratingController));
+app.use('/api/qnas', QnARoutes(qnaController));
 // START
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên cổng http://localhost:${PORT}/api`);

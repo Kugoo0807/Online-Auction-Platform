@@ -1,6 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { qnaRepository } from '../repositories/qna.repository.js';
 import { productRepository } from '../repositories/product.repository.js';
 import * as mailService from './email.service.js';
+
+const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'auction/' || 'http://localhost:3000/auction/';
 
 class QnaService {
 	async askQuestion({ product_id, asker, question_content }) {
@@ -27,11 +32,13 @@ class QnaService {
 		try {
 			const populated = await qnaRepository.findById(qna._id);
 			const sellerEmail = populated?.product?.seller?.email;
+			const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
 			if (sellerEmail) {
 				await mailService.notifyNewQuestion(
 					sellerEmail,
 					populated.product?.product_name || 'Sản phẩm của bạn',
-					populated.question_content
+					populated.question_content,
+					productUrl
 				);
 			}
 		} catch (e) {
@@ -59,7 +66,7 @@ class QnaService {
 		if (qna.answer_content) {
 			throw new Error('Câu hỏi đã được trả lời, không thể trả lời lại');
 		}
-		if (answerer.toString() !== qna.product.seller.toString()) {
+		if (answerer.toString() !== qna.product.seller?._id.toString()) {
 			throw new Error('Chỉ người bán của sản phẩm mới có thể trả lời câu hỏi này');
 		}
 
@@ -79,12 +86,15 @@ class QnaService {
 		try {
 			const askerEmail = populated?.asker?.email;
 			const productName = populated?.product?.product_name || 'Sản phẩm';
+			const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
 			if (askerEmail) {
 				await mailService.notifyNewAnswer(
 					[askerEmail],
 					productName,
 					populated?.question_content || '',
-					answerData.answer_content				);
+					answerData.answer_content,
+					productUrl
+				);
 			}
 		} catch (e) {
 		}

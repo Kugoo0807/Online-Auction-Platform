@@ -151,27 +151,75 @@ class ProductService {
     }
   }
 
-  async getMinValidPrice(productId, userId) {
+  async getMinValidPrice(productId) {
     try {
-      const response = await api.get(`/products/${productId}/min-price`, {
-        params: { userId }
-      });
+      const response = await api.get(`/products/${productId}/min-price`);
       return response.data;
     } catch (error) {
       console.error("Lỗi getMinValidPrice:", error);
       throw error;
     }
   }
-}
 
-const getRandomProductsByCategory = async (slug) => {
-  try {
-    const response = await apiClient.get(`/products/category/${slug}/random`);
-    return response.data;
-  } catch (error) {
-    throw error;
+  async banBidder(productId, bidderId) {
+    try {
+      const response = await api.post(`/products/${productId}/ban`, { 
+          bidder: bidderId 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi banBidder:", error);
+      throw error;
+    }
   }
-};
+
+  async unbanBidder(productId, bidderId) {
+    try {
+      const response = await api.post(`/products/${productId}/unban`, { 
+          bidder: bidderId 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi unbanBidder:", error);
+      throw error;
+    }
+  }
+
+  // --- QnA APIS ---
+  async postQuestion(productId, questionText) {
+    try {
+      const response = await api.post(`/products/${productId}/questions`, {
+        question_content: questionText
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi postQuestion:", error);
+      throw error;
+    }
+  }
+
+  async postAnswer(questionId, answerText) {
+    try {
+      const response = await api.post(`/qnas/${questionId}/answers`, {
+        answer_content: answerText
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi postAnswer:", error);
+      throw error;
+    }
+  }
+
+  async getQuestions(productId) {
+    try {
+      const response = await api.get(`/products/${productId}/questions`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getQuestions:", error);
+      return { data: [] };
+    }
+  }
+}
 
 
 export const productService = new ProductService();
