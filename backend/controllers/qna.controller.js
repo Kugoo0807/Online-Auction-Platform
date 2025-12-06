@@ -4,8 +4,8 @@ class QnaController {
         try {
             const asker = req.user._id; // Từ auth middleware
             const { question_content } = req.body;
-            const product_id = req.params.productId;
-            const qna = await qnaService.askQuestion({ product_id, asker, question_content });
+            const productId = req.params.id;
+            const qna = await qnaService.askQuestion({ product_id: productId, asker, question_content });
             return res.status(201).json({
                 message: 'Câu hỏi đã được gửi thành công!',
                 data: qna
@@ -17,7 +17,7 @@ class QnaController {
 
     async listByProduct(req, res) {
         try {
-            const productId = req.params.productId;
+            const productId = req.params.id;
             const qnaList = await qnaService.listByProduct(productId);
             return res.status(200).json({
                 message: 'Lấy danh sách hỏi đáp thành công!',
@@ -30,7 +30,7 @@ class QnaController {
 
     async answerQuestion(req, res) {
         try {
-            const qnaId = req.params.qnaId;
+            const qnaId = req.params.id;
             const answerer = req.user._id; // Từ auth middleware
             const { answer_content } = req.body;
             await qnaService.answerQuestion(qnaId, { answerer, answer_content });

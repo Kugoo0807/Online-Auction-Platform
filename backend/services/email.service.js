@@ -318,7 +318,7 @@ export async function notifyAuctionEndedNoBid(sellerEmail, productName, productL
     });
 }
 
-export async function notifyNewQuestion(sellerEmail, productName, questionContent) {
+export async function notifyNewQuestion(sellerEmail, productName, questionContent, productLink) {
     return sendMailBase({
         to: sellerEmail,
         subject: `Câu hỏi mới về sản phẩm: ${productName}`,
@@ -336,13 +336,18 @@ export async function notifyNewQuestion(sellerEmail, productName, questionConten
                     </div>
 
                     <p>Việc trả lời nhanh chóng sẽ tăng khả năng chốt đơn của bạn.</p>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Xem chi tiết sản phẩm
+                        </a>
+                    </div>
                 </div>
             </div>
         `
     });
 }
 
-export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent) {
+export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent, productLink) {
     // Lưu ý: Dùng bcc để bảo mật danh sách email người nhận
     return transporter.sendMail({
         from: `"AuctionHub Support" <${process.env.MAIL_USER}>`,
@@ -364,6 +369,11 @@ export async function notifyNewAnswer(recipientsEmails, productName, questionCon
                     <div style="margin-bottom: 30px;">
                         <span style="background-color: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">TRẢ LỜI TỪ NGƯỜI BÁN</span>
                         <p style="margin-top: 5px; color: #333; font-weight: 500;">${answerContent}</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Xem chi tiết sản phẩm
+                        </a>
                     </div>
                 </div>
             </div>

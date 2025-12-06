@@ -4,9 +4,8 @@ import { checkAuth, checkNotAdmin } from '../middleware/auth.middleware.js';
 export function QnARoutes(qnaController) {
     const router = express.Router();
 
-    router.get('/product/:productId', qnaController.listByProduct);
-    router.post('/:productId', [checkAuth, checkNotAdmin], qnaController.askQuestion);
-    router.post('/:qnaId', [checkAuth, checkNotAdmin], qnaController.answerQuestion);
+    // Trả lời cho một câu hỏi cụ thể
+    router.post('/:id/answers', [checkAuth, checkNotAdmin], qnaController.answerQuestion);
 
     return router;
 }
