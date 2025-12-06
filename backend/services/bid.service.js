@@ -160,14 +160,15 @@ class BidService {
                 return {
                     ...bidObj,
                     price: displayPrice,
-                    user: null,
+                    user: user,
                     
                     is_valid: !isInvalid,
                     is_deleted: isDeleted,
                     is_banned: isBanned,
+                    max_price: undefined,
                     
                     invalid_holder: null,
-                    holder: null
+                    holder: holder
                 };
             }
 
@@ -181,14 +182,15 @@ class BidService {
             return {
                 ...bidObj,
                 price: displayPrice,
-                user: isInvalid ? null : { _id: user._id, full_name: user.full_name },
+                user: user,
                 
                 is_valid: !isInvalid,
                 is_deleted: isDeleted,
                 is_banned: isBanned,
+                max_price: undefined,
                 
                 invalid_holder: isHolderInvalid,
-                holder: isHolderInvalid ? null : { _id: holder._id, full_name: holder.full_name }
+                holder: holder
             }
         })
 
