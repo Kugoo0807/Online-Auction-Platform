@@ -1,5 +1,6 @@
 import { upgradeRequestRepository }  from '../repositories/upgrade.request.repository.js';
 import { userRepository }  from '../repositories/user.repository.js';
+import * as mailService from './email.service.js';
 class UpgradeRequestService {
     async createRequest(userId) {
         const existingRequest = await upgradeRequestRepository.findPendingByUserId(userId);
@@ -27,8 +28,16 @@ class UpgradeRequestService {
             const userIdToUpgrade = request.bidder._id || request.bidder;
             try {
                 await userRepository.upgradeSeller(userIdToUpgrade);
+                if (request.bidder.email) {
+                    await mailService.notifyUpgradeApproved(request.bidder.email);
+                }
             } catch (e) {
                 throw new Error('Lỗi khi nâng cấp user, huỷ thao tác duyệt.');
+            }
+        }
+        if (status === 'rejected') {
+            if (request.bidder.email) {
+                await mailService.notifyUpgradeRejected(request.bidder.email);
             }
         }
 

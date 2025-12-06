@@ -7,17 +7,10 @@ class RatingRepository {
         return await result.save({ session });
     }
 
-    async findByAuctionAndRater(auctionResultId, raterId) {
-        return await Rating.findOne({ 
-            auction_result: auctionResultId, 
-            rater: raterId 
-        });
-    }
-
     async update(ratingId, updateData, session = null) {
         return await Rating.findByIdAndUpdate(
-            ratingId, 
-            updateData, 
+            ratingId,
+            updateData,
             { new: true, session }
         );
     }
@@ -49,10 +42,17 @@ class RatingRepository {
             .limit(limit);
     }
 
-    async calculateUserStats(userId) {
+    async findByAuctionAndRater(auctionResultId, raterId, session = null) {
+        return await Rating.findOne({
+            auction_result: auctionResultId,
+            rater: raterId
+        }).session(session);
+    }
+
+    async calculateUserStats(userId, session = null) {
         const stats = await Rating.aggregate([
-            { 
-                $match: { rated_user: new mongoose.Types.ObjectId(userId) } 
+            {
+                $match: { rated_user: new mongoose.Types.ObjectId(userId) }
             },
             {
                 $group: {
@@ -61,7 +61,7 @@ class RatingRepository {
                     totalCount: { $sum: 1 }
                 }
             }
-        ]);
+        ]).session(session);
 
         if (stats.length > 0) {
             return {
@@ -69,7 +69,7 @@ class RatingRepository {
                 count: stats[0].totalCount
             };
         }
-        
+
         return { score: 0, count: 0 };
     }
 }
