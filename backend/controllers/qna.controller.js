@@ -3,7 +3,8 @@ class QnaController {
     async askQuestion(req, res) {
         try {
             const asker = req.user._id; // Từ auth middleware
-            const { product_id, question_content } = req.body;
+            const { question_content } = req.body;
+            const product_id = req.params.productId;
             const qna = await qnaService.askQuestion({ product_id, asker, question_content });
             return res.status(201).json({
                 message: 'Câu hỏi đã được gửi thành công!',
