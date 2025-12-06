@@ -2,12 +2,12 @@ import { qnaRepository } from '../repositories/qna.repository.js';
 import * as mailService from './email.service.js';
 
 class QnaService {
-	async askQuestion({ product, asker, question_content }) {
-		if (!product || !asker || !question_content || !question_content.trim()) {
-			throw new Error('Thiếu dữ liệu: product, asker, question_content');
+	async askQuestion({ product_id, asker, question_content }) {
+		if (!product_id || !asker || !question_content || !question_content.trim()) {
+			throw new Error('Thiếu dữ liệu: product_id, asker, question_content');
 		}
 		const qna = await qnaRepository.create({
-			product,
+			product: product_id,
 			asker,
 			question_content: question_content.trim()
 		});
