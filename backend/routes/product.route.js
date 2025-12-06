@@ -2,7 +2,7 @@ import express from 'express';
 import { checkAuth, checkRole, checkNotAdmin } from '../middleware/auth.middleware.js';
 import uploadCloud from '../config/cloudinary.config.js';
 
-export function ProductRoutes(productController) {
+export function ProductRoutes(productController, qnaController) {
     const router = express.Router();
 
     // ======= PUBLIC ROUTES =======
@@ -53,10 +53,10 @@ export function ProductRoutes(productController) {
     router.post('/:id/description', [checkAuth, checkRole('seller')], productController.appendDescription);
 
     // Ban bidder
-    router.post('/:id/ban', [checkAuth, checkRole('seller')], productController.banBidder);
+    router.post('/:id/ban', [checkAuth, checkNotAdmin], productController.banBidder);
 
     // Unban bidder
-    router.post('/:id/unban', [checkAuth, checkRole('seller')], productController.unbanBidder);
+    router.post('/:id/unban', [checkAuth, checkNotAdmin], productController.unbanBidder);
     
     // Lấy chi tiết sản phẩm
     router.get('/:id', productController.getProductDetails);
@@ -69,6 +69,10 @@ export function ProductRoutes(productController) {
 
     // Kiểm tra xem có thích sản phẩm không
     router.get('/:id/watch-list/check', [checkAuth, checkNotAdmin], productController.checkIsWatching);
+
+    // Q&A routes
+    router.get('/:id/questions', qnaController.listByProduct);
+    router.post('/:id/questions', [checkAuth, checkNotAdmin], qnaController.askQuestion);
 
     return router;
 }

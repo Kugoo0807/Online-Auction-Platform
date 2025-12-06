@@ -9,7 +9,7 @@ class ProductRepository {
     async findById(product) {
         return await Product.findById(product)
             .populate('seller', 'full_name rating_score rating_count') 
-            .populate('category', 'category_name')
+            .populate('category', 'category_name slug')
             .populate('current_highest_bidder', 'full_name rating_score rating_count');
     }
     
@@ -36,7 +36,7 @@ class ProductRepository {
 
         return await query
             .populate('seller', 'full_name rating_score rating_count') 
-            .populate('category', 'category_name')
+            .populate('category', 'category_name slug')
             .populate('current_highest_bidder', 'full_name rating_score rating_count')
             .lean();
     }
@@ -49,7 +49,7 @@ class ProductRepository {
 
         return await Product.populate(docs, [
             { path: 'seller', select: 'full_name rating_score rating_count' },
-            { path: 'category', select: 'category_name' },
+            { path: 'category', select: 'category_name slug' },
             { path: 'current_highest_bidder', select: 'full_name rating_score rating_count'}
         ]);
     }
@@ -83,7 +83,7 @@ class ProductRepository {
     async findBySeller (seller) {
         return await Product.find({ seller })
             .populate('seller', 'full_name rating_score rating_count') 
-            .populate('category', 'category_name')
+            .populate('category', 'category_name slug')
             .populate('current_highest_bidder', 'full_name rating_score rating_count');
     }
 

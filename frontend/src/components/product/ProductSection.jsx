@@ -5,19 +5,30 @@ import LoginRequestModal from '../common/LoginRequestModal';
 import { useAuth } from '../../context/AuthContext';
 import ToastNotification from '../common/ToastNotification';
 
-function maskName(name) {
-    if (!name) return '';
+// Hàm mask tên
+const maskName = (name) => {
+  if (!name || typeof name !== 'string') return 'u***r'; 
 
-    const len = name.length;
+  // Lọc bỏ phần trong ngoặc () và khoảng trắng thừa
+  const cleanName = name.split('(')[0].trim();
+  
+  if (!cleanName) return 'u***r';
 
-    if (len <= 3) {
-        const visible = name.slice(-1);
-        return '*'.repeat(len - 1) + visible;
-    } else {
-        const visible = name.slice(-5);
-        return '****' + visible;
-    }
-}
+  const chars = Array.from(cleanName);
+  const len = chars.length;
+
+  if (len === 1) {
+      return `${chars[0]}***${chars[0]}`;
+  }
+
+  // CÔNG THỨC EBAY: Ký tự đầu + *** + Ký tự cuối
+  const first = chars[0];
+  const last = chars[len - 1];
+  const middleLength = Math.min(len - 2, 6); 
+  const middle = "*".repeat(middleLength);
+  
+  return `${first}${middle}${last}`;
+};
 
 // Utility functions
 const formatPrice = (price) => {
@@ -109,7 +120,7 @@ export function ProductCard({ product }) {
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       // Chỉ check nếu user đã đăng nhập và là bidder/seller
-      if (user && product._id) {
+      if (user && user.role !== 'admin' && product._id) {
         try {
           const result = await productService.checkIsWatching(product._id);
 
