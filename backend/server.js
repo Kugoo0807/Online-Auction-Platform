@@ -52,6 +52,14 @@ const { BidRoutes } = await import('./routes/bid.route.js');
 const { upgradeRequestController } = await import('./controllers/upgrade.request.controller.js');
 const { UpgradeRequestRoutes } = await import('./routes/upgrade.request.route.js');
 
+// === RATING ===
+const { ratingController } = await import('./controllers/rating.controller.js');
+const { RatingRoutes } = await import('./routes/rating.route.js');
+
+// === QNA ===
+const { qnaController } = await import('./controllers/qna.controller.js');
+const { QnARoutes } = await import('./routes/qna.route.js');
+
 // === BACKGROUND SERVICES (CRON JOB) ===
 const { cronService } = await import('./services/cron.service.js');
 cronService.start(); 
@@ -74,7 +82,8 @@ app.use('/api/products', ProductRoutes(productController));
 app.use('/api/categories', CategoryRoutes(categoryController));
 app.use('/api/bids', BidRoutes(bidController));
 app.use('/api/upgrade-request', UpgradeRequestRoutes(upgradeRequestController));
-
+app.use('/api/rating', RatingRoutes(ratingController));
+app.use('/api/qna', QnARoutes(qnaController));
 // START
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên cổng http://localhost:${PORT}/api`);

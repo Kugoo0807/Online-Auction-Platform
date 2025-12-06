@@ -1,13 +1,25 @@
 import { qnaRepository } from '../repositories/qna.repository.js';
+import { productRepository } from '../repositories/product.repository.js';
 import * as mailService from './email.service.js';
 
 class QnaService {
-	async askQuestion({ product, asker, question_content }) {
-		if (!product || !asker || !question_content || !question_content.trim()) {
-			throw new Error('Thiếu dữ liệu: product, asker, question_content');
+	async askQuestion({ product_id, asker, question_content }) {
+		if (!product_id || !asker || !question_content || !question_content.trim()) {
+			throw new Error('Thiếu dữ liệu: product_id, asker, question_content');
 		}
+
+		const product = await productRepository.findById(product_id);
+		if (!product) {
+			throw new Error('Sản phẩm không tồn tại');
+		}
+		
+		const sellerId = product.seller._id || product.seller;
+		if (sellerId.toString() === asker.toString()) {
+			throw new Error('Người bán không thể đặt câu hỏi cho chính sản phẩm của họ');
+		}
+
 		const qna = await qnaRepository.create({
-			product,
+			product: product_id,
 			asker,
 			question_content: question_content.trim()
 		});
@@ -38,12 +50,24 @@ class QnaService {
 		if (!qnaId || !answerer || !answer_content || !answer_content.trim()) {
 			throw new Error('Thiếu dữ liệu: qnaId, answerer, answer_content');
 		}
+
+		// Fetch QnA với population
+		const qna = await qnaRepository.findById(qnaId);
+		if (!qna) {
+			throw new Error('Câu hỏi không tồn tại');
+		}
+		if (qna.answer_content) {
+			throw new Error('Câu hỏi đã được trả lời, không thể trả lời lại');
+		}
+		if (answerer.toString() !== qna.product.seller.toString()) {
+			throw new Error('Chỉ người bán của sản phẩm mới có thể trả lời câu hỏi này');
+		}
+
 		const answerData = {
 			answerer,
 			answer_content: answer_content.trim(),
 			answer_timestamp: new Date()
-		};
-
+		};		
 		await qnaRepository.addAnswer(qnaId, answerData);
 
 		// Refetch with population for email and return

@@ -38,6 +38,14 @@ class QnARepository {
     async deleteById(qnaId) {
         return await QnA.findByIdAndDelete(qnaId);
     }
+
+    async exists(qnaId) {
+        return await QnA.exists({ _id: qnaId });
+    }
+
+    async existsAnswered(qnaId) {
+        return await QnA.exists({ _id: qnaId, answer_content: { $exists: true } });
+    }
 }
 
 export const qnaRepository = new QnARepository();
