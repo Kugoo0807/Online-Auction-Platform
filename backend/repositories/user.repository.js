@@ -1,6 +1,10 @@
 import { User } from '../../db/schema.js';
 
 class UserRepository {
+  async findAll() {
+    return await User.find({ is_deleted: false });
+  }
+
   async findByEmail(email) {
     return await User.findOne({ email, is_deleted: false });
   }

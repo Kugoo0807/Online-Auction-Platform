@@ -21,5 +21,11 @@ export function UserRoutes(userController) {
     // Khôi phục người dùng
     router.post('/:id/restore', [checkAuth, checkRole('admin')], userController.restoreUser);
 
+    // Lấy danh sách người dùng đã xóa
+    router.get('/deleted', [checkAuth, checkRole('admin')], userController.getDeletedUsers);
+
+    // Lấy danh sách tất cả người dùng
+    router.get('/', [checkAuth, checkRole('admin')], userController.getAllUsers);
+
     return router;
 }
