@@ -4,7 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import SearchBar from '../common/SearchBar';
 import CategoryMenu from '../home/CategoryMenu';
 import { upgradeRequestService } from '../../services/upgradeRequestService';
+
 import ToastNotification from '../common/ToastNotification';
+import ConfirmDialog from '../common/ConfirmDialog';
 
 export default function Header() {
   const [showCategories, setShowCategories] = useState(false);
@@ -15,11 +17,14 @@ export default function Header() {
 
   // --- Xử lí upgrade ---
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleUpgradeRequest = async () => {
-    const isConfirmed = window.confirm("Bạn có chắc chắn muốn gửi yêu cầu nâng cấp lên Seller?");
-    if (!isConfirmed) return;
-  
+    setShowConfirmDialog(true);
+  };
+
+  const confirmUpgradeRequest = async () => {
+    setShowConfirmDialog(false);
     setIsUpgrading(true);
   
     try {
@@ -189,8 +194,10 @@ export default function Header() {
                   {isSeller || isBidder ? (
                     <>
                       <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Hồ sơ cá nhân</Link>
+                      <Link to="/profile/ratings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Đánh giá của tôi</Link>
                       <Link to="/manage-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Quản lý sản phẩm</Link>
-                      <Link to="/my-bids" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Lịch sử đấu giá</Link>
+                      <Link to="/auctions/bidding" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Đang tham gia đấu giá</Link>
+                      <Link to="/auctions/won" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Sản phẩm đã thắng</Link>
                       <Link to="/watch-list" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Danh sách yêu thích</Link>
                       <div className="border-t border-gray-100 my-1"></div>
                       <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium cursor-pointer">Đăng xuất</button>
@@ -224,6 +231,14 @@ export default function Header() {
           </>
         )}
       </div>
+
+      {showConfirmDialog && (
+        <ConfirmDialog
+          message="Bạn có chắc chắn muốn gửi yêu cầu nâng cấp lên Seller?" 
+          onYes={confirmUpgradeRequest}
+          onNo={() => setShowConfirmDialog(false)}
+        />
+      )}
     </header>
   );
 }
