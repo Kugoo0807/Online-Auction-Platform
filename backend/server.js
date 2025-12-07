@@ -30,7 +30,6 @@ app.use(cors({
 // === AUTH ===
 const { authController } = await import('./controllers/auth.controller.js');
 const { AuthRoutes } = await import('./routes/auth.route.js');
-const { AdminRoutes } = await import('./routes/admin.route.js');
 
 // === USER ===
 const { userController } = await import('./controllers/user.controller.js');
@@ -77,7 +76,6 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', AuthRoutes(authController));
 app.use('/api/users', UserRoutes(userController));
-app.use('/api/admin', AdminRoutes());
 app.use('/api/products', ProductRoutes(productController, qnaController));
 app.use('/api/categories', CategoryRoutes(categoryController));
 app.use('/api/bids', BidRoutes(bidController));

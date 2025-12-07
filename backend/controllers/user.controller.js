@@ -59,6 +59,24 @@ class UserController {
             return res.status(400).json({ error: error.message });
         }
     }
+
+    async getAllUsers(req, res) {
+        try {
+            const users = await userService.getAllUsers();
+            return res.status(200).json({ users });
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getDeletedUsers(req, res) {
+        try {
+            const users = await userService.getDeletedUsers();
+            return res.status(200).json({ users });
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 export const userController = new UserController();

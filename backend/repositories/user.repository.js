@@ -1,6 +1,10 @@
 import { User } from '../../db/schema.js';
 
 class UserRepository {
+  async findAll() {
+    return await User.find({ is_deleted: false });
+  }
+
   async findByEmail(email) {
     return await User.findOne({ email, is_deleted: false });
   }
@@ -70,7 +74,6 @@ class UserRepository {
   }
 
   async updateData(userId, updateData) {
-    // FIX: dùng this.findById để tận dụng logic check is_deleted: false
     if (!updateData || typeof updateData !== 'object') {
       return await this.findById(userId); 
     }
