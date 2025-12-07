@@ -10,6 +10,20 @@ import * as mailService from './email.service.js';
 
 class ProductService {
     async createProduct(productData) {
+        const requiredFields = [
+            'product_name',
+            'description',
+            'start_price',
+            'thumbnail',
+            'auction_end_time',
+            'category',
+            'seller'
+        ];
+        const isValid = requiredFields.every(field => field in productData);
+        if (!isValid) {
+            throw new Error('Thiếu thông tin bắt buộc để tạo sản phẩm!');
+        }
+
         const { description, ...restData } = productData;
 
         const newProductData = {

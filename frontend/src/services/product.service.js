@@ -196,6 +196,18 @@ class ProductService {
     }
   }
 
+  async appendDescription(productId, descriptionContent) {
+    try {
+      const response = await api.post(`/products/${productId}/description`, {
+        content: descriptionContent
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi appendDescription:", error);
+      throw error;
+    }
+  }
+
   // --- QnA APIS ---
   async postQuestion(productId, questionText) {
     try {
