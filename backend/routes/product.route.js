@@ -74,5 +74,8 @@ export function ProductRoutes(productController, qnaController) {
     router.get('/:id/questions', qnaController.listByProduct);
     router.post('/:id/questions', [checkAuth, checkNotAdmin], qnaController.askQuestion);
 
+    // Mua ngay
+    router.post('/:id/buy-now', [checkAuth, checkNotAdmin], productController.buyProductNow);
+
     return router;
 }

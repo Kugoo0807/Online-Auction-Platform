@@ -127,6 +127,17 @@ class ProductService {
       return { isWatching: false };
     }
   }
+  
+  // 9. Mua ngay sản phẩm
+  async buyProductNow(productId) {
+    try {
+      const response = await api.post(`/products/${productId}/buy-now`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi buyProductNow:", error);
+      throw error;
+    }
+  }
 
   // --- SELLER API ---
 

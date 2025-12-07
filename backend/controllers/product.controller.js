@@ -261,6 +261,21 @@ class ProductController {
             return res.status(400).json({ message: error.message });
         }
     }
+
+    async buyProductNow(req, res) {
+        try {
+            const buyer = req.user._id;
+            const productId = req.params.id;
+            const result = await productService.buyProductNow(buyer, productId);
+
+            return res.status(200).json({
+                message: 'Mua ngay sản phẩm thành công!',
+                data: result
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }   
+    }
 }
 
 export const productController = new ProductController();

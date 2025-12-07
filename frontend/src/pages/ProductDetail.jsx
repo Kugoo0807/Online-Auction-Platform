@@ -204,13 +204,17 @@ export default function ProductDetail() {
         onRefresh={() => fetchProductData(false)}
       />
 
-      <ProductQA 
-        product={product}
-        user={user}
-        isRealSeller={isRealSeller}
-        questions={questions}
-        onRefresh={() => fetchProductData(false)}
-      />
+      {product.auction_status === 'active' && (
+          <>
+            <ProductQA 
+              product={product}
+              user={user}
+              isRealSeller={isRealSeller}
+              questions={questions}
+              onRefresh={() => fetchProductData(false)}
+            />
+          </>
+        )}
 
       <RelatedProducts products={relatedProducts} loading={loadingRelated} />
     </div>
@@ -330,10 +334,10 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
         <h1 className="text-3xl font-bold text-blue-900 mb-4 leading-tight">{product.product_name}</h1>
       </div>
       <div className="flex justify-between items-center mb-4">
-        <div className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${isAuctionActive() ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'}`}>
-          {isAuctionActive() ? '🟢 Đang đấu giá' : '🟡 Đã kết thúc'}
+        <div className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${isAuctionActive() ? 'bg-green-100 border-green-200 text-green-700' : 'bg-red-100 border-red-200 text-red-700'}`}>
+          {isAuctionActive() ? '🟢 Đang đấu giá' : '🔴 Đã kết thúc'}
         </div>
-        {!isRealSeller && <FavoriteButton />}
+        {!isRealSeller && product.auction_status === 'active' && <FavoriteButton />}
       </div>
       <div className="mb-5 pb-5 border-b border-gray-100">
         <div className="text-sm text-gray-500 mb-1 font-medium uppercase tracking-wide">Giá hiện tại</div>
@@ -345,7 +349,7 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
           <div className="text-xl font-bold text-blue-600">₫{formatPrice(product.buy_it_now_price)}</div>
         </div>
       )}
-      {!isRealSeller && minValidPrice > 0 && (
+      {!isRealSeller && product.auction_status === 'active' && minValidPrice > 0 && (
         <div className="mb-5">
           <div className="text-sm text-gray-500 mb-1 font-medium">Giá đặt tối thiểu</div>
           <div className="text-lg font-bold text-gray-800">₫{formatPrice(minValidPrice)}</div>
@@ -385,7 +389,7 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
             {product.current_highest_bidder.full_name?.charAt(0) || 'B'}
           </div>
           <div>
-            <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">Người giữ giá cao nhất</div>
+            <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">{product.auction_status === 'active' ? 'Người giữ giá cao nhất' : 'Người thắng đấu giá'}</div>
             <div className="font-bold text-gray-900">{maskName(product.current_highest_bidder.full_name)}</div>
             <div className="text-xs text-yellow-500 flex items-center">
                ⭐ {isNaN(calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count)) ? 'NaN' : calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count) + '%'}
@@ -420,6 +424,7 @@ const BlockingMessage = ({ title, message, type = 'blue' }) => {
     blue: "text-blue-800 bg-blue-50 border-blue-100",
     red: "text-red-800 bg-red-50 border-red-100",
     yellow: "text-yellow-800 bg-yellow-50 border-yellow-100",
+    green: "text-green-800 bg-green-50 border-green-100",
   };
   
   return (
@@ -430,7 +435,10 @@ const BlockingMessage = ({ title, message, type = 'blue' }) => {
   );
 };
 
-const renderBiddingContent = (user, isRealSeller, isBannedUser, isNewbie, bidAmount, minValidPrice, setBidAmount, handleBidClick, formatPrice) => {
+const renderBiddingContent = (user, product, 
+  isRealSeller, isBannedUser, isNewbie, 
+  bidAmount, minValidPrice, setBidAmount, formatPrice,
+  handleBidClick, handleBuyNowClick) => {
     // Trường hợp 1: Chưa đăng nhập
     if (!user) {
         return (
@@ -472,31 +480,51 @@ const renderBiddingContent = (user, isRealSeller, isBannedUser, isNewbie, bidAmo
         />;
     }
 
-    // Trường hợp 5: Hợp lệ -> Hiển thị Form đặt giá
+    // Trường hợp 5: Sản phẩm đã kết thúc đấu giá
+    if (new Date(product.auction_end_time) <= new Date() || product.auction_status !== 'active') {
+        return <BlockingMessage 
+            title="Phiên đấu giá đã kết thúc" 
+            message="Rất tiếc, phiên đấu giá cho sản phẩm này đã kết thúc. Vui lòng kiểm tra lịch sử đấu giá để biết thêm chi tiết."
+            type="green" 
+        />;
+    }
+
+    // Trường hợp 6: Hợp lệ -> Hiển thị Form đặt giá
     return (
-        <div>
-          <div className="mb-4">
-            <label className="block mb-2 font-bold text-gray-700">Giá đặt của bạn (₫)</label>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  value={bidAmount}
-                  onChange={(e) => setBidAmount(Number(e.target.value))}
-                  min={minValidPrice}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-medium text-gray-900"
-                />
-                <div className="text-sm text-gray-500 mt-2 ml-1">
-                  Giá đặt tối thiểu: <span className="font-semibold text-gray-700">₫{formatPrice(minValidPrice)}</span>
-                </div>
+        <div className="mb-4">
+          <label className="block mb-2 font-bold text-gray-700">Giá đặt của bạn (₫)</label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Phần Input nhập giá */}
+            <div className="flex-1">
+              <input
+                type="number"
+                value={bidAmount}
+                onChange={(e) => setBidAmount(Number(e.target.value))}
+                min={minValidPrice}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-medium text-gray-900"
+              />
+              <div className="text-sm text-gray-500 mt-2 ml-1">
+                Giá đặt tối thiểu: <span className="font-semibold text-gray-700">₫{formatPrice(minValidPrice)}</span>
               </div>
-              <button
-                onClick={handleBidClick}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px] cursor-pointer"
-              >
-                Đặt giá ngay
-              </button>
             </div>
+
+            {/* Nút Đặt giá */}
+            <button
+              onClick={handleBidClick}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px] cursor-pointer"
+            >
+              Đặt giá ngay
+            </button>
+
+            {/* Nút Mua ngay */}
+            {product.buy_it_now_price && (
+              <button
+                onClick={handleBuyNowClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors active:scale-95 whitespace-nowrap h-[54px] cursor-pointer"
+              >
+                Mua ngay
+              </button>
+            )}
           </div>
         </div>
     );
@@ -508,6 +536,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
   const [showHistory, setShowHistory] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showBidDialog, setShowBidDialog] = useState(false);
+  const [showBuyNowDialog, setShowBuyNowDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [banTarget, setBanTarget] = useState(null);
 
@@ -571,6 +600,29 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
     }
   }
 
+  const handleBuyNowClick = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return
+    }
+
+    setShowBuyNowDialog(true);
+  }
+
+  const executeBuyNow = async () => {
+    setShowBuyNowDialog(false);
+    
+    try {
+      await productService.buyProductNow(product._id)
+      ToastNotification(`Mua ngay thành công! Vui lòng chờ liên hệ từ người bán.`, 'success')
+      
+      if(onRefresh) onRefresh();
+    } catch(err) {
+      const message = err?.response?.data?.message || "Có lỗi xảy ra!";
+      ToastNotification(message, 'error');
+    }
+  }
+
   const formatDateTime = (dateString) => {
     try {
       return new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -591,7 +643,11 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
       </div>
 
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6">
-        {renderBiddingContent(user, isRealSeller, isBannedUser, isNewbie, bidAmount, minValidPrice, setBidAmount, handleBid, formatPrice)}
+        {renderBiddingContent(
+          user, product, isRealSeller, isBannedUser, isNewbie,
+          bidAmount, minValidPrice, setBidAmount, formatPrice,
+          handleBid, handleBuyNowClick
+        )}
       </div>
 
       {showHistory && (
@@ -611,7 +667,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                       <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người đấu giá</th>
                       <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Giá vào sản phẩm</th>
                       <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người giữ giá</th>
-                      {isRealSeller && <th className="py-3 px-4 text-center font-semibold text-gray-700 border-b">Kiểm duyệt</th>}
+                      {isRealSeller && product.auction_status === 'active' && <th className="py-3 px-4 text-center font-semibold text-gray-700 border-b">Kiểm duyệt</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -658,7 +714,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                               </span>
                             </div>
                           </td>
-                          {isRealSeller && (
+                          {isRealSeller && product.auction_status === 'active' && (
                                <td className="py-3 px-4 border-b text-center">
                                    <button 
                                         onClick={() => handleBanUser(bid.user._id, bidderName, bid.is_banned)}
@@ -687,6 +743,14 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
           message={`Bạn có chắc chắn muốn đặt giá ₫${formatPrice(bidAmount)} cho sản phẩm này không?`}
           onYes={executeBid}
           onNo={() => setShowBidDialog(false)}
+        />
+      )}
+
+      {showBuyNowDialog && (
+        <ConfirmDialog 
+          message={`Bạn có chắc chắn muốn MUA NGAY sản phẩm này với giá ₫${formatPrice(product.buy_it_now_price)} không?`}
+          onYes={executeBuyNow}
+          onNo={() => setShowBuyNowDialog(false)}
         />
       )}
 
