@@ -396,7 +396,10 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
           </div>
           <div>
             <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">{product.auction_status === 'active' ? 'Người giữ giá cao nhất' : 'Người thắng đấu giá'}</div>
-            <div className="font-bold text-gray-900">{maskName(product.current_highest_bidder.full_name)}</div>
+            <div className="font-bold text-gray-900">
+              {maskName(product.current_highest_bidder.full_name)} 
+              {user._id.toString() === product.current_highest_bidder._id.toString() ? ' (Bạn)' : ''}
+            </div>
             <div className="text-xs text-yellow-500 flex items-center">
                ⭐ {isNaN(calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count)) ? 'NaN' : calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count) + '%'}
                <span className="text-gray-400 ml-1">({product.current_highest_bidder.rating_count} đánh giá)</span>
@@ -463,7 +466,7 @@ function ProductDescription({ product, isRealSeller, onRefresh }) {
           📝 Chi tiết & Cập nhật mô tả
         </h2>
         
-        {isRealSeller && !isEditing && (
+        {product.auction_status === 'active' && isRealSeller && !isEditing && (
           <button
             onClick={() => setIsEditing(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
@@ -573,7 +576,16 @@ const renderBiddingContent = (user, product,
   isRealSeller, isBannedUser, isNewbie, 
   bidAmount, minValidPrice, setBidAmount, formatPrice,
   handleBidClick, handleBuyNowClick) => {
-    // Trường hợp 1: Chưa đăng nhập
+    // Trường hợp 1: Sản phẩm đã kết thúc đấu giá
+    if (new Date(product.auction_end_time) <= new Date() || product.auction_status !== 'active') {
+        return <BlockingMessage 
+            title="Phiên đấu giá đã kết thúc" 
+            message="Rất tiếc, phiên đấu giá cho sản phẩm này đã kết thúc. Vui lòng kiểm tra lịch sử đấu giá để biết thêm chi tiết."
+            type="green" 
+        />;
+    }
+
+    // Trường hợp 2: Chưa đăng nhập
     if (!user) {
         return (
             <div className="text-center py-8">
@@ -587,7 +599,7 @@ const renderBiddingContent = (user, product,
         );
     }
 
-    // Trường hợp 2: Là Seller (Chủ hàng)
+    // Trường hợp 3: Là Seller (Chủ hàng)
     if (isRealSeller) {
         return <BlockingMessage 
             title="Bạn là chủ sở hữu sản phẩm này" 
@@ -596,7 +608,7 @@ const renderBiddingContent = (user, product,
         />;
     }
 
-    // Trường hợp 3: Bị cấm (Banned)
+    // Trường hợp 4: Bị cấm (Banned)
     if (isBannedUser) {
         return <BlockingMessage 
             title="Bạn đã bị chặn đấu giá" 
@@ -605,21 +617,12 @@ const renderBiddingContent = (user, product,
         />;
     }
 
-    // Trường hợp 4: Là Newbie (và sản phẩm cấm Newbie)
+    // Trường hợp 5: Là Newbie
     if (isNewbie) {
         return <BlockingMessage 
             title="Giới hạn người tham gia" 
             message="Sản phẩm này không cho phép tài khoản mới (chưa có đánh giá) tham gia đấu giá."
             type="yellow" 
-        />;
-    }
-
-    // Trường hợp 5: Sản phẩm đã kết thúc đấu giá
-    if (new Date(product.auction_end_time) <= new Date() || product.auction_status !== 'active') {
-        return <BlockingMessage 
-            title="Phiên đấu giá đã kết thúc" 
-            message="Rất tiếc, phiên đấu giá cho sản phẩm này đã kết thúc. Vui lòng kiểm tra lịch sử đấu giá để biết thêm chi tiết."
-            type="green" 
         />;
     }
 
@@ -832,6 +835,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                               {/* Tên người dùng */}
                               <span className={`font-medium text-sm leading-tight ${invalidBidder ? 'text-gray-400 line-through italic' : 'text-gray-800'}`}>
                                 {bidderName ? maskName(bidderName) : 'Ẩn Danh'}
+                                {user._id.toString() === bid.user._id.toString() ? ' (Bạn)' : ''}
                               </span>
                             </div>
                           </td>
@@ -845,6 +849,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                               {/* Tên người dùng */}
                               <span className={`font-medium text-sm leading-tight ${invalidHolder ? 'text-gray-400 line-through italic' : 'text-gray-800'}`}>
                                 {holderName ? maskName(holderName) : 'Ẩn Danh'}
+                                {user._id.toString() === bid.holder._id.toString() ? ' (Bạn)' : ''}
                               </span>
                             </div>
                           </td>
