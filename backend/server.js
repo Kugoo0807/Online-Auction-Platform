@@ -59,6 +59,10 @@ const { RatingRoutes } = await import('./routes/rating.route.js');
 const { qnaController } = await import('./controllers/qna.controller.js');
 const { QnARoutes } = await import('./routes/qna.route.js');
 
+// === CHAT MESSAGE ===
+const { chatMessageController } = await import('./controllers/chat.message.controller.js');
+const { ChatMessageRoutes } = await import('./routes/chat.message.route.js');
+
 // === BACKGROUND SERVICES (CRON JOB) ===
 const { cronService } = await import('./services/cron.service.js');
 cronService.start(); 
@@ -82,6 +86,7 @@ app.use('/api/bids', BidRoutes(bidController));
 app.use('/api/upgrade-requests', UpgradeRequestRoutes(upgradeRequestController));
 app.use('/api/ratings', RatingRoutes(ratingController));
 app.use('/api/qnas', QnARoutes(qnaController));
+app.use('/api/chat', ChatMessageRoutes(chatMessageController));
 // START
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên cổng http://localhost:${PORT}/api`);
