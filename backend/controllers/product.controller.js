@@ -58,6 +58,20 @@ class ProductController {
         }
     }
 
+    async getAllProducts(req, res) {
+        try {
+            const products = await productService.findAllProducts();
+            return res.status(200).json({
+                message: 'Lấy danh sách sản phẩm thành công!',
+                data: products
+            });
+        } catch (error) {
+            return res.status(500).json({ 
+                message: error.message 
+            });
+        }
+    }
+
     async getProductDetails(req, res) {
         try {
             const { id } = req.params; // Lấy ID từ URL

@@ -5,6 +5,13 @@ class ProductRepository {
         const product = new Product(productData);
         return await product.save();
     }
+
+    async findAll() {
+        return await Product.find()
+            .populate('seller', 'full_name rating_score rating_count') 
+            .populate('category', 'category_name slug')
+            .populate('current_highest_bidder', 'full_name rating_score rating_count');
+    }
     
     async findById(product) {
         return await Product.findById(product)
