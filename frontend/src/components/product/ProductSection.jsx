@@ -229,7 +229,7 @@ export function ProductCard({ product }) {
 
           <div className="mt-auto pt-2">
             <Link
-              to={`/auction/${product._id}`}
+              to={`/product/${product._id}`}
               className="block w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
             >
               Xem ngay
@@ -278,7 +278,7 @@ export function ProductCard({ product }) {
           
           <div className="mt-auto pt-2">
             <Link
-              to={`/auction/${product._id}`}
+              to={`/product/${product._id}`}
               className="block w-full bg-blue-400 hover:bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
             >
               Xem chi tiết

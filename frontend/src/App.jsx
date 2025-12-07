@@ -28,7 +28,7 @@ export default function App() {
         <Route path="/category/:slug" element={<CategoryPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
-        <Route path="/auction/:id" element={<ProductDetail />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
 
         
         {/* Guest only */}

@@ -5,7 +5,7 @@ import { qnaRepository } from '../repositories/qna.repository.js';
 import { productRepository } from '../repositories/product.repository.js';
 import * as mailService from './email.service.js';
 
-const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'auction/' || 'http://localhost:3000/auction/';
+const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 
 class QnaService {
 	async askQuestion({ product_id, asker, question_content }) {

@@ -108,7 +108,7 @@ export default function SearchBar({ onSearch }) {
 
   const handleSelectProduct = (productId) => {
     setShowDropdown(false);
-    navigate(`/auction/${productId}`);
+    navigate(`/product/${productId}`);
   };
 
   const handleSelectKeyword = (keyword) => {
