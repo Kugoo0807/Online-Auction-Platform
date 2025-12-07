@@ -30,7 +30,7 @@ class UserService {
 
         const updateData = {};
         if (full_name) updateData.full_name = full_name;
-        if (date_of_birth) updateData.date_of_birth = date_of_birth;
+        if (date_of_birth) updateData.date_of_birth = new Date(date_of_birth);
         if (phone_number) updateData.phone_number = phone_number;
         if (address) updateData.address = address;
         if (email) updateData.email = email;
@@ -121,6 +121,14 @@ class UserService {
             message: 'Khôi phục tài khoản thành công.', 
             user: restoredUser 
         };
+    }
+
+    async getAllUsers() {
+        return await userRepository.findAll();
+    }
+
+    async getDeletedUsers() {
+        return await userRepository.findDeleted();
     }
 }
 
