@@ -9,11 +9,11 @@ import { recalculateAuctionState } from '../utils/auction.util.js';
 class BidService {
     async placeBid(userId, productId, amount) {
         return await executeTransaction(async (session) => {
-            // 1. Lock & Load Product
+            // Lock & Load Product
             const product = await productRepository.findByIdForUpdate(productId, session);
             if (!product) throw new Error("Sản phẩm không tồn tại!");
 
-            // 2. Validate Trạng thái & Thời gian
+            // Validate Trạng thái & Thời gian
             if (product.auction_status !== 'active') {
                 throw new Error("Phiên đấu giá này không còn hoạt động (Đã kết thúc, đã bán hoặc bị hủy)");
             }

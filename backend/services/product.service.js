@@ -1,5 +1,8 @@
 import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
+import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+import { bidRepository } from '../repositories/bid.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
@@ -7,6 +10,20 @@ import * as mailService from './email.service.js';
 
 class ProductService {
     async createProduct(productData) {
+        const requiredFields = [
+            'product_name',
+            'description',
+            'start_price',
+            'thumbnail',
+            'auction_end_time',
+            'category',
+            'seller'
+        ];
+        const isValid = requiredFields.every(field => field in productData);
+        if (!isValid) {
+            throw new Error('Thiếu thông tin bắt buộc để tạo sản phẩm!');
+        }
+
         const { description, ...restData } = productData;
 
         const newProductData = {
@@ -221,6 +238,79 @@ class ProductService {
 
     async getActiveProduct(userId) {
         return await productRepository.findActive(userId);
+    }
+
+    async buyProductNow(userId, productId) {
+        return await executeTransaction(async (session) => {
+            // Lock & Load Product
+            const product = await productRepository.findByIdForUpdate(productId, session);
+            if (!product) throw new Error('Sản phẩm không tồn tại!');
+
+            if (product.buy_it_now_price == null) {
+                throw new Error('Sản phẩm không có giá mua ngay!');
+            }
+            
+            // Validate Quyền hạn
+            if (product.seller.toString() === userId) throw new Error("Không thể tự đấu giá sản phẩm của mình!");
+            if (product.banned_bidder && product.banned_bidder.some(id => id.toString() === userId)) {
+                throw new Error("Bạn đã bị người bán chặn đấu giá sản phẩm này!");
+            }
+
+            // Validate Điểm đánh giá
+            const bidder = await userRepository.findById(userId);
+            if (!bidder) throw new Error("Không tìm thấy thông tin người dùng");
+
+            if (bidder.rating_count === 0) {
+                if (!product.allow_newbie) {
+                    throw new Error('Sản phẩm này không cho phép người mới (chưa có đánh giá) tham gia!');
+                }
+            } else {
+                const positiveCount = (bidder.rating_count + bidder.rating_score) / 2;
+                const positiveRatio = positiveCount / bidder.rating_count;
+
+                if (positiveRatio < 0.8) {
+                    throw new Error(`Điểm uy tín thấp (${(positiveRatio * 100).toFixed(1)}%). Yêu cầu trên 80% mới được đấu giá.`);
+                }
+            }
+
+            // Xử lí mua ngay
+            const amount = product.buy_it_now_price;
+            const currentBidCount = product.bid_counts.get(userId) || 0;
+            
+            product.bid_counts.set(userId, currentBidCount + 1);
+            product.auto_bid_map.set(userId, amount);
+            product.bid_count += 1;
+            product.auction_status = 'sold';
+            product.current_highest_price = amount;
+            product.current_highest_bidder = userId;
+
+            // Tạo đơn hàng
+            await auctionResultRepository.create({
+                product: product._id,
+                winning_bidder: userId,
+                seller: product.seller,
+                final_price: amount,
+                status: 'pending_payment'
+            }, session);
+            
+            await productRepository.save(product, session);
+            const finalPrice = product.current_highest_price;
+            const finalWinnerId = product.current_highest_bidder;
+
+            await bidRepository.create({
+                user: userId,
+                product: productId,
+                price: finalPrice,
+                max_bid_price: amount,
+                holder: finalWinnerId
+            }, session);
+
+            return {
+                success: true,
+                current_price: finalPrice,
+                winner_id: finalWinnerId,
+            }
+        });
     }
 }
 export const productService = new ProductService();

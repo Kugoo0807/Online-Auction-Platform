@@ -14,7 +14,11 @@ class ProductController {
             const imagesPaths = req.files['images'].map(file => file.path);
 
             // Xử lí dữ liệu
-            const productData = { ...req.body, seller, thumbnail: thumbnailPath, images: imagesPaths };
+            const start_price = Number(req.body.start_price);
+            const buy_it_now_price = req.body.buy_it_now_price ? Number(req.body.buy_it_now_price) : null;
+            const bid_increment = Number(req.body.bid_increment);
+            const auction_end_time = new Date(req.body.auction_end_time);
+            const productData = { ...req.body, start_price, buy_it_now_price, bid_increment, auction_end_time, seller, thumbnail: thumbnailPath, images: imagesPaths };
 
             const newProduct = await productService.createProduct(productData);
 
@@ -39,6 +43,7 @@ class ProductController {
             if (!content) {
                 return res.status(400).json({ message: 'Vui lòng nhập nội dung mô tả bổ sung!' });
             }
+            console.log('Sanitized content:', content);
 
             const updatedProduct = await productService.appendDescription(seller, productId, content);
 
@@ -48,8 +53,7 @@ class ProductController {
             });
         } catch (error) {
             return res.status(400).json({ 
-                message: 'Cập nhật mô tả thất bại', 
-                error: error.message 
+                message: error.message
             });
         }
     }
@@ -260,6 +264,21 @@ class ProductController {
         } catch (error) {
             return res.status(400).json({ message: error.message });
         }
+    }
+
+    async buyProductNow(req, res) {
+        try {
+            const buyer = req.user._id;
+            const productId = req.params.id;
+            const result = await productService.buyProductNow(buyer, productId);
+
+            return res.status(200).json({
+                message: 'Mua ngay sản phẩm thành công!',
+                data: result
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }   
     }
 }
 

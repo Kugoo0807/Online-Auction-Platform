@@ -1,5 +1,7 @@
 import express from 'express';
 import { checkAuth, checkRole, checkNotAdmin } from '../middleware/auth.middleware.js';
+import sanitizeDescription from '../middleware/sanitizeDescription.js';
+
 import uploadCloud from '../config/cloudinary.config.js';
 
 export function ProductRoutes(productController, qnaController) {
@@ -35,10 +37,15 @@ export function ProductRoutes(productController, qnaController) {
         [
             checkAuth, 
             checkRole('seller'),
+
+            // Upload
             uploadCloud.fields([
                 { name: 'thumbnail', maxCount: 1 }, // Field name là 'thumbnail', tối đa 1 ảnh
                 { name: 'images', maxCount: 10 }    // Field name là 'images', tối đa 10 ảnh
-            ])
+            ]),
+
+            // Làm sạch dữ liệu
+            sanitizeDescription
         ], 
         productController.createProduct
     );
@@ -73,6 +80,9 @@ export function ProductRoutes(productController, qnaController) {
     // Q&A routes
     router.get('/:id/questions', qnaController.listByProduct);
     router.post('/:id/questions', [checkAuth, checkNotAdmin], qnaController.askQuestion);
+
+    // Mua ngay
+    router.post('/:id/buy-now', [checkAuth, checkNotAdmin], productController.buyProductNow);
 
     return router;
 }
