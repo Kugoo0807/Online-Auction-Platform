@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { ProductCard } from '../components/product/ProductSection'
 import { useAuth } from '../context/AuthContext'
 
-import { bidService } from '../services/bid.service'
+import { bidService } from '../services/bidService'
 import { productService } from '../services/product.service'
 
 import LoginRequestModal from '../components/common/LoginRequestModal'
