@@ -53,6 +53,11 @@ export function ProductRoutes(productController, qnaController) {
     // Lấy sản phẩm của seller
     router.get('/seller', [checkAuth, checkNotAdmin], productController.getSellerProducts);
 
+    // ====== CẦN QUYỀN ADMIN =======
+
+    // Lấy tất cả sản phẩm
+    router.get('/', [checkAuth, checkRole('admin')], productController.getAllProducts);
+
 
     // ======= ROUTER ĐỘNG =======
 
