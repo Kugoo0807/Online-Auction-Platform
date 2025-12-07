@@ -274,7 +274,6 @@ const chatMessageSchema = new Schema({
   auction_result: { type: Schema.Types.ObjectId, ref: 'Auction_Result', required: true },
   sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true },
-  is_read: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // 13 OTP
