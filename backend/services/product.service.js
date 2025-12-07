@@ -48,6 +48,10 @@ class ProductService {
         
         return await productRepository.appendDescription(productId, newContent);
     }
+    
+    async findAllProducts() {
+        return await productRepository.findAll();
+    }
 
     async findProductDetails(productId) {
         return await productRepository.findById(productId);
