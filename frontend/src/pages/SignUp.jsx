@@ -1,6 +1,75 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { authService } from '../services/authService'
+
+// Component reCAPTCHA
+const ReCAPTCHA = ({ onChange, error }) => {
+  const recaptchaRef = useRef(null);
+  const widgetIdRef = useRef(null);
+
+  useEffect(() => {
+    // Load reCAPTCHA script
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.grecaptcha) {
+        widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+          callback: (token) => {
+            onChange(token);
+          },
+          'expired-callback': () => {
+            onChange(null);
+          },
+          'error-callback': () => {
+            onChange(null);
+          },
+          size: 'normal',
+          theme: 'light'
+        });
+      }
+    };
+
+    return () => {
+      // Cleanup
+      if (widgetIdRef.current && window.grecaptcha) {
+        window.grecaptcha.reset(widgetIdRef.current);
+      }
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [onChange]);
+
+  const resetCaptcha = () => {
+    if (widgetIdRef.current && window.grecaptcha) {
+      window.grecaptcha.reset(widgetIdRef.current);
+    }
+  };
+
+  // Reset captcha khi có lỗi
+  useEffect(() => {
+    if (error) {
+      resetCaptcha();
+    }
+  }, [error]);
+
+  return (
+    <div>
+      <div 
+        ref={recaptchaRef} 
+        className={`flex justify-center ${error ? 'border border-red-300 rounded-lg p-2' : ''}`}
+      />
+      {error && (
+        <p className="text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
 
 export default function SignUp() {
   const navigate = useNavigate()
@@ -13,10 +82,12 @@ export default function SignUp() {
     confirmPassword: '',
     otp: ''
   })
+  const [captchaToken, setCaptchaToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
   const [error, setError] = useState('')
   const [otpError, setOtpError] = useState('')
+  const [captchaError, setCaptchaError] = useState('')
   const [countdown, setCountdown] = useState(0)
 
   useEffect(() => {
@@ -51,12 +122,21 @@ export default function SignUp() {
     // Xóa lỗi khi người dùng bắt đầu nhập lại
     if (name === 'otp' && otpError) setOtpError('');
     if (error) setError('');
+    if (captchaError) setCaptchaError('');
   }
 
   const handleInputChange = (setter) => (e) => {
     setter(e.target.value);
     if (error) setError('');
     if (otpError) setOtpError('');
+    if (captchaError) setCaptchaError('');
+  }
+
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
+    if (captchaError && token) {
+      setCaptchaError('');
+    }
   }
 
   // Bước 1: Gửi OTP xác thực
@@ -79,6 +159,12 @@ export default function SignUp() {
       return;
     }
 
+    // Kiểm tra reCAPTCHA
+    if (!captchaToken) {
+      setCaptchaError('Vui lòng xác nhận bạn không phải robot');
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Email không hợp lệ');
@@ -89,7 +175,7 @@ export default function SignUp() {
     setError('');
     
     try {
-      const result = await authService.sendSignupOTP(formData.email);
+      const result = await authService.sendSignupOTP(formData.email, captchaToken);
       
       if (result.success) {
         setStep(2);
@@ -100,9 +186,12 @@ export default function SignUp() {
         } else {
           setError(result.message || 'Có lỗi xảy ra khi gửi OTP');
         }
+        // Reset captcha nếu có lỗi
+        setCaptchaToken('');
       }
     } catch (err) {
       setError('Có lỗi xảy ra khi gửi OTP. Vui lòng thử lại.');
+      setCaptchaToken('');
     } finally {
       setOtpLoading(false);
     }
@@ -166,13 +255,10 @@ export default function SignUp() {
     setOtpError('');
     
     try {
-      const result = await authService.sendSignupOTP(formData.email);
-      
-      if (result.success) {
-        setCountdown(60);
-      } else {
-        setOtpError(result.message || 'Không thể gửi lại OTP. Vui lòng thử lại.');
-      }
+      // Gửi lại OTP cần captcha mới
+      setCaptchaToken('');
+      setError('Vui lòng xác nhận captcha để gửi lại OTP');
+      setStep(1);
     } catch (err) {
       setOtpError('Có lỗi xảy ra khi gửi lại OTP');
     } finally {
@@ -185,6 +271,7 @@ export default function SignUp() {
     setStep(1);
     setOtpError('');
     setError('');
+    setCaptchaToken('');
   }
 
   // Các hàm OAuth
@@ -337,6 +424,15 @@ export default function SignUp() {
               />
             </div>
 
+            {/* reCAPTCHA */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Xác thực bảo mật</label>
+              <ReCAPTCHA 
+                onChange={handleCaptchaChange} 
+                error={captchaError}
+              />
+            </div>
+
             {/* Error Message */}
             {error && (
               <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-100">
@@ -350,7 +446,7 @@ export default function SignUp() {
             {/* Submit Button */}
             <button 
               type="submit" 
-              disabled={otpLoading}
+              disabled={otpLoading || !captchaToken}
               className="w-full py-3.5 rounded-lg bg-blue-600 text-white font-bold text-sm uppercase tracking-wide shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
             >
               {otpLoading ? (
@@ -361,7 +457,7 @@ export default function SignUp() {
                   </svg>
                   Đang gửi...
                 </span>
-              ) : 'Tiếp tục'}
+              ) : 'Tiếp tục - Gửi OTP'}
             </button>
           </form>
         ) : (

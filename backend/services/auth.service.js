@@ -47,8 +47,35 @@ const googleClient = new OAuth2Client(
     GOOGLE_REDIRECT_URI
 );
 
+
 class AuthService {
+    async verifyCaptcha(captchaToken) {
+        try {
+            const response = await axios.post(
+                `https://www.google.com/recaptcha/api/siteverify`,
+                null,
+                {
+                    params: {
+                        secret: process.env.RECAPTCHA_SECRET_KEY,
+                        response: captchaToken
+                    }
+                }
+            );
+
+            return response.data.success;
+        } catch (error) {
+            console.error('CAPTCHA verification failed:', error);
+            return false;
+        }
+    }
+
     async sendRegisterOtp(email) {
+        // Xác thực CAPTCHA trước
+        const isCaptchaValid = await verifyCaptcha(captchaToken);
+        if (!isCaptchaValid) {
+            throw new Error('CAPTCHA verification failed');
+        }
+
         const existingUser = await userRepository.findByEmail(email);
         if (existingUser) {
             throw new Error('Email đã tồn tại trong hệ thống!');
@@ -74,7 +101,7 @@ class AuthService {
 
         // Check OTP
         const otpRecord = await otpRepository.findByEmail(email);
-        
+
         if (!otpRecord) {
             throw new Error('OTP không tồn tại hoặc đã hết hạn!');
         }
@@ -112,7 +139,7 @@ class AuthService {
 
     async login(user) {
         // user ở đây là user đã được xác thực bởi Passport
-        
+
         return this.generateToken(user);
     }
 
@@ -235,8 +262,8 @@ class AuthService {
     async loginWithGitHub(code) {
         const tokenUrl = 'https://github.com/login/oauth/access_token';
         const { data: tokenData } = await axios.post(tokenUrl, {
-            client_id: GITHUB_CLIENT_ID, 
-            client_secret: GITHUB_CLIENT_SECRET, 
+            client_id: GITHUB_CLIENT_ID,
+            client_secret: GITHUB_CLIENT_SECRET,
             redirect_uri: GITHUB_REDIRECT_URI,
             code: code,
         }, {
@@ -302,10 +329,10 @@ class AuthService {
             email: user.email,
             role: user.role
         };
-        
+
         // Ký access token (15 phút)
         const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-        
+
         // Ký refresh token (7 ngày)
         const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         const refreshToken = jwt.sign(
@@ -402,11 +429,11 @@ class AuthService {
 
         return { message: 'OTP đang được gửi đi...' };
     }
-    
+
     async resetPassword(email, otp, newPassword) {
         const otpRecord = await otpRepository.findByEmail(email);
 
-       // Kiểm tra OTP có tồn tại không
+        // Kiểm tra OTP có tồn tại không
         if (!otpRecord) {
             throw new Error('Mã OTP không tồn tại hoặc đã hết hạn!');
         }
