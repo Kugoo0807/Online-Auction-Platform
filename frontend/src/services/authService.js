@@ -108,9 +108,9 @@ export const authService = {
     }
   },
   // 1. Đổi mật khẩu
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (oldPassword, newPassword) => {
     const response = await api.post('/auth/change-password', {
-      oldPassword: currentPassword,
+      oldPassword: oldPassword,
       newPassword: newPassword
     });
     return { success: true, message: response.data.message };
