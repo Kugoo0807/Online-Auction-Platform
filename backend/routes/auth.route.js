@@ -8,6 +8,8 @@ export function AuthRoutes(authController) {
     // Gửi OTP (email)
     router.post('/send-otp', authController.sendOtp);
 
+    router.post('/send-updated-email-otp', authController.sendUpdatedEmailOtp);
+
     // Đăng ký (input: email, password, full_name, address, phone_number)
     router.post("/register", authController.register);
     

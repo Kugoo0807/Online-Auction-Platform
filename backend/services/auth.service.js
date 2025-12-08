@@ -87,8 +87,26 @@ class AuthService {
 
         await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
-        console.log(`[REGISTER OTP] Gửi tới ${email}: ${otp}`);
-        // TODO: mail service
+        sendOtp(email, otp);
+        console.log('[REGISTER OTP]: ' + otp);
+
+        return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
+    }
+
+    async sendUpdatedEmailOtp(email) {
+        const existingUser = await userRepository.findByEmail(email);
+        if (existingUser) {
+            throw new Error('Email đã tồn tại trong hệ thống!');
+        }
+
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const salt = await bcrypt.genSalt(10);
+        const hashedOtp = await bcrypt.hash(otp, salt);
+
+        await otpRepository.createOrUpdateOtp(email, hashedOtp);
+
+        sendOtp(email, otp);
+        console.log('[UPDATE EMAIL OTP]: ' + otp);
 
         return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
     }
