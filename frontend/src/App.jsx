@@ -14,7 +14,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import SearchPage from './pages/SearchPage';
 import ProductDetail from './pages/ProductDetail';
-
+import UserProfile from './pages/UserProfile'
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
@@ -42,6 +42,7 @@ export default function App() {
         {/* Private */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<UserProfile />} />
         </Route>
       </Route>
     </Routes>

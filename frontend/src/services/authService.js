@@ -106,6 +106,24 @@ export const authService = {
         message: error.response?.data?.message || 'Có lỗi xảy ra'
       };
     }
-  }
+  },
+  // 1. Đổi mật khẩu
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.post('/auth/change-password', {
+      oldPassword: currentPassword,
+      newPassword: newPassword
+    });
+    return { success: true, message: response.data.message };
+  },
+
+  // 2. Cập nhật thông tin cá nhân
+  updateProfile: async (profileData) => {
+    const response = await api.put('/users/profile', {
+      full_name: profileData.full_name,
+      address: profileData.address,
+      phone_number: profileData.phone_number,
+    });
+    return { success: true, data: response.data };
+  },
 
 };
