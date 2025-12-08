@@ -1,4 +1,5 @@
 import { Product } from '../../db/schema.js';
+import { Category } from '../../db/schema.js';
 
 class ProductRepository { 
     async create(productData) { 
@@ -26,9 +27,18 @@ class ProductRepository {
 
     async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0) {
         if (keyword) {
+            // Tìm các category có tên khớp với từ khóa
+            const matchingCategories = await Category.find({ 
+                category_name: { $regex: keyword, $options: 'i' } 
+            }).select('_id');
+
+            const matchingCategoryIds = matchingCategories.map(cat => cat._id);
+
+            // Thêm điều kiện tìm kiếm vào filter
             filter.$or = [
-                { product_name: { $regex: keyword, $options: 'i' } }, 
-                { description_current: { $regex: keyword, $options: 'i' } } 
+                { product_name: { $regex: keyword, $options: 'i' } },
+                { description_current: { $regex: keyword, $options: 'i' } },
+                { category: { $in: matchingCategoryIds } } 
             ];
         }
 
