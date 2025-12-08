@@ -106,6 +106,88 @@ export const authService = {
         message: error.response?.data?.message || 'Có lỗi xảy ra'
       };
     }
-  }
+  },
+
+  // Bước 1: Gửi OTP xác thực cho đăng ký
+  sendSignupOTP: async (email) => {
+    try {
+      console.log('=== FRONTEND: Calling /auth/send-otp for signup ===');
+      console.log('Email:', email);
+
+      const response = await api.post('/auth/send-otp', { email });
+
+      console.log('=== FRONTEND: Response received ===');
+      console.log('Status:', response.status);
+      console.log('Data:', response.data);
+
+      return {
+        success: response.status === 200,
+        message: response.data.message || 'OTP đã được gửi',
+        data: response.data
+      };
+    } catch (error) {
+      console.log('=== FRONTEND: Error occurred ===');
+      console.log('Error:', error);
+      console.log('Error response:', error.response);
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message || 'Có lỗi xảy ra khi gửi OTP';
+
+      return {
+        success: false,
+        message: message,
+        isEmailExists: status === 400 && message.includes('đã tồn tại')
+      };
+    }
+  },
+
+  // Bước 2: Đăng ký với OTP
+  registerWithOTP: async (userData) => {
+    try {
+      console.log('=== FRONTEND: Calling /auth/register with OTP ===');
+      console.log('Data:', userData);
+
+      const response = await api.post('/auth/register', {
+        email: userData.email,
+        password: userData.password,
+        full_name: userData.full_name,
+        address: userData.address,
+        otp: userData.otp
+      });
+
+      console.log('=== FRONTEND: Register response received ===');
+      console.log('Status:', response.status);
+      console.log('Data:', response.data);
+
+      return {
+        success: response.status === 201,
+        message: response.data.message || 'Đăng ký thành công',
+        data: response.data
+      };
+    } catch (error) {
+      console.log('=== FRONTEND: Error occurred ===');
+      console.log('Error:', error);
+      console.log('Error response:', error.response);
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
+
+      // Phân loại lỗi
+      const isOTPError = status === 400 && (
+        message.includes('OTP') || 
+        message.includes('mã') || 
+        message.includes('xác thực')
+      );
+      
+      const isOTPExpired = status === 400 && message.includes('hết hạn');
+
+      return {
+        success: false,
+        message: message,
+        isOTPError: isOTPError,
+        isOTPExpired: isOTPExpired
+      };
+    }
+  },
 
 };
