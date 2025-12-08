@@ -33,6 +33,16 @@ class AuctionResultRepository {
             .populate('winning_bidder', 'full_name email rating_score rating_count');
     }
 
+    async existPendingTransaction(userId) {
+        return await AuctionResult.exists({
+            $or: [
+                { seller: userId },
+                { winning_bidder: userId }
+            ],
+            status: { $nin: ['completed', 'cancelled'] }
+        });
+    }
+
     // Người mua thanh toán -> Chờ vận chuyển
     async updatePaymentInfo(id, address, paymentProofUrl) {
         return await AuctionResult.findByIdAndUpdate(

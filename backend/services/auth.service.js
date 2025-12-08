@@ -47,8 +47,35 @@ const googleClient = new OAuth2Client(
     GOOGLE_REDIRECT_URI
 );
 
+
 class AuthService {
+    async verifyCaptcha(captchaToken) {
+        try {
+            const response = await axios.post(
+                `https://www.google.com/recaptcha/api/siteverify`,
+                null,
+                {
+                    params: {
+                        secret: process.env.RECAPTCHA_SECRET_KEY,
+                        response: captchaToken
+                    }
+                }
+            );
+
+            return response.data.success;
+        } catch (error) {
+            console.error('CAPTCHA verification failed:', error);
+            return false;
+        }
+    }
+
     async sendRegisterOtp(email) {
+        // Xác thực CAPTCHA trước
+        const isCaptchaValid = await verifyCaptcha(captchaToken);
+        if (!isCaptchaValid) {
+            throw new Error('CAPTCHA verification failed');
+        }
+
         const existingUser = await userRepository.findByEmail(email);
         if (existingUser) {
             throw new Error('Email đã tồn tại trong hệ thống!');
@@ -74,7 +101,7 @@ class AuthService {
 
         // Check OTP
         const otpRecord = await otpRepository.findByEmail(email);
-        
+
         if (!otpRecord) {
             throw new Error('OTP không tồn tại hoặc đã hết hạn!');
         }
@@ -112,7 +139,7 @@ class AuthService {
 
     async login(user) {
         // user ở đây là user đã được xác thực bởi Passport
-        
+
         return this.generateToken(user);
     }
 
@@ -131,37 +158,36 @@ class AuthService {
         });
         const payload = ticket.getPayload();
 
-        const googleProfile = {
-            email: payload.email,
-            full_name: payload.name,
-            auth_provider: 'google',
-            provider_id: payload.sub, // ID duy nhất của Google
-        };
+        const googleId = payload.sub;
+        const email = payload.email;
+        const fullName = payload.name;
 
-        let user = await userRepository.findByProviderId(
-            googleProfile.auth_provider,
-            googleProfile.provider_id
-        );
+        let user = await userRepository.findByProvider("google", googleId);
 
         if (!user) {
             // Kiểm tra xem mail có tồn tại không
-            const existingUser = await userRepository.findByEmail(googleProfile.email);
+            const existingUser = await userRepository.findByEmail(email);
             if (!existingUser) {
                 // Tạo mới
-                user = await userRepository.createSocialUser(googleProfile);
+                user = await userRepository.createSocialUser({
+                    full_name: fullName,
+                    email,
+                    provider: "google",
+                    provider_id: googleId
+                });
             }
             else {
-                // Kiểm tra xem tài khoản có liên kết với nhà cung cấp khác không
-                if (existingUser.auth_provider !== 'local') {
-                    throw new Error('Email này đã liên kết với nhà cung cấp khác!');
+                // Đã có user => thêm provider Google cho user đó
+                if (!existingUser.full_name) {
+                    existingUser.full_name = fullName;
+                    await existingUser.save();
                 }
 
-                await userRepository.linkSocialAccount(
+                user = await userRepository.addProvider(
                     existingUser.id,
-                    googleProfile.auth_provider,
-                    googleProfile.provider_id
-                )
-                user = existingUser;
+                    "google",
+                    googleId
+                );
             }
         }
 
@@ -193,40 +219,40 @@ class AuthService {
             },
         });
 
-        const fbProfile = {
-            email: profile.email,
-            full_name: profile.name,
-            auth_provider: 'facebook',
-            provider_id: profile.id,
-        };
+        const fbId = profile.id;
+        const email = profile.email;
+        const fullName = profile.name;
 
         // Nếu FB không trả về email (do đăng ký bằng số điện thoại), báo lỗi
-        if (!fbProfile.email) {
+        if (!email) {
             throw new Error('Facebook không trả về email cho tài khoản này. Vui lòng sử dụng phương thức đăng nhập khác.');
         }
 
-        let user = await userRepository.findByProviderId(
-            fbProfile.auth_provider,
-            fbProfile.provider_id
-        );
+        let user = await userRepository.findByProvider("facebook", fbId);
 
         if (!user) {
             // Kiểm tra xem mail có tồn tại không
-            const existingUser = await userRepository.findByEmail(fbProfile.email);
+            const existingUser = await userRepository.findByEmail(email);
             if (!existingUser) {
                 // Tạo mới
-                user = await userRepository.createSocialUser(fbProfile);
+                user = await userRepository.createSocialUser({
+                    full_name: fullName,
+                    email,
+                    provider: "facebook",
+                    provider_id: fbId
+                });
             } else {
-                // Kiểm tra xem tài khoản có liên kết với nhà cung cấp khác không
-                if (existingUser.auth_provider !== 'local') {
-                    throw new Error('Email này đã liên kết với nhà cung cấp khác!');
+                // Đã có user => thêm provider Facebook cho user đó
+                if (!existingUser.full_name) {
+                    existingUser.full_name = fullName;
+                    await existingUser.save();
                 }
-                await userRepository.linkSocialAccount(
+
+                user = await userRepository.addProvider(
                     existingUser.id,
-                    fbProfile.auth_provider,
-                    fbProfile.provider_id
+                    "facebook",
+                    fbId
                 );
-                user = existingUser;
             }
         }
 
@@ -236,8 +262,8 @@ class AuthService {
     async loginWithGitHub(code) {
         const tokenUrl = 'https://github.com/login/oauth/access_token';
         const { data: tokenData } = await axios.post(tokenUrl, {
-            client_id: GITHUB_CLIENT_ID, 
-            client_secret: GITHUB_CLIENT_SECRET, 
+            client_id: GITHUB_CLIENT_ID,
+            client_secret: GITHUB_CLIENT_SECRET,
             redirect_uri: GITHUB_REDIRECT_URI,
             code: code,
         }, {
@@ -258,7 +284,7 @@ class AuthService {
         // Lấy email github
         let email = profile.email;
         if (!email) {
-            const { data: emails } = await axios.get('https://api.github.com/user/emails', {
+            const { data: emails } = await axios.get("https://api.github.com/user/emails", {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
             // Lấy email chính và đã xác minh
@@ -266,39 +292,31 @@ class AuthService {
             email = primaryEmail ? primaryEmail.email : null;
         }
 
-        if (!email) {
-            throw new Error('Không tìm thấy email hợp lệ từ tài khoản GitHub!');
-        }
+        if (!email) throw new Error('Không tìm thấy email hợp lệ từ tài khoản GitHub!');
 
-        const githubProfile = {
-            email: email,
-            full_name: profile.name || profile.login, // Use username if real name is missing
-            auth_provider: 'github',
-            provider_id: profile.id,
-        };
+        const githubId = profile.id;
+        const fullName = profile.name || profile.login;
 
-        let user = await userRepository.findByProviderId(
-            githubProfile.auth_provider,
-            githubProfile.provider_id
-        );
+        let user = await userRepository.findByProvider("github", githubId);
 
         if (!user) {
-            // Kiểm tra xem mail có tồn tại không
-            const existingUser = await userRepository.findByEmail(githubProfile.email);
+            const existingUser = await userRepository.findByEmail(email);
+
             if (!existingUser) {
                 // Tạo mới
-                user = await userRepository.createSocialUser(githubProfile);
+                user = await userRepository.createSocialUser({
+                    full_name: fullName,
+                    email,
+                    provider: "github",
+                    provider_id: githubId
+                });
             } else {
-                // Kiểm tra xem tài khoản có liên kết với nhà cung cấp khác không
-                if (existingUser.auth_provider !== 'local') {
-                    throw new Error('Email này đã liên kết với nhà cung cấp khác!');
-                }
-                await userRepository.linkSocialAccount(
+                // Liên kết provider mới
+                user = await userRepository.addProvider(
                     existingUser.id,
-                    githubProfile.auth_provider,
-                    githubProfile.provider_id
+                    "github",
+                    githubId
                 );
-                user = existingUser;
             }
         }
 
@@ -311,10 +329,10 @@ class AuthService {
             email: user.email,
             role: user.role
         };
-        
+
         // Ký access token (15 phút)
         const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-        
+
         // Ký refresh token (7 ngày)
         const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         const refreshToken = jwt.sign(
@@ -402,7 +420,7 @@ class AuthService {
                 await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
                 // Gửi OTP (chưa hash) cho người dùng
-                //await emailService.sendOtp(email, otp);
+                await sendOtp(email, otp);
                 console.log('[FORGOT PASSWORD OTP]: ' + otp);
             } catch (e) {
                 throw new Error('Lỗi khi xử lý forgotPassword: ' + e);
@@ -411,11 +429,11 @@ class AuthService {
 
         return { message: 'OTP đang được gửi đi...' };
     }
-    
+
     async resetPassword(email, otp, newPassword) {
         const otpRecord = await otpRepository.findByEmail(email);
 
-       // Kiểm tra OTP có tồn tại không
+        // Kiểm tra OTP có tồn tại không
         if (!otpRecord) {
             throw new Error('Mã OTP không tồn tại hoặc đã hết hạn!');
         }
@@ -438,7 +456,7 @@ class AuthService {
         await userRepository.updatePassword(user.id, newHashedPassword);
 
         // Xóa OTP
-        await userRepository.clearOtp(user.id);
+        await otpRepository.deleteByEmail(email);
 
         return { message: 'Mật khẩu đã được reset thành công.' };
     }

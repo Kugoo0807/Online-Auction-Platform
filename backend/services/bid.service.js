@@ -9,11 +9,11 @@ import { recalculateAuctionState } from '../utils/auction.util.js';
 class BidService {
     async placeBid(userId, productId, amount) {
         return await executeTransaction(async (session) => {
-            // 1. Lock & Load Product
+            // Lock & Load Product
             const product = await productRepository.findByIdForUpdate(productId, session);
             if (!product) throw new Error("Sản phẩm không tồn tại!");
 
-            // 2. Validate Trạng thái & Thời gian
+            // Validate Trạng thái & Thời gian
             if (product.auction_status !== 'active') {
                 throw new Error("Phiên đấu giá này không còn hoạt động (Đã kết thúc, đã bán hoặc bị hủy)");
             }
@@ -100,7 +100,7 @@ class BidService {
                 // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
 
                 // Tính toán lại winner và price dựa trên thuật toán
-                recalculateAuctionState(product, userId);
+                await recalculateAuctionState(product, userId, session);
 
                 // Logic Auto Renew (Gia hạn 10p nếu còn < 5p)
                 if (product.auto_renew) {
@@ -135,22 +135,62 @@ class BidService {
 
     async getBidHistory(productId) {
         const product = await productRepository.findById(productId);
-        if (!product) {
-            throw new Error('Không tìm thấy sản phẩm!');
-        }
+        if (!product) throw new Error('Không tìm thấy sản phẩm!');
+
         const bannedSet = new Set(
             (product.banned_bidder || []).map(id => id.toString())
         );
 
         const history = await bidRepository.findByProduct(productId);
+        
+        const currentPrice = product.current_highest_price;
 
-        // Thêm cờ 'is_banned'
         const result = history.map(h => {
             const bidObj = h.toObject ? h.toObject() : h;
-            const userId = bidObj.user?._id || bidObj.user;
+            const user = bidObj.user;
+            const holder = bidObj.holder;
+            
+            let displayPrice = bidObj.price;
+            
+            if (bidObj.price > currentPrice) {
+                displayPrice = currentPrice;
+            }
+
+            if (!user) {
+                return {
+                    ...bidObj,
+                    price: displayPrice,
+                    user: user,
+                    
+                    is_valid: !isInvalid,
+                    is_deleted: isDeleted,
+                    is_banned: isBanned,
+                    max_price: undefined,
+                    
+                    invalid_holder: null,
+                    holder: holder
+                };
+            }
+
+            const userIdStr = user._id.toString();
+            const isBanned = bannedSet.has(userIdStr);
+            const isDeleted = user.is_deleted === true;
+            const isInvalid = isDeleted || isBanned;
+
+            const isHolderInvalid = holder?.is_deleted === true || bannedSet.has(holder?._id.toString());
+
             return {
                 ...bidObj,
-                is_banned: userId ? bannedSet.has(userId.toString()) : false
+                price: displayPrice,
+                user: user,
+                
+                is_valid: !isInvalid,
+                is_deleted: isDeleted,
+                is_banned: isBanned,
+                max_price: undefined,
+                
+                invalid_holder: isHolderInvalid,
+                holder: holder
             }
         })
 

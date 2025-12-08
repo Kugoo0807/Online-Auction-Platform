@@ -318,7 +318,7 @@ export async function notifyAuctionEndedNoBid(sellerEmail, productName, productL
     });
 }
 
-export async function notifyNewQuestion(sellerEmail, productName, questionContent) {
+export async function notifyNewQuestion(sellerEmail, productName, questionContent, productLink) {
     return sendMailBase({
         to: sellerEmail,
         subject: `Câu hỏi mới về sản phẩm: ${productName}`,
@@ -336,13 +336,18 @@ export async function notifyNewQuestion(sellerEmail, productName, questionConten
                     </div>
 
                     <p>Việc trả lời nhanh chóng sẽ tăng khả năng chốt đơn của bạn.</p>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Xem chi tiết sản phẩm
+                        </a>
+                    </div>
                 </div>
             </div>
         `
     });
 }
 
-export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent) {
+export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent, productLink) {
     // Lưu ý: Dùng bcc để bảo mật danh sách email người nhận
     return transporter.sendMail({
         from: `"AuctionHub Support" <${process.env.MAIL_USER}>`,
@@ -364,6 +369,96 @@ export async function notifyNewAnswer(recipientsEmails, productName, questionCon
                     <div style="margin-bottom: 30px;">
                         <span style="background-color: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">TRẢ LỜI TỪ NGƯỜI BÁN</span>
                         <p style="margin-top: 5px; color: #333; font-weight: 500;">${answerContent}</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Xem chi tiết sản phẩm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyAuctionCancelled(recipientsEmails, productName) {
+    return sendMailBase({
+        to: recipientsEmails,
+        subject: `[HỦY ĐẤU GIÁ] "${productName}" đã bị hủy đấu giá`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">PHIÊN ĐẤU GIÁ BỊ HỦY</h2>
+                </div>
+
+                <div style="padding: 24px;">
+                    <p style="color: #333;">Phiên đấu giá cho sản phẩm: <strong>${productName}</strong> đã bị hủy</p>
+                    <div style="background-color: #fff3cd; color: #856404; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
+                        Mọi lượt ra giá trước đó của bạn (nếu có) đã bị vô hiệu hóa. Bạn sẽ không bị tính bất kỳ khoản phí nào.
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyUpgradeApproved(userEmail) {
+    return sendMailBase({
+        to: userEmail,
+        subject: `[Thông báo]: Nâng cấp tài khoản thành công`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">NÂNG CẤP TÀI KHOẢN THÀNH CÔNG</h2>
+                </div> 
+                <div style="padding: 25px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px; color: #333;">Chúng tôi rất vui thông báo rằng tài khoản của bạn đã được nâng cấp thành công lên vai trò Người bán (Seller).</p>
+                    <p style="font-size: 16px; color: #333;">Bây giờ bạn có thể tạo và quản lý các sản phẩm đấu giá của riêng mình trên nền tảng của chúng tôi.</p>
+                    <p style="font-size: 16px; color: #333;">Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi!</p>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyUpgradeRejected(userEmail) {
+    return sendMailBase({
+        to: userEmail,
+        subject: `[Thông báo]: Yêu cầu nâng cấp tài khoản`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">YÊU CẦU NÂNG CẤP BỊ TỪ CHỐI</h2>
+                </div> 
+                <div style="padding: 25px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px; color: #333;">Chúng tôi rất tiếc phải thông báo rằng yêu cầu nâng cấp tài khoản của bạn lên vai trò Người bán (Seller) đã bị từ chối.</p>
+                    <p style="font-size: 16px; color: #333;">Nếu bạn có bất kỳ thắc mắc nào hoặc cần thêm thông tin, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+                    <p style="font-size: 16px; color: #333;">Cảm ơn bạn đã quan tâm đến dịch vụ của chúng tôi!</p>
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyRatingReceived(userEmail, raterName, score, comment, productName) {
+    const maskRaterName = maskName(raterName);
+    return sendMailBase({
+        to: userEmail,
+        subject: `[Thông báo]: Bạn vừa nhận được đánh giá mới từ ${maskRaterName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #ffc107; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">ĐÁNH GIÁ MỚI NHẬN ĐƯỢC</h2>
+                </div> 
+                <div style="padding: 25px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px; color: #333;">Bạn vừa nhận được một đánh giá mới cho giao dịch sản phẩm <strong>"${productName}"</strong> từ người dùng <strong>${maskRaterName}</strong>.</p>
+                    <p style="font-size: 16px; color: #333;">Điểm đánh giá: <strong>${score} / 5</strong></p>
+                    <p style="font-size: 16px; color: #333;">Bình luận:</p>
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; color: #555; margin: 10px 0;">
+                        ${comment}
                     </div>
                 </div>
             </div>

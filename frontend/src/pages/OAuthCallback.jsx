@@ -7,7 +7,7 @@ import { setAuthToken } from '../services/api'
 export default function OAuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { setUser } = useAuth()
+  const { user, setUser } = useAuth()
   const processedRef = useRef(false)
 
   useEffect(() => {
@@ -42,7 +42,8 @@ export default function OAuthCallback() {
           setAuthToken(rawToken);
           const profileRes = await authService.getProfile();
           setUser(profileRes.user);
-          navigate('/dashboard', { replace: true });
+          if (profileRes.user?.role === 'admin') navigate('/dashboard', { replace: true });
+          else navigate('/', { replace: true });
 
         } catch (error) {
           console.error("Login Failed:", error);
@@ -66,7 +67,7 @@ export default function OAuthCallback() {
     'OAuth provider';
 
   return (
-    <div className="flex justify-center items-center h-screen flex-col bg-[#c7dbe6] font-sans text-[#153243]">
+    <div className="flex justify-center items-center h-screen flex-col bg-white font-sans text-[#153243]">
       <div className="w-[50px] h-[50px] border-[5px] border-[#b5bec6] border-t-[#284b63] rounded-full animate-spin"></div>
       <h3 className="mt-5 font-semibold">Đang đăng nhập {providerLabel}...</h3>
     </div>

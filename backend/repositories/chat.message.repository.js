@@ -13,26 +13,6 @@ class ChatMessageRepository {
       .limit(limit)
       .populate('sender', 'full_name role');
   }
-
-  async getUnreadCount(auctionResultId, userId) {
-    return await ChatMessage.countDocuments({ auction_result: auctionResultId, is_read: false, sender: { $ne: userId } });
-  }
-
-  async markAsRead(messageId) {
-    return await ChatMessage.findByIdAndUpdate(messageId, { is_read: true }, { new: true });
-  }
-
-  async markAllAsRead(auctionResultId, userId) {
-    const res = await ChatMessage.updateMany(
-      { auction_result: auctionResultId, is_read: false, sender: { $ne: userId } },
-      { $set: { is_read: true } }
-    );
-    return res.modifiedCount;
-  }
-
-  async deleteById(messageId) {
-    return await ChatMessage.findByIdAndDelete(messageId);
-  }
 }
 
 export const chatMessageRepository = new ChatMessageRepository();

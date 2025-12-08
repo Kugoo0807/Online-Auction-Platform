@@ -1,6 +1,6 @@
 import api from './api';
 
-const BASE_URL = '/upgrade-request'
+const BASE_URL = '/upgrade-requests'
 
 class UpgradeRequestService {
 

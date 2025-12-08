@@ -115,7 +115,7 @@ const SearchPage = () => {
   }, [page, processedList]);
 
   // Scroll lên đầu khi đổi trang
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [page]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [page, keyword]);
 
   // --- 5. HELPER & OPTIONS ---
   const handlePageChange = (newPage) => {

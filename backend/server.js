@@ -30,7 +30,10 @@ app.use(cors({
 // === AUTH ===
 const { authController } = await import('./controllers/auth.controller.js');
 const { AuthRoutes } = await import('./routes/auth.route.js');
-const { AdminRoutes } = await import('./routes/admin.route.js');
+
+// === USER ===
+const { userController } = await import('./controllers/user.controller.js');
+const { UserRoutes } = await import('./routes/user.route.js');
 
 // === CATEGORY ===
 const { categoryController } = await import('./controllers/category.controller.js');
@@ -48,6 +51,18 @@ const { BidRoutes } = await import('./routes/bid.route.js');
 const { upgradeRequestController } = await import('./controllers/upgrade.request.controller.js');
 const { UpgradeRequestRoutes } = await import('./routes/upgrade.request.route.js');
 
+// === RATING ===
+const { ratingController } = await import('./controllers/rating.controller.js');
+const { RatingRoutes } = await import('./routes/rating.route.js');
+
+// === QNA ===
+const { qnaController } = await import('./controllers/qna.controller.js');
+const { QnARoutes } = await import('./routes/qna.route.js');
+
+// === CHAT MESSAGE ===
+const { chatMessageController } = await import('./controllers/chat.message.controller.js');
+const { ChatMessageRoutes } = await import('./routes/chat.message.route.js');
+
 // === BACKGROUND SERVICES (CRON JOB) ===
 const { cronService } = await import('./services/cron.service.js');
 cronService.start(); 
@@ -64,12 +79,14 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', AuthRoutes(authController));
-app.use('/api/admin', AdminRoutes());
-app.use('/api/products', ProductRoutes(productController));
+app.use('/api/users', UserRoutes(userController));
+app.use('/api/products', ProductRoutes(productController, qnaController));
 app.use('/api/categories', CategoryRoutes(categoryController));
 app.use('/api/bids', BidRoutes(bidController));
-app.use('/api/upgrade-request', UpgradeRequestRoutes(upgradeRequestController));
-
+app.use('/api/upgrade-requests', UpgradeRequestRoutes(upgradeRequestController));
+app.use('/api/ratings', RatingRoutes(ratingController));
+app.use('/api/qnas', QnARoutes(qnaController));
+app.use('/api/chat', ChatMessageRoutes(chatMessageController));
 // START
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên cổng http://localhost:${PORT}/api`);

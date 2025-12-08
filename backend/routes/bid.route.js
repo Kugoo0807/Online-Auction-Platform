@@ -1,5 +1,5 @@
 import express from 'express';
-import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
+import { checkAuth, checkNotAdmin } from '../middleware/auth.middleware.js';
 
 export function BidRoutes(bidController) {
     const router = express.Router();
@@ -15,7 +15,7 @@ export function BidRoutes(bidController) {
 
     // === ROUTER ĐỘNG ===
     // API Ra giá (Cần login + quyền bidder)
-    router.post('/:id/place', [checkAuth, checkRole(['bidder', 'seller'])], bidController.placeBid);
+    router.post('/:id/place', [checkAuth, checkNotAdmin], bidController.placeBid);
 
     return router;
 }

@@ -15,8 +15,8 @@ class BidRepository {
     async findByProduct(productId) {
         return await Bid.find({ product: productId })
             .sort({ createdAt: -1 })
-            .populate('user', 'full_name rating')
-            .populate('holder', 'full_name rating');
+            .populate('user', 'full_name rating_count rating_score is_deleted')
+            .populate('holder', 'full_name rating_count rating_score is_deleted');
     }
 }
 

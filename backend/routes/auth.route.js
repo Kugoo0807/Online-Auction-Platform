@@ -35,6 +35,9 @@ export function AuthRoutes(authController) {
     // Đặt lại mật khẩu
     router.post('/reset-password', authController.resetPassword);
 
+    // Đổi mật khẩu
+    router.post('/change-password', [checkAuth], authController.changePassword);
+
     // Hàm test get me (kiểm tra đăng nhập)
     router.get('/me', [checkAuth], (req, res) => {
         req.user.password = undefined;

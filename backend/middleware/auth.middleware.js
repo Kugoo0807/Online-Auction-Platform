@@ -17,6 +17,13 @@ const checkRole = (roles) => (req, res, next) => {
     next();
 };
 
+const checkNotAdmin = (req, res, next) => {
+    if (req.user.role === 'admin') {
+        return res.status(403).json({ message: 'Admin không được phép truy cập!' });
+    }
+    next();
+};
+
 const attemptLogin = (req, res, next) => {
     passport.authenticate('local', { session: false }, (err, user, info) => {
         if (err) return next(err);
@@ -33,4 +40,4 @@ const attemptLogin = (req, res, next) => {
     }) (req, res, next);
 };
 
-export { checkAuth, attemptLogin, checkRole };
+export { checkAuth, attemptLogin, checkRole, checkNotAdmin };

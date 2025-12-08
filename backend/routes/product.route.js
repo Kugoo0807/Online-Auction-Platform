@@ -1,8 +1,10 @@
 import express from 'express';
-import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
+import { checkAuth, checkRole, checkNotAdmin } from '../middleware/auth.middleware.js';
+import sanitizeDescription from '../middleware/sanitizeDescription.js';
+
 import uploadCloud from '../config/cloudinary.config.js';
 
-export function ProductRoutes(productController) {
+export function ProductRoutes(productController, qnaController) {
     const router = express.Router();
 
     // ======= PUBLIC ROUTES =======
@@ -25,7 +27,7 @@ export function ProductRoutes(productController) {
     // ======= CẦN CHECK AUTH =======
 
     // Xem watch list
-    router.get('/watch-list', checkAuth, productController.getWatchList);
+    router.get('/watch-list', [checkAuth, checkNotAdmin], productController.getWatchList);
 
 
     // ======= CẦN QUYỀN SELLER =======
@@ -35,37 +37,57 @@ export function ProductRoutes(productController) {
         [
             checkAuth, 
             checkRole('seller'),
+
+            // Upload
             uploadCloud.fields([
                 { name: 'thumbnail', maxCount: 1 }, // Field name là 'thumbnail', tối đa 1 ảnh
                 { name: 'images', maxCount: 10 }    // Field name là 'images', tối đa 10 ảnh
-            ])
+            ]),
+
+            // Làm sạch dữ liệu
+            sanitizeDescription
         ], 
         productController.createProduct
     );
 
     // Lấy sản phẩm của seller
-    router.get('/seller', [checkAuth, checkRole('seller')], productController.getSellerProducts);
+    router.get('/seller', [checkAuth, checkNotAdmin], productController.getSellerProducts);
+
+    // ====== CẦN QUYỀN ADMIN =======
+
+    // Lấy tất cả sản phẩm
+    router.get('/', [checkAuth, checkRole('admin')], productController.getAllProducts);
 
 
     // ======= ROUTER ĐỘNG =======
 
+    // Cập nhật mô tả
+    router.post('/:id/description', [checkAuth, checkRole('seller')], productController.appendDescription);
+
     // Ban bidder
-    router.post('/:id/ban', [checkAuth, checkRole('seller')], productController.banBidder);
+    router.post('/:id/ban', [checkAuth, checkNotAdmin], productController.banBidder);
 
     // Unban bidder
-    router.post('/:id/unban', [checkAuth, checkRole('seller')], productController.unbanBidder);
+    router.post('/:id/unban', [checkAuth, checkNotAdmin], productController.unbanBidder);
     
     // Lấy chi tiết sản phẩm
     router.get('/:id', productController.getProductDetails);
     
     // Lấy giá trị đặt thấp nhất
-    router.get('/:id/min-price', [checkAuth, checkRole(['seller', 'bidder'])], productController.getMinValidPrice);
+    router.get('/:id/min-price', [checkAuth, checkNotAdmin], productController.getMinValidPrice);
 
     // Toggle watch list
-    router.post('/:id/watch-list', [checkAuth, checkRole(['seller', 'bidder'])], productController.toggleWatchList);
+    router.post('/:id/watch-list', [checkAuth, checkNotAdmin], productController.toggleWatchList);
 
     // Kiểm tra xem có thích sản phẩm không
-    router.get('/:id/watch-list/check', [checkAuth, checkRole(['seller', 'bidder'])], productController.checkIsWatching);
+    router.get('/:id/watch-list/check', [checkAuth, checkNotAdmin], productController.checkIsWatching);
+
+    // Q&A routes
+    router.get('/:id/questions', qnaController.listByProduct);
+    router.post('/:id/questions', [checkAuth, checkNotAdmin], qnaController.askQuestion);
+
+    // Mua ngay
+    router.post('/:id/buy-now', [checkAuth, checkNotAdmin], productController.buyProductNow);
 
     return router;
 }

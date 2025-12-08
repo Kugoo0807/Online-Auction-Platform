@@ -44,73 +44,97 @@ const seedDatabase = async () => {
     console.log('👤 Đang tạo 5 Users...');
     const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create([
       { 
-        full_name: "Nguyễn Văn Bán (Seller 1)", 
+        full_name: "Seller Một", 
         email: "seller1@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "Hà Nội",
         phone_number: "0901234567",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 2)", 
+        full_name: "Seller Hai", 
         email: "seller2@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 3)", 
+        full_name: "Seller Ba", 
         email: "seller3@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 4)", 
+        full_name: "Seller Bốn", 
         email: "seller4@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Trần Thị Buôn (Seller 5)", 
+        full_name: "Seller Năm", 
         email: "seller5@example.com", 
         password: hashedPassword, 
         role: "seller", 
         address: "TP.HCM",
         phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Lê Văn Mua (Bidder 1)", 
+        full_name: "Bidder Một", 
         email: "bidder1@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Đà Nẵng",
-        phone_number: "0912345678"
+        phone_number: "0912345678",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Phạm Thị Săn (Bidder 2)", 
+        full_name: "Bidder Hai", 
         email: "bidder2@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Cần Thơ",
-        phone_number: "0987654321"
+        phone_number: "0987654321",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
-        full_name: "Phạm Thị Săn (Bidder 3)", 
+        full_name: "Bidder Ba", 
         email: "bidder3@example.com", 
         password: hashedPassword, 
         role: "bidder", 
         address: "Cần Thơ",
-        phone_number: "0987654321"
+        phone_number: "0987654321",
+        providers: [
+          { provider: 'local' }
+        ],
       },
       { 
         full_name: "Admin Quản Trị", 
@@ -118,7 +142,10 @@ const seedDatabase = async () => {
         password: hashedPassword, 
         role: "admin", 
         address: "Server",
-        phone_number: "0000000000"
+        phone_number: "0000000000",
+        providers: [
+          { provider: 'local' }
+        ],
       }
     ]);
 
@@ -162,7 +189,29 @@ const seedDatabase = async () => {
       "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
     ];
 
-    const activeProducts = await Product.create([
+    const createList = async (dataList) => {
+        for (const item of dataList) {
+            // 1. Tách description cũ ra
+            const { description, ...otherFields } = item;
+
+            // 2. Tạo object mới đúng chuẩn Schema
+            const productData = {
+                ...otherFields,
+                // Chuyển description text -> description_history array
+                description_history: [{
+                    // Bọc thẻ <p> để giả lập đây là HTML từ Editor gửi lên
+                    content: `<p>${description}</p>`, 
+                    timestamp: new Date()
+                }]
+                // Không cần field description_current, hook pre-save sẽ tự làm
+            };
+
+            // 3. Create (Nó sẽ kích hoạt pre('save') hook để sanitize và tạo index search)
+            await Product.create(productData);
+        }
+    };
+
+    const activeProducts = [
       {
         product_name: "MacBook Pro 14 M1 2021 – Likenew 99%",
         description: "Máy còn mới 99%, pin sạc ít lần, đầy đủ phụ kiện zin theo máy.",
@@ -389,9 +438,9 @@ const seedDatabase = async () => {
         thumbnail: sampleThumbnail,
         images: sampleImages
       }
-    ]);
+    ];
 
-    const soldProducts = await Product.create([
+    const soldProducts = [
         {
             product_name: "Sony PlayStation 5 (Đã bán)",
             description: "Máy chơi game console, fullbox.",
@@ -420,41 +469,68 @@ const seedDatabase = async () => {
             current_highest_bidder: bidder2._id, // Bidder 2 thắng
             current_highest_price: 6000000
         }
-    ]);
+    ];
+
+    console.log('Đang seed Active Products...');
+    await createList(activeProducts);
+
+    console.log('Đang seed Sold Products...');
+    await createList(soldProducts);
 
     // --- 6. TẠO WATCHLIST ---
-    console.log('👀 Đang tạo WatchLists...');
-    await WatchList.create([
-      { user: bidder1._id, product: activeProducts[0]._id }, // Bidder 1 thích Macbook
-      { user: bidder1._id, product: activeProducts[4]._id }, // Bidder 1 thích Giày Nike
-      { user: bidder2._id, product: activeProducts[1]._id }, // Bidder 2 thích iPhone
-      { user: seller1._id, product: activeProducts[6]._id }, // Seller 1 cũng đi soi Sofa của Seller 2
-    ]);
+    console.log('🔄 Đang lấy lại ID sản phẩm từ DB...');
+    const currentActiveProducts = await Product.find({ auction_status: 'active' });
+    if (currentActiveProducts.length > 0) {
+      console.log('👀 Đang tạo WatchLists...');
+      
+      await WatchList.create([
+        // Giờ thì activeProducts đã có dữ liệu thật, gọi [0] vô tư
+        { user: bidder1._id, product: currentActiveProducts[0]._id }, 
+        { user: bidder1._id, product: currentActiveProducts[4] ? currentActiveProducts[4]._id : currentActiveProducts[0]._id }, // Check lỡ mảng ngắn quá
+        { user: bidder2._id, product: currentActiveProducts[1] ? currentActiveProducts[1]._id : currentActiveProducts[0]._id }, 
+        { user: seller1._id, product: currentActiveProducts[6] ? currentActiveProducts[6]._id : currentActiveProducts[0]._id }, 
+      ]);
+    } else {
+        console.log('⚠️ Không tìm thấy Active Product nào để tạo WatchList');
+    }
+
+    console.log('✅ Xong tất cả!');
 
     // --- 7. TẠO AUCTION RESULTS (Đơn hàng) ---
-    console.log('📜 Đang tạo Auction Results...');
+    console.log('🔄 Đang lấy danh sách sản phẩm ĐÃ BÁN từ DB...');
     
-    // Đơn hàng 1: Seller 1 bán PS5 cho Bidder 1 (Thành công tốt đẹp)
-    const result1 = await AuctionResult.create({
-        product: soldProducts[0]._id,
-        winning_bidder: bidder1._id,
-        seller: seller1._id,
-        final_price: 12000000,
-        status: 'completed',
-        shipping_address: "123 Đường A, Đà Nẵng",
-        payment_proof: "https://example.com/payment.jpg",
-        shipping_proof: "https://example.com/ship.jpg"
-    });
+    // BƯỚC QUAN TRỌNG: Phải query lấy thằng status 'sold' về mới có _id
+    const dbSoldProducts = await Product.find({ auction_status: 'sold' });
+    
+    let result = []
+    if (dbSoldProducts.length > 0) {
+        console.log('🏆 Đang tạo Auction Results...');
+        
+        result = await AuctionResult.create([
+             {
+                product: dbSoldProducts[0]._id,
+                winning_bidder: bidder1._id,
+                seller: seller1._id,
+                final_price: 12000000,
+                status: 'completed',
+                shipping_address: "123 Đường A, Đà Nẵng",
+                payment_proof: "https://example.com/payment.jpg",
+                shipping_proof: "https://example.com/ship.jpg"
+            },
+            {
+                product: dbSoldProducts[1] ? dbSoldProducts[1]._id : dbSoldProducts[0]._id, 
+                winning_bidder: bidder2._id,
+                seller: seller2._id,
+                final_price: 6000000,
+                status: 'pending_payment',
+            }
+        ]);
+        
+        console.log('✅ Tạo Auction Results thành công!');
 
-    // Đơn hàng 2: Seller 2 bán Loa cho Bidder 2 (Có xích mích)
-    const result2 = await AuctionResult.create({
-        product: soldProducts[1]._id,
-        winning_bidder: bidder2._id,
-        seller: seller2._id,
-        final_price: 6000000,
-        status: 'completed',
-        shipping_address: "456 Đường B, Cần Thơ"
-    });
+    } else {
+        console.log('⚠️ Không tìm thấy sản phẩm đã bán (Sold) nào để tạo kết quả.');
+    }
 
     // --- 7. TẠO RATINGS & UPDATE USER STATS ---
     console.log('⭐ Đang tạo Ratings...');
@@ -464,14 +540,14 @@ const seedDatabase = async () => {
         {
             rater: bidder1._id,
             rated_user: seller1._id, // Khen Seller 1
-            auction_result: result1._id,
+            auction_result: result[0]._id,
             rating_type: 1,
             comment: "Shop uy tín, máy ngon!"
         },
         {
             rater: seller1._id,
             rated_user: bidder1._id, // Khen Bidder 1
-            auction_result: result1._id,
+            auction_result: result[0]._id,
             rating_type: 1,
             comment: "Khách chuyển khoản nhanh, very good."
         },
@@ -480,7 +556,7 @@ const seedDatabase = async () => {
         {
             rater: seller2._id,
             rated_user: bidder2._id, // Chê Bidder 2
-            auction_result: result2._id,
+            auction_result: result[1]._id,
             rating_type: -1,
             comment: "Khách bom hàng, thái độ lồi lõm."
         },
@@ -488,7 +564,7 @@ const seedDatabase = async () => {
         {
             rater: bidder2._id,
             rated_user: seller2._id,
-            auction_result: result2._id,
+            auction_result: result[1]._id,
             rating_type: -1,
             comment: "Hàng dỏm, đừng mua."
         }
@@ -510,23 +586,29 @@ const seedDatabase = async () => {
     await User.findByIdAndUpdate(bidder2._id, { rating_score: -1, rating_count: 1 });
 
     // --- 9. TẠO QnA ---
-    console.log('❓ Đang tạo QnAs...');
-    await QnA.create([
-      {
-        product: activeProducts[0]._id, // Macbook
-        asker: bidder1._id,
-        question_content: "Máy có bị trầy xước gì không shop?",
-        answerer: seller1._id,
-        answer_content: "Máy đẹp keng như mới bạn nhé.",
-        answer_timestamp: new Date()
-      },
-      {
-        product: activeProducts[6]._id, // Sofa
-        asker: bidder2._id,
-        question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
-        // Chưa trả lời
-      }
-    ]);
+    if (typeof currentActiveProducts !== 'undefined' && currentActiveProducts.length > 0) {
+        console.log('❓ Đang tạo QnAs...');
+        
+        await QnA.create([
+          {
+            product: currentActiveProducts[0]._id, // Macbook
+            asker: bidder1._id,
+            question_content: "Máy có bị trầy xước gì không shop?",
+            answerer: seller1._id,
+            answer_content: "Máy đẹp keng như mới bạn nhé.",
+            answer_timestamp: new Date()
+          },
+          {
+            product: currentActiveProducts[6] ? currentActiveProducts[6]._id : currentActiveProducts[0]._id, // Sofa
+            asker: bidder2._id,
+            question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
+          }
+        ]);
+        
+        console.log('✅ Tạo QnA thành công!');
+    } else {
+        console.log('⚠️ Không có Active Product để tạo QnA.');
+    }
 
     console.log('✨ --- TẠO DỮ LIỆU MẪU THÀNH CÔNG --- ✨');
 

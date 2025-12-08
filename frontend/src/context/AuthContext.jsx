@@ -26,7 +26,9 @@ export function AuthProvider({ children }) {
       const profileRes = await authService.getProfile();
       if (profileRes && profileRes.user) {
         setUser(profileRes.user);
+        return profileRes.user;
       }
+      return null;
     } catch (error) {
       console.error("Error fetching current user:", error);
       
@@ -64,9 +66,9 @@ export function AuthProvider({ children }) {
       const rawToken = data.accessToken.replace('Bearer ', '');
       setAuthToken(rawToken);
 
-      await fetchCurrentUser();
+      const current_user = await fetchCurrentUser();
 
-      return { success: true, data };
+      return { success: true, user: current_user };
     } catch (error) {
         console.error('Login error:', error);
         return { success: false, error: error.response?.data?.message || error.message };
