@@ -58,7 +58,6 @@ const userSchema = new Schema({
   seller_expiry_date: { type: Date, default: null },
   
   // Profile Info
-  date_of_birth: Date,
   phone_number: { type: String, sparse: true },
   address: { type: String },
   

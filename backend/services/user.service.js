@@ -12,7 +12,7 @@ import { executeTransaction } from '../../db/db.helper.js';
 
 class UserService {
     async updateProfile(userId, profileData) {
-        const { full_name, date_of_birth, phone_number, address, email } = profileData;
+        const { full_name, phone_number, address, email } = profileData;
 
         const currentUser = await userRepository.findById(userId);
         if (!currentUser) {
@@ -30,7 +30,6 @@ class UserService {
 
         const updateData = {};
         if (full_name) updateData.full_name = full_name;
-        if (date_of_birth) updateData.date_of_birth = new Date(date_of_birth);
         if (phone_number) updateData.phone_number = phone_number;
         if (address) updateData.address = address;
         if (email) updateData.email = email;
