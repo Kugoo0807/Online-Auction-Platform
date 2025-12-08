@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { productRepository } from '../repositories/product.repository.js';
 import { bidRepository } from '../repositories/bid.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
@@ -5,6 +7,9 @@ import { auctionResultRepository } from '../repositories/auction.result.reposito
 
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
+import * as mailService from '../services/email.service.js';
+
+const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 
 class BidService {
     async placeBid(userId, productId, amount) {
@@ -74,7 +79,8 @@ class BidService {
                     throw new Error(`Giá đặt không hợp lệ. Sàn hiện tại yêu cầu tối thiểu: ${globalMinPrice}`);
                 }
             }
-
+            // Lưu previous holder để gửi email sau
+            const previousHolderId = product.current_highest_bidder;
             // Cập nhật dữ liệu
             const currentBidCount = product.bid_counts.get(userId) || 0;
             product.bid_counts.set(userId, currentBidCount + 1);
@@ -96,8 +102,38 @@ class BidService {
                     final_price: amount,
                     status: 'pending_payment'
                 }, session);
+                // Gửi email thông báo
+                try {
+			        const productUrl = PRODUCT_URL_PREFIX + (product?._id || '');
+                    const [seller, winner] = await Promise.all([
+                        userRepository.findById(product.seller),
+                        userRepository.findById(userId)
+                    ]);
+
+                    if (seller?.email) {
+                        await mailService.notifyAuctionEndedSold(
+                            seller.email,
+                            product.product_name,
+                            winner?.full_name || 'Người mua',
+                            amount,
+                            productUrl
+                        );
+                    }
+                    if (winner?.email) {
+                        await mailService.notifyAuctionWinner(
+                            winner.email,
+                            product.product_name,
+                            amount,
+                            productUrl
+                        );
+                    }
+                } catch (emailError) {
+                    console.error('Lỗi gửi email mua ngay:', emailError);
+                }
             } else {
                 // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
+
+                // Lưu người giữ giá cũ trước khi recalculate
 
                 // Tính toán lại winner và price dựa trên thuật toán
                 await recalculateAuctionState(product, userId, session);
@@ -123,6 +159,60 @@ class BidService {
                 holder: finalWinnerId
             }, session);
 
+            // === GỬI EMAIL SAU KHI ĐẤU GIÁ THÀNH CÔNG ===
+            if (!isBuyItNow) {
+                try {
+                    const productUrl = PRODUCT_URL_PREFIX + productId;
+                    
+                    // Lấy thông tin đầy đủ của các bên liên quan
+                    const [seller, bidder, currentHolder, previousHolder] = await Promise.all([
+                        userRepository.findById(product.seller),
+                        userRepository.findById(userId),
+                        finalWinnerId ? userRepository.findById(finalWinnerId) : null,
+                        previousHolderId ? userRepository.findById(previousHolderId) : null
+                    ]);
+
+                    // 1. GỬI CHO NGƯỜI BÁN
+                    if (seller?.email) {
+                        await mailService.notifyNewBidToSeller(
+                            seller.email,
+                            product.product_name,
+                            finalPrice,
+                            bidder?.full_name || 'Người dùng',
+                            productUrl
+                        );
+                    }
+
+                    // 2. GỬI CHO NGƯỜI RA GIÁ (xác nhận)
+                    if (bidder?.email) {
+                        await mailService.notifyBidSuccess(
+                            bidder.email,
+                            product.product_name,
+                            currentHolder?.full_name || 'Bạn',
+                            amount,
+                            finalPrice,
+                            productUrl
+                        );
+                    }
+
+                    // 3. GỬI CHO NGƯỜI GIỮ GIÁ TRƯỚC ĐÓ (nếu có và khác người vừa ra giá)
+                    if (previousHolderId && previousHolderId.toString() !== userId && previousHolder?.email) {
+                        await mailService.notifyHolder(
+                            previousHolder.email,
+                            product.product_name,
+                            finalPrice,
+                            finalWinnerId?.toString() === previousHolder._id.toString() 
+                                ? previousHolder.email 
+                                : bidder?.email || '',
+                            productUrl
+                        );
+                    }
+                } catch (emailError) {
+                    console.error('Lỗi gửi email sau khi đấu giá:', emailError);
+                    // Không throw error để không ảnh hưởng transaction
+                }
+            }
+
             return {
                 success: true,
                 current_price: finalPrice,
@@ -142,16 +232,16 @@ class BidService {
         );
 
         const history = await bidRepository.findByProduct(productId);
-        
+
         const currentPrice = product.current_highest_price;
 
         const result = history.map(h => {
             const bidObj = h.toObject ? h.toObject() : h;
             const user = bidObj.user;
             const holder = bidObj.holder;
-            
+
             let displayPrice = bidObj.price;
-            
+
             if (bidObj.price > currentPrice) {
                 displayPrice = currentPrice;
             }
@@ -161,12 +251,12 @@ class BidService {
                     ...bidObj,
                     price: displayPrice,
                     user: user,
-                    
+
                     is_valid: !isInvalid,
                     is_deleted: isDeleted,
                     is_banned: isBanned,
                     max_price: undefined,
-                    
+
                     invalid_holder: null,
                     holder: holder
                 };
@@ -183,12 +273,12 @@ class BidService {
                 ...bidObj,
                 price: displayPrice,
                 user: user,
-                
+
                 is_valid: !isInvalid,
                 is_deleted: isDeleted,
                 is_banned: isBanned,
                 max_price: undefined,
-                
+
                 invalid_holder: isHolderInvalid,
                 holder: holder
             }

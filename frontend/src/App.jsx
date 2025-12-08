@@ -14,6 +14,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import SearchPage from './pages/SearchPage';
 import ProductDetail from './pages/ProductDetail';
+import UserProfile from './pages/UserProfile'
+import WatchList from './pages/WatchList';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
@@ -42,6 +44,9 @@ export default function App() {
         {/* Private */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/watch-list" element={<WatchList />} />
+
         </Route>
       </Route>
     </Routes>

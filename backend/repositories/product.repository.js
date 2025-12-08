@@ -1,4 +1,5 @@
 import { Product } from '../../db/schema.js';
+import { Category } from '../../db/schema.js';
 
 class ProductRepository { 
     async create(productData) { 
@@ -8,16 +9,16 @@ class ProductRepository {
 
     async findAll() {
         return await Product.find()
-            .populate('seller', 'full_name rating_score rating_count') 
+            .populate('seller', 'full_name email rating_score rating_count') 
             .populate('category', 'category_name slug')
-            .populate('current_highest_bidder', 'full_name rating_score rating_count');
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count');
     }
     
-    async findById(product) {
-        return await Product.findById(product)
-            .populate('seller', 'full_name rating_score rating_count') 
+    async findById(product, session = null) {
+        return await Product.findById(product).session(session)
+            .populate('seller', 'full_name email rating_score rating_count') 
             .populate('category', 'category_name slug')
-            .populate('current_highest_bidder', 'full_name rating_score rating_count');
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count');
     }
     
     async findByName(productName) {
@@ -26,9 +27,18 @@ class ProductRepository {
 
     async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0) {
         if (keyword) {
+            // Tìm các category có tên khớp với từ khóa
+            const matchingCategories = await Category.find({ 
+                category_name: { $regex: keyword, $options: 'i' } 
+            }).select('_id');
+
+            const matchingCategoryIds = matchingCategories.map(cat => cat._id);
+
+            // Thêm điều kiện tìm kiếm vào filter
             filter.$or = [
-                { product_name: { $regex: keyword, $options: 'i' } }, 
-                { description_current: { $regex: keyword, $options: 'i' } } 
+                { product_name: { $regex: keyword, $options: 'i' } },
+                { description_current: { $regex: keyword, $options: 'i' } },
+                { category: { $in: matchingCategoryIds } } 
             ];
         }
 
@@ -42,9 +52,9 @@ class ProductRepository {
         }
 
         return await query
-            .populate('seller', 'full_name rating_score rating_count') 
+            .populate('seller', 'full_name email rating_score rating_count') 
             .populate('category', 'category_name slug')
-            .populate('current_highest_bidder', 'full_name rating_score rating_count')
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count')
             .lean();
     }
 
@@ -55,9 +65,9 @@ class ProductRepository {
         ]);
 
         return await Product.populate(docs, [
-            { path: 'seller', select: 'full_name rating_score rating_count' },
+            { path: 'seller', select: 'full_name email rating_score rating_count' },
             { path: 'category', select: 'category_name slug' },
-            { path: 'current_highest_bidder', select: 'full_name rating_score rating_count'}
+            { path: 'current_highest_bidder', select: 'full_name email rating_score rating_count'}
         ]);
     }
 
@@ -89,9 +99,9 @@ class ProductRepository {
 
     async findBySeller (seller) {
         return await Product.find({ seller })
-            .populate('seller', 'full_name rating_score rating_count') 
+            .populate('seller', 'full_name email rating_score rating_count') 
             .populate('category', 'category_name slug')
-            .populate('current_highest_bidder', 'full_name rating_score rating_count');
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count');
     }
 
     // Xử lí transaction

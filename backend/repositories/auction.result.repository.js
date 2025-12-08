@@ -6,8 +6,8 @@ class AuctionResultRepository {
         return await result.save({ session });
     }
 
-    async findById(id) {
-        return await AuctionResult.findById(id)
+    async findById(id, session = null) {
+        return await AuctionResult.findById(id).session(session)
             .populate('product', 'product_name thumbnail')
             .populate('winning_bidder', 'full_name email rating_score rating_count')
             .populate('seller', 'full_name email rating_score rating_count');

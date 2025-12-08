@@ -38,14 +38,6 @@ class RatingService {
             session
         );
         // Gửi email thông báo cho người được đánh giá
-        const raterUser = await userRepository.findById(rater, session);
-        if (raterUser && raterUser.full_name && raterUser.full_name.length > 0) {
-            await import('./email.service.js').then(module => 
-                module.notifyNewRating(
-                    raterUser.email, data.rated_user, data.score, data.comment, raterUser.full_name
-                )
-            );
-        }
         return { message: 'Đánh giá thành công!' };
     }
 
