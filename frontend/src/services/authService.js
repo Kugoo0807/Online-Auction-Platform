@@ -91,7 +91,7 @@ export const authService = {
       };
     }
   },
-  
+
   resetPassword: async (email, otp, newPassword) => {
     try {
       const response = await api.post('/auth/reset-password', {
@@ -125,5 +125,65 @@ export const authService = {
     });
     return { success: true, data: response.data };
   },
+  sendSignupOTP: async (email, captchaToken) => {
+    try {
+      const response = await api.post('/auth/send-otp', {
+        email,
+        captchaToken  // Thêm captcha token
+      });
 
+      return {
+        success: response.status === 200,
+        message: response.data.message || 'OTP đã được gửi',
+        data: response.data,
+        isEmailExists: false
+      };
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message || 'Có lỗi xảy ra khi gửi OTP';
+
+      return {
+        success: false,
+        message: message,
+        isEmailExists: status === 400 && message.includes('đã tồn tại')
+      };
+    }
+  },
+
+  // Bước 2: Đăng ký với OTP (giữ nguyên)
+  registerWithOTP: async (userData) => {
+    try {
+      const response = await api.post('/auth/register', {
+        email: userData.email,
+        password: userData.password,
+        full_name: userData.full_name,
+        address: userData.address,
+        otp: userData.otp
+      });
+
+      return {
+        success: response.status === 201,
+        message: response.data.message || 'Đăng ký thành công',
+        data: response.data
+      };
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
+
+      const isOTPError = status === 400 && (
+        message.includes('OTP') ||
+        message.includes('mã') ||
+        message.includes('xác thực')
+      );
+
+      const isOTPExpired = status === 400 && message.includes('hết hạn');
+
+      return {
+        success: false,
+        message: message,
+        isOTPError: isOTPError,
+        isOTPExpired: isOTPExpired
+      };
+    }
+  }
 };
