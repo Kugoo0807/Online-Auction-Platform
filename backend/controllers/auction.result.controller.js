@@ -14,8 +14,9 @@ class AuctionResultController {
 
     async getOrderByProductId(req, res) {
         try {
+            const userId = req.user._id.toString();
             const productId = req.params.productId;
-            const order = await auctionResultService.getOrderByProductId(productId);
+            const order = await auctionResultService.getOrderByProductId(productId, userId);
             res.status(200).json(order);
         } catch (error) {
             res.status(400).json({ message: error.message });

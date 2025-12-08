@@ -18,9 +18,17 @@ class AuctionResultService {
         return order;
     }
 
-    async getOrderByProductId(productId) {
-        const order = await auctionResultRepository.findByProductId(productId);
+    async getOrderByProductId(productId, userId) {
+        const order = await auctionResultRepository.findByProduct(productId);
         if (!order) throw new Error("Sản phẩm đã chọn không có đơn hàng đấu giá tương ứng");
+
+        // Validate: Chỉ người mua hoặc người bán mới được xem
+        const isBuyer = order.winning_bidder._id.toString() === userId;
+        const isSeller = order.seller._id.toString() === userId;
+
+        if (!isBuyer && !isSeller) {
+            throw new Error("Bạn không có quyền xem đơn hàng này");
+        }
 
         return order;
     }
