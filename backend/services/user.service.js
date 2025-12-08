@@ -4,6 +4,9 @@ import { userRepository }  from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 import { productRepository } from '../repositories/product.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
+import { otpRepository } from '../repositories/otp.repository.js';
+
+import bcrypt from 'bcryptjs';
 
 import { productService } from './product.service.js';
 
@@ -12,7 +15,7 @@ import { executeTransaction } from '../../db/db.helper.js';
 
 class UserService {
     async updateProfile(userId, profileData) {
-        const { full_name, phone_number, address, email } = profileData;
+        const { full_name, phone_number, address, email, otp } = profileData;
 
         const currentUser = await userRepository.findById(userId);
         if (!currentUser) {
@@ -21,6 +24,21 @@ class UserService {
 
         // Kiểm tra cập nhật Email
         if (email && email !== currentUser.email) {
+            // Validate đầu vào
+            if (!otp) throw new Error('Vui lòng nhập mã OTP!');
+
+            // Check OTP
+            const otpRecord = await otpRepository.findByEmail(email);
+
+            if (!otpRecord) {
+                throw new Error('OTP không tồn tại hoặc đã hết hạn!');
+            }
+
+            const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+            if (!isMatch) {
+                throw new Error('Mã OTP không chính xác!');
+            }
+
             // Kiểm tra sự tồn tại của Email mới
             const existingUser = await userRepository.findByEmail(email);
             if (!existingUser) {
