@@ -107,6 +107,24 @@ export const authService = {
       };
     }
   },
+  // 1. Đổi mật khẩu
+  changePassword: async (oldPassword, newPassword) => {
+    const response = await api.post('/auth/change-password', {
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    });
+    return { success: true, message: response.data.message };
+  },
+
+  // 2. Cập nhật thông tin cá nhân
+  updateProfile: async (profileData) => {
+    const response = await api.put('/users/profile', {
+      full_name: profileData.full_name,
+      address: profileData.address,
+      phone_number: profileData.phone_number,
+    });
+    return { success: true, data: response.data };
+  },
   sendSignupOTP: async (email, captchaToken) => {
     try {
       const response = await api.post('/auth/send-otp', {
