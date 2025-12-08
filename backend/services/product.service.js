@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { productRepository } from '../repositories/product.repository.js';
 import { categoryRepository } from '../repositories/category.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
@@ -8,6 +10,7 @@ import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
 import * as mailService from './email.service.js';
 
+const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 class ProductService {
     async createProduct(productData) {
         const requiredFields = [
@@ -45,10 +48,10 @@ class ProductService {
         if (product.seller._id.toString() !== userId.toString()) {
             throw new Error('Bạn không có quyền sửa sản phẩm này!');
         }
-        
+
         return await productRepository.appendDescription(productId, newContent);
     }
-    
+
     async findAllProducts() {
         return await productRepository.findAll();
     }
@@ -60,29 +63,29 @@ class ProductService {
     async findTop5ProductsEndingSoon() {
         const sortOption = { auction_end_time: 1 };
         return await productRepository.findByCondition(
-            undefined, 
-            {auction_status: 'active', auction_end_time: { $gt: new Date() }}, 
-            sortOption, 
+            undefined,
+            { auction_status: 'active', auction_end_time: { $gt: new Date() } },
+            sortOption,
             5
         );
     }
 
     async findTop5HighestPriceProducts() {
-        const sortOption = { current_highest_price : -1 };
+        const sortOption = { current_highest_price: -1 };
         return await productRepository.findByCondition(
-            undefined, 
-            {auction_status: 'active', auction_end_time: { $gt: new Date() }}, 
-            sortOption, 
+            undefined,
+            { auction_status: 'active', auction_end_time: { $gt: new Date() } },
+            sortOption,
             5
         );
     }
 
     async findTop5MostBiddedProducts() {
-        const sortOption = { bid_count : -1 };
+        const sortOption = { bid_count: -1 };
         return await productRepository.findByCondition(
-            undefined, 
-            {auction_status: 'active', auction_end_time: { $gt: new Date() }}, 
-            sortOption, 
+            undefined,
+            { auction_status: 'active', auction_end_time: { $gt: new Date() } },
+            sortOption,
             5
         );
     }
@@ -94,7 +97,7 @@ class ProductService {
         }
 
         const allCategoryIds = await categoryRepository.getAllDescendantIds(category._id);
-        const filter = { category: {$in: allCategoryIds }};
+        const filter = { category: { $in: allCategoryIds } };
 
         return await productRepository.findByCondition(undefined, filter, {});
     }
@@ -120,7 +123,7 @@ class ProductService {
 
         return await productRepository.findRandom(filter, 5);
     }
-    
+
     // Đưa vào API lấy chi tiết sản phẩm
     async getMinValidPrice(productId, userId) {
         const product = await productRepository.findById(productId);
@@ -134,7 +137,7 @@ class ProductService {
         const globalFloor = product.bid_count === 0
             ? product.start_price
             : product.current_highest_price + product.bid_increment;
-        
+
         const userFloor = product.auto_bid_map.get(userId.toString()) || 0;
 
         return {
@@ -161,6 +164,13 @@ class ProductService {
             await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
+            const bidder = await userRepository.findById(bidderIdToBan);
+            if (bidder?.email) {
+                await mailService.notifyBidRejected(
+                    bidder.email,
+                    product.product_name
+                );
+            }
             return { success: true };
         });
     }
@@ -182,12 +192,21 @@ class ProductService {
             await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
+            const bidder = await userRepository.findById(bidderIdToUnban);
+            if (bidder?.email) {
+			    const productUrl = PRODUCT_URL_PREFIX + (product?._id || '');
+                await mailService.notifyBidUnBan(
+                    bidder.email,
+                    product.product_name,
+                    productUrl
+                );
+            }
             return { success: true };
         });
     }
-    
+
     async toggleWatchList(userId, productId) {
-        const product = await productRepository.findById(productId);    
+        const product = await productRepository.findById(productId);
         if (!product) {
             throw new Error('Sản phẩm không tồn tại');
         }
@@ -196,19 +215,19 @@ class ProductService {
         if (product.seller._id.toString() === userId.toString()) {
             throw new Error('Bạn không thể tự thêm sản phẩm của mình vào yêu thích!')
         }
-        
+
         const isExist = await watchListRepository.exists(userId, productId);
         if (isExist) {
             await watchListRepository.remove(userId, productId);
-            return { 
-                action: 'removed', 
-                message: 'Đã xóa sản phẩm khỏi danh sách yêu thích' 
+            return {
+                action: 'removed',
+                message: 'Đã xóa sản phẩm khỏi danh sách yêu thích'
             };
         } else {
             await watchListRepository.add(userId, productId);
-            return { 
-                action: 'added', 
-                message: 'Đã thêm sản phẩm vào danh sách yêu thích' 
+            return {
+                action: 'added',
+                message: 'Đã thêm sản phẩm vào danh sách yêu thích'
             };
         }
     }
@@ -228,15 +247,15 @@ class ProductService {
         if (!product) {
             throw new Error('Sản phẩm không tồn tại!');
         }
-        
+
         if (product.seller?.email) {
             await mailService.notifyAuctionCancelled(product.seller.email, product.product_name);
         }
-        
+
         if (product.current_highest_bidder?.email) {
             await mailService.notifyAuctionCancelled(product.current_highest_bidder.email, product.product_name);
         }
-        
+
         return await productRepository.cancelProduct(productId);
     }
 
@@ -253,7 +272,7 @@ class ProductService {
             if (product.buy_it_now_price == null) {
                 throw new Error('Sản phẩm không có giá mua ngay!');
             }
-            
+
             // Validate Quyền hạn
             if (product.seller.toString() === userId) throw new Error("Không thể tự đấu giá sản phẩm của mình!");
             if (product.banned_bidder && product.banned_bidder.some(id => id.toString() === userId)) {
@@ -280,7 +299,7 @@ class ProductService {
             // Xử lí mua ngay
             const amount = product.buy_it_now_price;
             const currentBidCount = product.bid_counts.get(userId) || 0;
-            
+
             product.bid_counts.set(userId, currentBidCount + 1);
             product.auto_bid_map.set(userId, amount);
             product.bid_count += 1;
@@ -296,11 +315,29 @@ class ProductService {
                 final_price: amount,
                 status: 'pending_payment'
             }, session);
-            
+
             await productRepository.save(product, session);
             const finalPrice = product.current_highest_price;
             const finalWinnerId = product.current_highest_bidder;
-
+            if (populatedResult) {
+                const productUrl = PRODUCT_URL_PREFIX + (product?._id || '');
+                if (product.seller.email) {
+                    await mailService.notifyAuctionEndedSold(
+                        product.seller.email,
+                        product.product_name,
+                        finalPrice,
+                        productUrl
+                    );
+                }
+                if (product.current_highest_bidder.email) {
+                    await mailService.notifyAuctionWinner(
+                        product.current_highest_bidder.email,
+                        product.product_name,
+                        finalPrice,
+                        productUrl
+                    );
+                }
+            }
             await bidRepository.create({
                 user: userId,
                 product: productId,
