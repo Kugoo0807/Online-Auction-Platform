@@ -368,8 +368,8 @@ const UserProfile = () => {
 
       {/* === MODAL ĐỔI MẬT KHẨU === */}
       {showPassModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={handleCloseModal}>
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
                <h3 className="text-xl font-bold text-gray-900">Đổi mật khẩu</h3>
                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 cursor-pointer">
