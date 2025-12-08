@@ -1,10 +1,13 @@
 import api from './api';
 
 export const authService = {
+  // ============================================================
+  // CODE CŨ (GIỮ NGUYÊN)
+  // ============================================================
+  
   // Đăng nhập - backend trả về { token: "Bearer <accessToken>" }
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-
     // Backend trả về { token: "Bearer <accessToken>" }
     return {
       accessToken: response.data.token
@@ -105,6 +108,50 @@ export const authService = {
         success: false,
         message: error.response?.data?.message || 'Có lỗi xảy ra'
       };
+    }
+  },
+
+
+  // 1. Đổi mật khẩu (Dành cho user đã đăng nhập muốn đổi pass)
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.post('/auth/change-password', {
+      oldPassword: currentPassword,
+      newPassword: newPassword
+    });
+    return { success: true, message: response.data.message };
+  },
+
+  // 2. Cập nhật thông tin cá nhân
+  updateProfile: async (profileData) => {
+    const response = await api.put('/users/profile', {
+      full_name: profileData.full_name,
+      address: profileData.address,
+      phone_number: profileData.phone_number,
+      // avatar: profileData.avatar 
+    });
+    return { success: true, data: response.data };
+  },
+
+  // 3. Gửi lại mã OTP (Trường hợp user không nhận được email hoặc mã hết hạn)
+  resendOTP: async (email) => {
+    try {
+      const response = await api.post('/auth/resend-otp', { email });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Không thể gửi lại mã'
+      };
+    }
+  },
+
+  // 4. Verify OTP (Chỉ kiểm tra mã OTP đúng hay sai trước khi cho nhập pass mới - Tùy chọn UI)
+  verifyOTP: async (email, otp) => {
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp });
+      return { success: true, isValid: response.data.isValid };
+    } catch (error) {
+      return { success: false, message: 'Mã OTP không hợp lệ' };
     }
   }
 
