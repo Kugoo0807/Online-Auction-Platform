@@ -15,10 +15,27 @@ const transporter = nodemailer.createTransport({
 });
 
 const maskName = (name) => {
-  if (!name) return 'Người dùng ẩn danh';
-  if (name.length <= 2) return "****" + name.slice(-1);
-  const visibleLength = Math.min(name.length - 1, 4); 
-  return "****" + name.slice(-visibleLength);
+  if (!name || typeof name !== 'string') return 'u***r'; 
+
+  // Lọc bỏ phần trong ngoặc () và khoảng trắng thừa
+  const cleanName = name.split('(')[0].trim();
+  
+  if (!cleanName) return 'u***r';
+
+  const chars = Array.from(cleanName);
+  const len = chars.length;
+
+  if (len === 1) {
+      return `${chars[0]}***${chars[0]}`;
+  }
+
+  // CÔNG THỨC EBAY: Ký tự đầu + *** + Ký tự cuối
+  const first = chars[0];
+  const last = chars[len - 1];
+  const middleLength = Math.min(len - 2, 6); 
+  const middle = "*".repeat(middleLength);
+  
+  return `${first}${middle}${last}`;
 };
 
 async function sendMailBase({ to, subject, html }) {

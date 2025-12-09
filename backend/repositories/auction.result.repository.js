@@ -13,38 +13,38 @@ class AuctionResultRepository {
             .populate('seller', 'full_name email rating_score rating_count');
     }
 
-    async findByProduct(productId) {
-        return await AuctionResult.findOne({ product: productId })
+    async findByProduct(productId, session = null) {
+        return await AuctionResult.findOne({ product: productId }).session(session)
             .populate('winning_bidder', 'full_name email rating_score rating_count')
             .populate('seller', 'full_name email rating_score rating_count');
     }
 
-    async findByWinner(userId) {
-        return await AuctionResult.find({ winning_bidder: userId })
+    async findByWinner(userId, session = null) {
+        return await AuctionResult.find({ winning_bidder: userId }).session(session)
             .sort({ createdAt: -1 })
             .populate('product', 'product_name thumbnail')
             .populate('seller', 'full_name email rating_score rating_count');
     }
 
-    async findBySeller(userId) {
-        return await AuctionResult.find({ seller: userId })
+    async findBySeller(userId, session = null) {
+        return await AuctionResult.find({ seller: userId }).session(session)
             .sort({ createdAt: -1 })
             .populate('product', 'product_name thumbnail')
             .populate('winning_bidder', 'full_name email rating_score rating_count');
     }
 
-    async existPendingTransaction(userId) {
+    async existPendingTransaction(userId, session = null) {
         return await AuctionResult.exists({
             $or: [
                 { seller: userId },
                 { winning_bidder: userId }
             ],
             status: { $nin: ['completed', 'cancelled'] }
-        });
+        }).session(session);
     }
 
     // Người mua thanh toán -> Chờ vận chuyển
-    async updatePaymentInfo(id, address, paymentProofUrl) {
+    async updatePaymentInfo(id, address, paymentProofUrl, session = null) {
         return await AuctionResult.findByIdAndUpdate(
             id,
             { 
@@ -52,28 +52,28 @@ class AuctionResultRepository {
                 payment_proof: paymentProofUrl,
                 status: 'pending_shipment'
             },
-            { new: true }
+            { new: true, session }
         );
     }
 
     // Người bán gửi hàng -> Đang giao
-    async updateShipmentInfo(id, shippingProofUrl) {
+    async updateShipmentInfo(id, shippingProofUrl, session = null) {
         return await AuctionResult.findByIdAndUpdate(
             id,
             { 
                 shipping_proof: shippingProofUrl,
                 status: 'shipping'
             },
-            { new: true }
+            { new: true, session }
         );
     }
 
     // Người mua xác nhận -> Hoàn tất
-    async completeTransaction(id) {
+    async completeTransaction(id, session = null) {
         return await AuctionResult.findByIdAndUpdate(
             id,
             { status: 'completed' },
-            { new: true }
+            { new: true, session }
         );
     }
 

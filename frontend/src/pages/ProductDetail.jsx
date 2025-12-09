@@ -44,6 +44,19 @@ const maskName = (name) => {
   return `${first}${middle}${last}`;
 };
 
+const avatar = (name, size = 10) => {
+  if (!name || typeof name !== 'string') name = '?';
+  return (
+    <div className="relative">
+      <img 
+        src={`https://ui-avatars.com/api/?name=${name}&background=random&color=fff`} 
+        alt="Avatar" 
+        className={`w-${size} h-${size} rounded-full object-cover shadow-sm`}
+      />
+    </div>
+  )
+};
+
 export default function ProductDetail() {
   const { id } = useParams()
   const { user } = useAuth()
@@ -364,10 +377,6 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
       )}
       <div className={`p-4 rounded-lg mb-6 border ${isEndingSoon() ? 'bg-orange-50 border-orange-100' : 'bg-gray-50 border-gray-100'}`}>
         <div className="flex justify-between mb-3 items-center">
-          <span className="font-bold text-gray-700">⏳ Thời gian còn lại:</span>
-          <span className={`font-bold ${isEndingSoon() ? 'text-red-600' : 'text-green-600'}`}>{getTimeRemaining(product.auction_end_time)}</span>
-        </div>
-        <div className="flex justify-between mb-3 items-center">
           <span className="text-gray-600">🔁 Số lượt ra giá:</span>
           <span className="font-semibold text-gray-900">{product.bid_count || 0}</span>
         </div>
@@ -377,9 +386,7 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
         </div>
       </div>
       <div className="mb-6 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-          {product.seller?.full_name?.charAt(0) || 'A'}
-        </div>
+        {avatar(product.seller?.full_name)}
         <div>
           <div className="text-xs text-gray-500 uppercase font-semibold">Người bán</div>
           <div className="font-bold text-gray-900">{maskName(product.seller?.full_name) || "Ẩn danh"}</div>
@@ -391,9 +398,7 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
       </div>
       {product.current_highest_bidder && (
         <div className="mb-6 flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-          <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-            {product.current_highest_bidder.full_name?.charAt(0) || 'B'}
-          </div>
+          {avatar(product.current_highest_bidder.full_name)}
           <div>
             <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">{product.auction_status === 'active' ? 'Người giữ giá cao nhất' : 'Người thắng đấu giá'}</div>
             <div className="font-bold text-gray-900">
@@ -409,11 +414,55 @@ function ProductInfo({ product, minValidPrice, user, isRealSeller }) {
       )}
       <div className="border-t border-gray-100 pt-4 text-sm text-gray-600 space-y-2">
         <div className="flex justify-between"><span>Thời điểm đăng:</span><span className="font-medium text-gray-800">{formatDate(product.auction_start_time)}</span></div>
-        <div className="flex justify-between"><span>Thời điểm kết thúc:</span><span className="font-medium text-gray-800">{formatDate(product.auction_end_time)}</span></div>
+        <AuctionCountdown endTime={product.auction_end_time} formatDate={formatDate} />
       </div>
       <LoginRequestModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} productName={product.product_name} />
     </div>
   )
+}
+
+function AuctionCountdown({ endTime, formatDate }) {
+  const [relative, setRelative] = useState(true);
+  const [display, setDisplay] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date().getTime();
+      const end = new Date(endTime).getTime();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        setDisplay("Đã kết thúc");
+        setRelative(false);
+        return;
+      }
+
+      const minutes = Math.floor(diff / 1000 / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days >= 3) {
+        setDisplay(formatDate(endTime));
+        setRelative(false);
+        return;
+      }
+
+      if (days >= 1) {
+        setDisplay(`${days} Ngày Nữa`);
+      } else if (hours >= 1) {
+        setDisplay(`${hours} Giờ ${minutes % 60} Phút Nữa`);
+      } else {
+        setDisplay(`${minutes} Phút Nữa`);
+      }
+    };
+
+    update();
+
+    const intervalId = setInterval(update, 60000);
+    return () => clearInterval(intervalId);
+  }, [endTime]);
+
+  return <div className="flex justify-between"><span>Thời điểm kết thúc:</span><span className={`${relative ? 'text-red-500 font-bold' : 'text-gray-800 font-medium'}`}>{display}</span></div>;
 }
 
 function ProductDescription({ product, isRealSeller, onRefresh }) {
@@ -728,7 +777,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
     try {
       await bidService.placeBid(product._id, bidAmount)
       const displayPrice = new Intl.NumberFormat('vi-VN').format(bidAmount);
-      ToastNotification(`Đã đặt giá (₫${displayPrice}) thành công!`, 'success')
+      ToastNotification(`Đặt giá (₫${displayPrice}) thành công!`, 'success');
       
       if(onRefresh) onRefresh();
     } catch(err) {
@@ -829,9 +878,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                           <td className="py-3 px-4 border-b">
                             <div className="flex items-center gap-2">
                               {/* Avatar người dùng */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${invalidBidder ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-600'}`}>
-                                {bidderName?.charAt(0)?.toUpperCase() || '?'}
-                              </div>
+                              {avatar(bidderName, 8)}
                               {/* Tên người dùng */}
                               <span className={`font-medium text-sm leading-tight ${invalidBidder ? 'text-gray-400 line-through italic' : 'text-gray-800'}`}>
                                 {bidderName ? maskName(bidderName) : 'Ẩn Danh'}
@@ -843,9 +890,7 @@ function BiddingSection({ product, minValidPrice, user, isRealSeller, isBannedUs
                           <td className="py-3 px-4 border-b">
                              <div className="flex items-center gap-2">
                               {/* Avatar người dùng */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${invalidHolder ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-indigo-600'}`}>
-                                {holderName?.charAt(0)?.toUpperCase() || '?'}
-                              </div>
+                              {avatar(holderName, 8)}
                               {/* Tên người dùng */}
                               <span className={`font-medium text-sm leading-tight ${invalidHolder ? 'text-gray-400 line-through italic' : 'text-gray-800'}`}>
                                 {holderName ? maskName(holderName) : 'Ẩn Danh'}
@@ -960,9 +1005,7 @@ function ProductQA({ product, user, isRealSeller, questions = [], onRefresh }) {
         {!isRealSeller && user ? (
           <form onSubmit={handlePostQuestion} className="mb-8">
             <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
+              {avatar(user.full_name)}
               <div className="flex-1">
                 <textarea
                   value={questionText}
@@ -1001,9 +1044,7 @@ function ProductQA({ product, user, isRealSeller, questions = [], onRefresh }) {
                 {/* === PHẦN CÂU HỎI === */}
                 <div className="flex gap-3 items-start">
                   {/* Avatar Người hỏi */}
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold flex-shrink-0 border border-gray-300">
-                    {q.asker?.full_name ? q.asker.full_name.charAt(0).toUpperCase() : '?'}
-                  </div>
+                  {avatar(q.asker?.full_name, 8)}
 
                   {/* Bong bóng nội dung câu hỏi */}
                   <div className="flex-1 bg-gray-50 p-4 rounded-2xl rounded-tl-none border border-gray-200">
@@ -1025,9 +1066,7 @@ function ProductQA({ product, user, isRealSeller, questions = [], onRefresh }) {
                 {q.answer_content ? (
                   <div className="mt-4 ml-11 flex gap-3 rounded-lg">
                     {/* Avatar Người trả lời */}
-                    <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-gray-600 font-bold flex-shrink-0 border border-gray-300">
-                      {q.answerer?.full_name ? q.answerer.full_name.charAt(0).toUpperCase() : '?'}
-                    </div>
+                    {avatar(q.answerer?.full_name, 8)}
 
                     {/* Bong bóng nội dung câu trả lời */}
                     <div className="flex-1 bg-blue-50 p-4 rounded-2xl rounded-tl-none border border-blue-200">

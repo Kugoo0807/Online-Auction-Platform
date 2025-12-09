@@ -375,9 +375,9 @@ const UserProfile = () => {
         </div>
 
         {/* === BOTTOM: FOOTER INFO  === */}
-        <div className="bg-red-50 rounded-xl border border-red-100 p-6">
+        <div className="bg-green-100 rounded-xl border border-green-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <h3 className="text-lg font-bold text-gray-900">Thông tin tài khoản</h3>
           </div>
           <div className="flex items-start gap-4 pl-1">
@@ -389,6 +389,17 @@ const UserProfile = () => {
                <p className="font-medium text-gray-900">{user.is_deleted ? 'Đã khóa' : 'Đang hoạt động'}</p>
              </div>
           </div>
+          {user.seller_expiry_date && (
+            <div className="flex items-start gap-4 pl-1 mt-4">
+               <div className="mt-1 text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+               </div>
+               <div>
+                 <p className="text-sm text-gray-500 mb-1">Hạn quyền Seller</p>
+                 <p className="font-medium text-green-700">{new Date(user.seller_expiry_date).toLocaleDateString('vi-VN')}</p>
+               </div>
+            </div>
+          )}
         </div>
 
       </div>
