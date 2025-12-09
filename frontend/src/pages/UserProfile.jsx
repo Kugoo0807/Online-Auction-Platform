@@ -91,7 +91,7 @@ const UserProfile = () => {
 
     return () => clearInterval(intervalId);
 
-  }, []);
+  }, [isEditing]);
 
   // --- 4. CÁC HÀM XỬ LÍ ---
   
