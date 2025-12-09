@@ -41,7 +41,7 @@ class UserService {
 
             // Kiểm tra sự tồn tại của Email mới
             const existingUser = await userRepository.findByEmail(email);
-            if (existingUser) {
+            if (existingUser && existingUser._id.toString() !== userId.toString()) {
                 throw new Error('Email này đã được sử dụng bởi tài khoản khác!');
             }
         }
