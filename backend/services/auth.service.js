@@ -49,8 +49,18 @@ const googleClient = new OAuth2Client(
 
 
 class AuthService {
-    async verifyCaptcha(captchaToken) {
+    async verifyCaptcha(captchaToken, options = {}) {
         try {
+            if (!captchaToken) {
+                return {
+                    success: false,
+                    message: 'Captcha token is required',
+                    score: 0
+                };
+            }
+
+            const { expectedAction = null, minScore = 0.5 } = options;
+
             const response = await axios.post(
                 `https://www.google.com/recaptcha/api/siteverify`,
                 null,
@@ -62,53 +72,109 @@ class AuthService {
                 }
             );
 
-            return response.data.success;
+            const { success, score, challenge_ts, hostname, action } = response.data;
+
+            console.log('reCAPTCHA v3 verification:', {
+                success,
+                score,
+                hostname,
+                action,
+                expectedAction,
+                timestamp: challenge_ts
+            });
+
+            // Kiểm tra cho reCAPTCHA v3
+            if (success && score !== undefined) {
+                // Kiểm tra score
+                if (score < minScore) {
+                    return {
+                        success: false,
+                        message: `Score too low (${score.toFixed(2)} < ${minScore})`,
+                        score,
+                        minScore,
+                        action
+                    };
+                }
+
+                // Kiểm tra action nếu có
+                if (expectedAction && action !== expectedAction) {
+                    return {
+                        success: false,
+                        message: `Action mismatch: expected ${expectedAction}, got ${action}`,
+                        score,
+                        expectedAction,
+                        receivedAction: action
+                    };
+                }
+            }
+
+            return {
+                success,
+                score: score || (success ? 1.0 : 0),
+                message: success ? 'Captcha verified successfully' : 'Captcha verification failed',
+                hostname,
+                action,
+                timestamp: challenge_ts,
+                data: response.data
+            };
         } catch (error) {
             console.error('CAPTCHA verification failed:', error);
-            return false;
+            return {
+                success: false,
+                message: error.message || 'Failed to verify captcha',
+                score: 0,
+                error: error.message
+            };
         }
     }
+    async sendRegisterOtp(email, captchaToken) { // Thêm tham số captchaToken
+        try {
+            console.log('=== SERVICE: sendRegisterOtp called ===');
+            console.log('Email:', email);
+            console.log('Captcha token received:', !!captchaToken);
+            console.log('Captcha token length:', captchaToken?.length || 0);
 
-    async sendRegisterOtp(email) {
-        // Xác thực CAPTCHA trước
-        const isCaptchaValid = await verifyCaptcha(captchaToken);
-        if (!isCaptchaValid) {
-            throw new Error('CAPTCHA verification failed');
+            // Xác thực CAPTCHA trước
+            if (captchaToken) {
+                console.log('Verifying captcha...');
+                const captchaResult = await this.verifyCaptcha(captchaToken, {
+                    expectedAction: 'register',
+                    minScore: 0.5
+                });
+
+                console.log('Captcha verification result:', captchaResult);
+
+                if (!captchaResult.success) {
+                    throw new Error(captchaResult.message || 'CAPTCHA verification failed');
+                }
+            } else {
+                console.warn('No captcha token provided, skipping verification');
+                // Có thể ném lỗi nếu bạn muốn bắt buộc captcha:
+                // throw new Error('Captcha token is required');
+            }
+
+            const existingUser = await userRepository.findByEmail(email);
+            if (existingUser) {
+                throw new Error('Email đã tồn tại trong hệ thống!');
+            }
+
+            const otp = crypto.randomInt(100000, 999999).toString();
+            const salt = await bcrypt.genSalt(10);
+            const hashedOtp = await bcrypt.hash(otp, salt);
+
+            await otpRepository.createOrUpdateOtp(email, hashedOtp);
+
+            console.log(`[REGISTER OTP] Gửi tới ${email}: ${otp}`);
+            // TODO: mail service
+
+            return {
+                success: true,
+                message: 'OTP xác thực đã được gửi tới email của bạn.'
+            };
+        } catch (error) {
+            console.error('Error in sendRegisterOtp:', error);
+            throw error;
         }
-
-        const existingUser = await userRepository.findByEmail(email);
-        if (existingUser) {
-            throw new Error('Email đã tồn tại trong hệ thống!');
-        }
-
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const salt = await bcrypt.genSalt(10);
-        const hashedOtp = await bcrypt.hash(otp, salt);
-
-        await otpRepository.createOrUpdateOtp(email, hashedOtp);
-
-        sendOtp(email, otp);
-        console.log('[REGISTER OTP]: ' + otp);
-
-        return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
-    }
-
-    async sendUpdatedEmailOtp(email) {
-        const existingUser = await userRepository.findByEmail(email);
-        if (existingUser) {
-            throw new Error('Email đã tồn tại trong hệ thống!');
-        }
-
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const salt = await bcrypt.genSalt(10);
-        const hashedOtp = await bcrypt.hash(otp, salt);
-
-        await otpRepository.createOrUpdateOtp(email, hashedOtp);
-
-        sendOtp(email, otp);
-        console.log('[UPDATE EMAIL OTP]: ' + otp);
-
-        return { message: 'OTP xác thực đã được gửi tới email của bạn.' };
     }
 
     async register(registerData) {
