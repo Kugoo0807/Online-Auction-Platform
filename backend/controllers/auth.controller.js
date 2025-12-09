@@ -100,6 +100,22 @@ class AuthController {
         }
     }
 
+    async sendUpdatedEmailOtp(req, res) {
+        try {
+            const { email } = req.body;
+
+            if (!email) {
+                throw new Error('Vui lòng cung cấp email!');
+            }
+
+            const result = await authService.sendUpdatedEmailOtp(email);
+
+            res.status(200).json(result);
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
     async register(req, res) {
         try {
             // { email, password, full_name, address, otp }

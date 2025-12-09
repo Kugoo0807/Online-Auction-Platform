@@ -18,9 +18,24 @@ class AuctionResultService {
         return order;
     }
 
-    // ======= NGƯỜI MUA THANH TOÁN =======
-    async submitPayment(userId, productId, address, paymentProofUrl) {
+    async getOrderByProductId(productId, userId) {
         const order = await auctionResultRepository.findByProduct(productId);
+        if (!order) throw new Error("Sản phẩm đã chọn không có đơn hàng đấu giá tương ứng");
+
+        // Validate: Chỉ người mua hoặc người bán mới được xem
+        const isBuyer = order.winning_bidder._id.toString() === userId;
+        const isSeller = order.seller._id.toString() === userId;
+
+        if (!isBuyer && !isSeller) {
+            throw new Error("Bạn không có quyền xem đơn hàng này");
+        }
+
+        return order;
+    }
+
+    // ======= NGƯỜI MUA THANH TOÁN =======
+    async submitPayment(orderId, userId, address, paymentProofUrl) {
+        const order = await auctionResultRepository.findById(orderId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
         // Validate quyền hạn & trạng thái
@@ -36,8 +51,8 @@ class AuctionResultService {
     }
 
     // ======= SELLER XÁC NHẬN GỬI HÀNG =======
-    async confirmShipment(userId, productId, shippingProofUrl) {
-        const order = await auctionResultRepository.findByProduct(productId);
+    async confirmShipment(orderId, userId, shippingProofUrl) {
+        const order = await auctionResultRepository.findById(orderId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
         // Validate quyền hạn & trạng thái
@@ -53,8 +68,8 @@ class AuctionResultService {
     }
 
     // ======= NGƯỜI MUA XÁC NHẬN ĐÃ NHẬN HÀNG =======
-    async confirmReceipt(userId, productId) {
-        const order = await auctionResultRepository.findByProduct(productId);
+    async confirmReceipt(orderId, userId) {
+        const order = await auctionResultRepository.findById(orderId);
         if (!order) throw new Error("Đơn hàng không tồn tại");
 
         // Validate quyền hạn & trạng thái
@@ -70,9 +85,9 @@ class AuctionResultService {
     }
 
     // ======= HUỶ GIAO DỊCH (SELLER ONLY) =======
-    async cancelTransaction(sellerId, productId, reason) {
+    async cancelTransaction(orderId, sellerId, reason) {
         return await executeTransaction(async (session) => {
-            const order = await auctionResultRepository.findByProduct(productId);
+            const order = await auctionResultRepository.findById(orderId);
             if (!order) throw new Error("Đơn hàng không tồn tại");
 
             // Validate
@@ -85,13 +100,17 @@ class AuctionResultService {
 
             // Update trạng thái đơn hàng & đánh giá -1 cho bidder
             const updatedOrder = await auctionResultRepository.cancelTransaction(order._id, reason, session);
+
+            if (!reason || reason.trim() === '') {
+                reason = 'Người thắng không thanh toán';
+            }
             
             await ratingService.addRating({
                 rater: sellerId,
                 rated_user: order.winning_bidder._id,
                 auction_result: order._id,
                 rating_type: -1,
-                comment: `Giao dịch bị huỷ bởi người bán. Lý do: ${reason}`
+                comment: reason
             }, session);
 
             return updatedOrder;

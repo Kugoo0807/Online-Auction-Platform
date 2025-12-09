@@ -99,6 +99,7 @@ export default function SearchBar({ onSearch }) {
     if (query.trim()) {
         saveToHistory(query.trim());
         onSearch(query);
+        setQuery("");
     }
   };
 
@@ -115,7 +116,8 @@ export default function SearchBar({ onSearch }) {
       setQuery(keyword);
       saveToHistory(keyword);
       onSearch(keyword);
-      setShowDropdown(false);
+      setShowDropdown(false);  
+      setQuery("");
   };
 
   return (

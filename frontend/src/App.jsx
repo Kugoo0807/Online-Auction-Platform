@@ -14,10 +14,19 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import SearchPage from './pages/SearchPage';
 import ProductDetail from './pages/ProductDetail';
+import UserProfile from './pages/UserProfile'
+import WatchList from './pages/WatchList';
+import AdminDashboard from './pages/AdminDashboard'
+import { useAuth } from './context/AuthContext'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
+
+function RoleDashboard() {
+  const { user } = useAuth();
+  return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
+}
 
 export default function App() {
   return (
@@ -41,7 +50,9 @@ export default function App() {
 
         {/* Private */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<RoleDashboard />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/watch-list" element={<WatchList />} />
         </Route>
       </Route>
     </Routes>

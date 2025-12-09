@@ -73,13 +73,12 @@ class UserRepository {
     );
   }
 
-  async updateData(userId, updateData) {
-    // FIX: dùng this.findById để tận dụng logic check is_deleted: false
+  async updateData(userId, updateData, session = null) {
     if (!updateData || typeof updateData !== 'object') {
       return await this.findById(userId); 
     }
 
-    const allowed = ['full_name', 'date_of_birth', 'phone_number', 'address', 'email'];
+    const allowed = ['full_name', 'phone_number', 'address', 'email'];
     const cleaned = Object.fromEntries(
       Object.entries(updateData).filter(([key, val]) =>
         allowed.includes(key) &&
@@ -98,7 +97,7 @@ class UserRepository {
     return await User.findOneAndUpdate(
       { _id: userId, is_deleted: false },
       { $set: cleaned },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, session }
     );
   }
 
