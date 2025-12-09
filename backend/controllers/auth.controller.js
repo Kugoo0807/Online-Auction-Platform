@@ -12,19 +12,91 @@ const setRefreshTokenCookie = (res, token) => {
 }
 
 class AuthController {
+    async verifyCaptcha(req, res) {
+        try {
+            const { captchaToken, action } = req.body;
+
+            if (!captchaToken) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Captcha token là bắt buộc',
+                    code: 'MISSING_CAPTCHA_TOKEN'
+                });
+            }
+
+            // Gọi service với action (cho reCAPTCHA v3)
+            const result = await authService.verifyCaptcha(captchaToken, {
+                expectedAction: action || 'register',
+                minScore: 0.5
+            });
+
+            if (!result.success) {
+                return res.status(400).json({
+                    success: false,
+                    message: result.message || 'Captcha không hợp lệ',
+                    score: result.score || 0,
+                    code: 'CAPTCHA_INVALID'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Captcha đã được xác thực thành công',
+                score: result.score || 0,
+                action: result.action,
+                timestamp: result.timestamp || new Date().toISOString()
+            });
+        } catch (e) {
+            console.error('Verify captcha error:', e);
+
+            res.status(500).json({
+                success: false,
+                message: e.message || 'Lỗi xác thực captcha',
+                code: 'CAPTCHA_VERIFICATION_ERROR'
+            });
+        }
+    }
+    
     async sendOtp(req, res) {
         try {
-            const { email } = req.body;
-            
+            const { email, captchaToken } = req.body; // Lấy cả captchaToken
+
+            console.log('=== CONTROLLER: sendOtp called ===');
+            console.log('Email:', email);
+            console.log('Captcha token present:', !!captchaToken);
+
             if (!email) {
                 throw new Error('Vui lòng cung cấp email!');
             }
 
-            const result = await authService.sendRegisterOtp(email);
+            const result = await authService.sendRegisterOtp(email, captchaToken); // Truyền captchaToken
 
-            res.status(200).json(result);
+            res.status(200).json({
+                success: true,
+                ...result
+            });
         } catch (e) {
-            res.status(400).json({ message: e.message });
+            console.error('Error in sendOtp controller:', e);
+
+            // Xử lý các loại lỗi
+            let statusCode = 400;
+            let isEmailExists = false;
+            let isCaptchaInvalid = false;
+
+            if (e.message.includes('Email đã tồn tại')) {
+                isEmailExists = true;
+            }
+
+            if (e.message.includes('CAPTCHA') || e.message.includes('Captcha')) {
+                isCaptchaInvalid = true;
+            }
+
+            res.status(statusCode).json({
+                success: false,
+                message: e.message,
+                isEmailExists,
+                isCaptchaInvalid
+            });
         }
     }
 
@@ -51,7 +123,7 @@ class AuthController {
             // Gửi refresh qua cookie - access qua json
             setRefreshTokenCookie(res, refreshToken);
 
-            res.status(200).json({token: accessToken});
+            res.status(200).json({ token: accessToken });
         } catch (e) {
             res.status(500).json({ message: 'Lỗi máy chủ khi tạo token!' });
         }
@@ -61,7 +133,7 @@ class AuthController {
         try {
             const { code } = req.body; // Mã ủy quyền
             console.log("Backend received Google Code:", code);
-            
+
             if (!code) {
                 return res.status(400).json({ message: 'Không có mã ủy quyền (code)!' });
             }
@@ -125,7 +197,7 @@ class AuthController {
 
             // Refresh tokens mới
             setRefreshTokenCookie(res, refreshToken);
-            res.status(200).json({ token: accessToken} );
+            res.status(200).json({ token: accessToken });
         } catch (e) {
             res.clearCookie('refreshToken', { path: '/api/auth' });
             res.status(403).json({ message: e.message || 'Refresh token không hợp lệ!' });
