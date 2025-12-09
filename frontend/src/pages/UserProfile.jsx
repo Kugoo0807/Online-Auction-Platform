@@ -165,7 +165,7 @@ const UserProfile = () => {
     const cleanOtp = otpCode.trim();
     console.log("1. OTP Code nhập vào:", cleanOtp);
     // Validate OTP
-    if (!cleanOtp || cleanOtp.length < 6) {
+    if (!cleanOtp || cleanOtp.length !== 6) {
       return ToastNotification("Vui lòng nhập mã OTP đầy đủ", "warning");
     }
     console.log("2. Data Pending Update:", pendingEmailUpdate);
