@@ -404,7 +404,14 @@ const UserProfile = () => {
                 type="text" 
                 placeholder="Nhập mã OTP" 
                 value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
+                maxLength={6}
+                inputMode="numeric"
+                onChange={(e) => {
+                const val = e.target.value;
+                  if (/^\d*$/.test(val) && val.length <= 6) {
+                    setOtpCode(val);
+                  }
+                }}
                 className="w-full p-3 border border-gray-300 rounded-lg text-center text-lg tracking-widest font-bold mb-4 focus:border-black outline-none"
               />
               

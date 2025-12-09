@@ -28,7 +28,13 @@ export const profileService = {
       });
       return { success: true, data: response.data, message: "Cập nhật thành công" };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Lỗi khi cập nhật hồ sơ" };
+      
+      const serverMessage = 
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Lỗi khi cập nhật hồ sơ"; 
+
+      return { success: false, message: serverMessage };
     }
   },
 
