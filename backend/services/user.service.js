@@ -44,6 +44,8 @@ class UserService {
             if (existingUser && existingUser._id.toString() !== userId.toString()) {
                 throw new Error('Email này đã được sử dụng bởi tài khoản khác!');
             }
+            // Cleanup OTP after successful validation
+            await otpRepository.deleteByEmail(email);
         }
 
         const updateData = {};
