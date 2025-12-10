@@ -4,6 +4,8 @@ import { productService } from '../services/product.service';
 import { categoryService } from '../services/categoryService';
 import ToastNotification from '../components/common/ToastNotification';
 import TextEditor from '../components/common/TextEditor';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const CreateProduct = () => {
   const navigate = useNavigate();
