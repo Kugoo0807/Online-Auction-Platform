@@ -6,14 +6,14 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function MainLayout() {
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="min-h-[80vh]">
-        {/* Outlet là nơi nội dung của các trang con (HomePage, LoginPage) sẽ hiển thị */}
+      
+      <main className="flex-1 flex flex-col relative"> 
         <Outlet />
-      </div>
+      </main>
+      
       <Footer />
-
       <ToastContainer />
     </div>
   );
