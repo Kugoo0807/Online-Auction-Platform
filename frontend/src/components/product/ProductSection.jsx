@@ -274,7 +274,7 @@ export function ProductCard({ product }) {
           </h3>
           
           {/* Thông tin sản phẩm */}
-          <ProductInfo product={product} />
+          <ProductInfo product={product} user={user} />
           
           <div className="mt-auto pt-2">
             <Link
@@ -298,7 +298,7 @@ export function ProductCard({ product }) {
 }
 
 // Component hiển thị thông tin sản phẩm
-function ProductInfo({ product }) {
+function ProductInfo({ product, user }) {
   const timeLeft = getTimeRemaining(product.auction_end_time);
   const now = Date.now();
   const startTime = new Date(product.auction_start_time || product.createdAt).getTime();
@@ -312,12 +312,21 @@ function ProductInfo({ product }) {
       
       {/* GIÁ & BID */}
       <div className="flex justify-between items-end mb-1">
-        <div>
-          <p className="text-xs text-gray-400 font-medium">Giá hiện tại</p>
-          <span className="text-xl font-bold text-red-600 leading-none">
-            {formatPrice(product.current_highest_price || product.start_price)}₫
-          </span>
-        </div>
+        {!product.current_highest_bidder ? (
+          <div>
+            <p className="text-xs text-gray-400 font-medium">Giá khởi điểm</p>
+            <span className="text-xl font-bold text-red-600 leading-none">
+              {formatPrice(product.current_highest_price || product.start_price)}₫
+            </span>
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs text-gray-400 font-medium">Giá hiện tại</p>
+            <span className="text-xl font-bold text-red-600 leading-none">
+              {formatPrice(product.current_highest_price || product.start_price)}₫
+            </span>
+          </div>
+        )}
         
         {/* SỐ LƯỢT BID */}
         <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
@@ -346,7 +355,7 @@ function ProductInfo({ product }) {
          {product.current_highest_bidder ? (
             <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-xs px-2 py-1 rounded border font-semibold`}>
               <span className={`${isNew ? 'text-red-600' : 'text-teal-600'} mr-1`}>
-                {maskName(product.current_highest_bidder.full_name)}
+                {user?._id === product.current_highest_bidder?._id ? 'BẠN' : maskName(product.current_highest_bidder.full_name)}
               </span>
               <span className="text-gray-700">
                 hiện đang giữ mức giá cao nhất!

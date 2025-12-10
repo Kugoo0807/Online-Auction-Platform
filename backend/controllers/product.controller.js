@@ -200,9 +200,11 @@ class ProductController {
             const result = await productService.getMinValidPrice(id, user);
             return res.status(200).json({
                 message: 'Lấy giá trị đặt thấp nhất thành công',
-                min_valid_price: result.min_valid_price
+                min_valid_price: result.min_valid_price,
+                last_bid: result.last_bid
             })
         } catch (error) {
+            console.error(error);
             return res.status(400).json({ message: error.message });
         }
     }

@@ -23,6 +23,13 @@ class QnaService {
 			throw new Error('Người bán không thể đặt câu hỏi cho chính sản phẩm của họ');
 		}
 
+		const bannedSet = new Set(
+            (product.banned_bidder || []).map(id => id.toString())
+        );
+		if (bannedSet.has(asker.toString())) {
+			throw new Error('Người dùng đã bị cấm tham gia đấu giá sản phẩm này, không thể đặt câu hỏi');
+		}
+
 		const qna = await qnaRepository.create({
 			product: product_id,
 			asker,
