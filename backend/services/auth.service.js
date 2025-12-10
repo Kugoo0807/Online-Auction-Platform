@@ -544,6 +544,35 @@ class AuthService {
 
         return { message: 'Mật khẩu đã được reset thành công.' };
     }
+
+    async sendUpdatedEmailOtp(email) {
+        try {
+            console.log('=== SERVICE: sendUpdatedEmailOtp called ===');
+            console.log('Email:', email);
+
+            const existingUser = await userRepository.findByEmail(email);
+            if (existingUser) {
+                throw new Error('Email đã tồn tại trong hệ thống!');
+            }
+
+            const otp = crypto.randomInt(100000, 999999).toString();
+            const salt = await bcrypt.genSalt(10);
+            const hashedOtp = await bcrypt.hash(otp, salt);
+
+            await otpRepository.createOrUpdateOtp(email, hashedOtp);
+
+            await sendOtp(email, otp);
+            console.log(`[UPDATE EMAIL OTP] Gửi tới ${email}: ${otp}`);
+
+            return {
+                success: true,
+                message: 'OTP xác thực đã được gửi tới email mới của bạn.'
+            };
+        } catch (error) {
+            console.error('Error in sendUpdatedEmailOtp:', error);
+            throw error;
+        }
+    }
 }
 
 export const authService = new AuthService();

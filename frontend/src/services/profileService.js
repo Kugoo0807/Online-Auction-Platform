@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api.js';
 
 export const profileService = {
   // 1. Đổi mật khẩu
@@ -48,8 +48,11 @@ export const profileService = {
         data: response.data
       };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Không thể gửi OTP' };
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Không thể gửi OTP' 
+      };
     }
-  },
+  }
 
 };
