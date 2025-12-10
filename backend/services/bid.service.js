@@ -114,7 +114,7 @@ class BidService {
                 price: product.current_highest_price,
                 is_auto: true
             }, session);
-            product.bid_counts.set(currentHolderIdStr, product.bid_counts.get(currentHolderIdStr) || 0 + 1);
+            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
             product.bid_count += 1;
             await productRepository.save(product, session);
 
