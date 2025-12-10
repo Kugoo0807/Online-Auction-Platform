@@ -162,7 +162,7 @@ class ProductRepository {
             timestamp: new Date()
         });
 
-        return await product.save();
+        return await product.save({ session });
     }
     
     async existsInCategories(categoryIds, session = null) {
