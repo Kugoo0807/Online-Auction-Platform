@@ -355,7 +355,7 @@ function ProductInfo({ product, user }) {
          {product.current_highest_bidder ? (
             <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-xs px-2 py-1 rounded border font-semibold`}>
               <span className={`${isNew ? 'text-red-600' : 'text-teal-600'} mr-1`}>
-                {user?._id === product.current_highest_bidder?._id ? 'BẠN' : maskName(product.current_highest_bidder.full_name)}
+                {user?._id?.toString() === product.current_highest_bidder?._id?.toString() ? 'BẠN' : maskName(product.current_highest_bidder.full_name)}
               </span>
               <span className="text-gray-700">
                 hiện đang giữ mức giá cao nhất!
