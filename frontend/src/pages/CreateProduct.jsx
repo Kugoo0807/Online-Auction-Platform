@@ -195,6 +195,12 @@ const CreateProduct = () => {
     if (!formData.step_price || Number(formData.step_price) <= 0) {
         return ToastNotification("Vui lòng nhập bước giá hợp lệ!", "error");
     }
+    if (
+      formData.buy_now_price &&
+      Number(formData.buy_now_price) <= Number(formData.start_price)
+    ) {
+      return ToastNotification("Giá mua ngay phải lớn hơn giá khởi điểm!", "error");
+    }
     if (images.length < 3) {
       return ToastNotification("Vui lòng chọn ít nhất 3 ảnh chi tiết!", "error");
     }
