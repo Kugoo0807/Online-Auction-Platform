@@ -3,6 +3,7 @@ import './App.css'
 import MainLayout from './components/layout/MainLayout'
 
 // Pages
+import NotFound from './pages/NotFound'
 import HomePages from './pages/HomePages'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp' 
@@ -54,6 +55,9 @@ export default function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
         </Route>
+
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

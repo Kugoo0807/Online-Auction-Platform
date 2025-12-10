@@ -1,6 +1,7 @@
 import { User } from '../../db/schema.js';
+import { Bid } from '../../db/schema.js';
 
-export const recalculateAuctionState = async (product, latestBidderId = null, session = null) => {
+export const recalculateAuctionState = async (product, session = null) => {
     const allBids = Array.from(product.auto_bid_map.entries())
         .map(([uid, price]) => ({ userId: uid.toString(), price }));
 
@@ -28,39 +29,58 @@ export const recalculateAuctionState = async (product, latestBidderId = null, se
 
     // Sort
     activeIds.sort((a, b) => {
-        // Ưu tiên 1: Giá cao hơn
-        if (b.price !== a.price) {
-            return b.price - a.price;
-        }
-
-        // Ưu tiên 2: Xử lí bằng giá (người cũ giữ)
-        if (latestBidderId) {
-            // Nếu a là thằng mới vào đặt -> a phải đứng sau b -> return 1
-            if (a.userId === latestBidderId) return 1;
-            
-            // Nếu b là thằng mới vào đặt -> b phải đứng sau a -> return -1
-            if (b.userId === latestBidderId) return -1;
-        }
-
-        return 0;
+        return b.price - a.price;
     });
 
     const winner = activeIds[0];
     const second = activeIds[1];
 
-    // Tính toán
-    const oldWinnerId = product.current_highest_bidder ? product.current_highest_bidder.toString() : null;
+    // Tính toán giá mới
     let newPrice = product.start_price;
     let newWinnerId = null;
 
     if (winner) {
         newWinnerId = winner.userId;
         if (second) {
-            if (oldWinnerId && newWinnerId === oldWinnerId) {
-                 newPrice = second.price;
-            } else {
-                const priceWithStep = second.price + product.bid_increment;
-                newPrice = Math.min(priceWithStep, winner.price);
+            const priceWithStep = second.price + product.bid_increment;
+            newPrice = Math.min(priceWithStep, winner.price);
+
+            // === LOGIC XỬ LÝ SYSTEM BID ===
+
+            // Tìm bản ghi mới nhất trong lịch sử
+            const latestHistoryBid = await Bid.findOne({
+                product: product._id,
+                user: { $in: activeIds.map(b => b.userId) }
+            }).session(session).sort({ date: -1 });
+
+            // Chỉ tạo record mới nếu Giá Mới > Giá Lịch Sử Gần Nhất
+            if (latestHistoryBid && latestHistoryBid.price < newPrice) {
+                // Cập nhật bản ghi cho người đang giữ vị trí cao nhất hiện tại
+                const currentHolderMaxBidObj = activeIds.find(b => b.userId === latestHistoryBid.user.toString());
+                const amountForHolder = Math.min(newPrice, currentHolderMaxBidObj?.price || newPrice);
+
+                // Ghi bản ghi mới
+                const revealBid = new Bid({
+                    user: latestHistoryBid.user,
+                    product: product._id,
+                    price: amountForHolder,
+                    is_auto: true
+                });
+                await revealBid.save({ session });
+
+                // Tạo bản ghi chiến thắng cho Winner Mới (Nếu người này khác người giữ vị trí cao nhất hiện tại)
+                if (latestHistoryBid.user.toString() !== winner.userId.toString()) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    const winnerBid = new Bid({
+                        user: winner.userId,
+                        product: product._id,
+                        price: newPrice,
+                        is_auto: true
+                    });
+                    await winnerBid.save({ session });
+
+                    // TODO: Gửi email thông báo cho người này rằng họ đã bị vượt mất vị trí cao nhất
+                }
             }
         }
         // Nếu sàn chỉ còn 1 người giá hiện tại vẫn là giá ban đầu
