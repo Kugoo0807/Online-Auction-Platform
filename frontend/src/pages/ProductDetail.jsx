@@ -12,6 +12,7 @@ import BiddingSection from '../components/productDetail/BiddingSection'
 import ProductDescription from '../components/productDetail/ProductDescription'
 import ProductQA from '../components/productDetail/ProductQA'
 import RelatedProducts from '../components/productDetail/RelatedProducts'
+import AuctionStatusAlert from '../components/productDetail/AuctionStatusAlert'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -169,6 +170,11 @@ export default function ProductDetail() {
         <span className="mx-2">&gt;</span>
         <span className="text-gray-800 font-medium truncate">{product.product_name}</span>
       </nav>
+
+      <AuctionStatusAlert
+        product={product}
+        user={user}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
         <ProductImages
