@@ -65,7 +65,7 @@ const CreateProduct = () => {
   }, []);
 
   useEffect(() => {
-  return () => {
+    return () => {
       if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
       imagesPreview.forEach(preview => URL.revokeObjectURL(preview));
       if (toastTimeoutRef.current) {
