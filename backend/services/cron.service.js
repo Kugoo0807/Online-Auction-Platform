@@ -36,7 +36,7 @@ class CronService {
         for (const product of expiredProducts) {
             try {
                 await executeTransaction(async (session) => {
-                    const currentProduct = await productRepository.findById(product._id, null, { session }); 
+                    const currentProduct = await productRepository.findById(product._id, null, session); 
                     
                     // Kiểm tra trạng thái
                     if (!currentProduct || currentProduct.auction_status !== 'active') {
