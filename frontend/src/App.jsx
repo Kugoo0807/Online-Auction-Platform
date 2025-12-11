@@ -60,7 +60,7 @@ export default function App() {
 
         {/* Seller Only */}
         <Route element={<SellerRoute />}>
-          <Route path="/products/create" element={<CreateProduct />} />
+          <Route path="/product/create" element={<CreateProduct />} />
         </Route>
 
         {/* Not Found */}

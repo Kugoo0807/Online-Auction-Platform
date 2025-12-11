@@ -15,6 +15,7 @@ const CategoryPage = () => {
   const [description, setDescription] = useState('');
   const [parentCategory, setParentCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [categoryNotFound, setCategoryNotFound] = useState(false);
 
   const [priceFilter, setPriceFilter] = useState('ALL');
   const [timeFilter, setTimeFilter] = useState('ALL');
@@ -30,6 +31,18 @@ const CategoryPage = () => {
       if (!isPolling) setLoading(true); 
       try {
         const result = await categoryService.getProductsByCategorySlug(slug);
+        
+        // Kiểm tra nếu không có categoryName hoặc là message lỗi
+        if (!result.categoryName || result.categoryName === "Lỗi tải dữ liệu" || result.categoryName === slug) {
+          // Kiểm tra thêm nếu không có sản phẩm nào
+          if (!result.data || result.data.length === 0) {
+            setCategoryNotFound(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        setCategoryNotFound(false);
         const activeProducts = (result.data || []).filter(p => p.auction_status === 'active');
         setAllProducts(activeProducts);
         setCategoryName(result.categoryName || slug);
@@ -37,6 +50,7 @@ const CategoryPage = () => {
         setParentCategory(result.parentCategory || null); 
       } catch (error) {
         console.error("Lỗi tải danh mục:", error);
+        setCategoryNotFound(true);
       } finally {
         if (!isPolling) setLoading(false);
       }
@@ -152,6 +166,29 @@ const CategoryPage = () => {
   const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Sắp hết giờ", value: "end_time_asc" } ];
 
   if (loading && allProducts.length === 0) return <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">Đang tải dữ liệu...</div>;
+
+  // Hiển thị khi danh mục không tồn tại
+  if (categoryNotFound) {
+    return (
+      <div className="min-h-screen bg-white flex justify-center items-center py-10 px-4">
+        <div className="bg-blue-50 rounded-2xl p-12 max-w-md w-full text-center shadow-sm">
+          <div className="text-gray-400 mb-6">
+            <svg className="w-24 h-24 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 015.646 5.646 9.001 9.001 0 0020.354 15.354z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 11a3 3 0 106 0 3 3 0 00-6 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Không tìm thấy danh mục</h2>
+          <p className="text-gray-600 mb-8">Danh mục bạn yêu cầu không tồn tại trong hệ thống hoặc đã bị xóa.</p>
+          <div className="flex gap-3 justify-center">
+            <Link to="/" className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+              Quay về trang chủ
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white text-gray-900 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
