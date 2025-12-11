@@ -579,7 +579,7 @@ const CreateProduct = () => {
           </form>
         </div>
       </div>
-       {showConfirm && (
+      {showConfirm && (
         <ConfirmDialog
           message={getConfirmMessage()}
           onYes={handleConfirmSubmit}
