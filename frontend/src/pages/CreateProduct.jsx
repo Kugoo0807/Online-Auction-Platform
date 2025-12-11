@@ -89,15 +89,13 @@ const CreateProduct = () => {
       ...prev,
       [name]: value
     }));
-    if (name === 'step_price' && formData.start_price && value) {
-      if (Number(value) >= Number(formData.start_price)) {
+    // Compute the new form data as it will be after this change
+    const newFormData = { ...formData, [name]: value };
+    if (newFormData.start_price && newFormData.step_price) {
+      if (Number(newFormData.step_price) >= Number(newFormData.start_price)) {
         showToastWithDelay("⚠️ Khuyến nghị: Bước giá nên nhỏ hơn giá khởi điểm!", "warning");
       }
-    }
-
-    // Khuyến nghị giá khởi điểm
-    if (name === 'start_price' && formData.step_price && value) {
-      if (Number(formData.step_price) >= Number(value)) {
+      if (Number(newFormData.start_price) <= Number(newFormData.step_price)) {
         showToastWithDelay("⚠️ Khuyến nghị: Giá khởi điểm nên lớn hơn bước giá!", "warning");
       }
     }
