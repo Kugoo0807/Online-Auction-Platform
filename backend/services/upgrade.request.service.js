@@ -29,7 +29,9 @@ class UpgradeRequestService {
             try {
                 await userRepository.upgradeSeller(userIdToUpgrade);
                 if (request.bidder.email) {
-                    await mailService.notifyUpgradeApproved(request.bidder.email);
+                    dispatchEmail('NOTIFY_UPGRADE_APPROVED', {
+                        userEmail: request.bidder.email,
+                    });
                 }
             } catch (e) {
                 throw new Error('Lỗi khi nâng cấp user, huỷ thao tác duyệt.');
@@ -37,7 +39,9 @@ class UpgradeRequestService {
         }
         if (status === 'rejected') {
             if (request.bidder.email) {
-                await mailService.notifyUpgradeRejected(request.bidder.email);
+                dispatchEmail('NOTIFY_UPGRADE_REJECTED', {
+                    userEmail: request.bidder.email,
+                });
             }
         }
 
