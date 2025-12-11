@@ -220,7 +220,8 @@ const CreateProduct = () => {
     parts.push(`Tên sản phẩm: ${formData.name}`);
     parts.push(`Giá khởi điểm: ${formatPrice(formData.start_price)}`);
     parts.push(`Bước giá: ${formatPrice(formData.step_price)}`);
-    
+    parts.push(`Danh mục: ${categories.find(cat => (cat._id || cat.id) === formData.category)?.category_name || 'N/A'}`);
+    parts.push(`Thời gian kết thúc: ${new Date(formData.auction_end).toLocaleString('vi-VN')}`);
     if (formData.buy_now_price && Number(formData.buy_now_price) > 0) {
       parts.push(`Giá mua ngay: ${formatPrice(formData.buy_now_price)}`);
     }
