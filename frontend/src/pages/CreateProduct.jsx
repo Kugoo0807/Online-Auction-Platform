@@ -4,17 +4,16 @@ import { productService } from '../services/product.service';
 import { categoryService } from '../services/categoryService';
 import ToastNotification from '../components/common/ToastNotification';
 import TextEditor from '../components/common/TextEditor';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const CreateProduct = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-
+  const [showConfirm, setShowConfirm] = useState(false);
   const thumbnailInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-
+  const toastTimeoutRef = useRef(null);
   const [categories, setCategories] = useState([]); 
   const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [isDraggingImages, setIsDraggingImages] = useState(false);
@@ -69,15 +68,37 @@ const CreateProduct = () => {
     return () => {
       if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
       imagesPreview.forEach(preview => URL.revokeObjectURL(preview));
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
     };
   }, [thumbnailPreview, imagesPreview]);
 
+  const showToastWithDelay = (message, type) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = setTimeout(() => {
+      ToastNotification(message, type);
+    }, 500);
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    // Compute the new form data as it will be after this change
+    const newFormData = { ...formData, [name]: value };
+    if (newFormData.start_price && newFormData.step_price) {
+      if (Number(newFormData.step_price) >= Number(newFormData.start_price)) {
+        showToastWithDelay("⚠️ Khuyến nghị: Bước giá nên nhỏ hơn giá khởi điểm!", "warning");
+      }
+      if (Number(newFormData.start_price) <= Number(newFormData.step_price)) {
+        showToastWithDelay("⚠️ Khuyến nghị: Giá khởi điểm nên lớn hơn bước giá!", "warning");
+      }
+    }
   };
 
   const handleDescriptionChange = (content) => {
@@ -186,7 +207,28 @@ const CreateProduct = () => {
     e.preventDefault();
     setDragState(false);
   };
+  
+  const formatPrice = (price) => {
+    if (price === undefined || price === null || price === '' || isNaN(Number(price)) || !isFinite(Number(price))) {
+      return 'N/A';
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(price));
+  };
 
+  const getConfirmMessage = () => {
+    let parts = [];
+    parts.push(`Tên sản phẩm: ${formData.name}`);
+    parts.push(`Giá khởi điểm: ${formatPrice(formData.start_price)}`);
+    parts.push(`Bước giá: ${formatPrice(formData.step_price)}`);
+    
+    if (formData.buy_now_price && Number(formData.buy_now_price) > 0) {
+      parts.push(`Giá mua ngay: ${formatPrice(formData.buy_now_price)}`);
+    }
+    
+    return parts.map((line, idx) => (
+      <span key={idx}>{line}<br /></span>
+    ));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -195,16 +237,26 @@ const CreateProduct = () => {
     if (!formData.step_price || Number(formData.step_price) <= 0) {
         return ToastNotification("Vui lòng nhập bước giá hợp lệ!", "error");
     }
-    if (
-      formData.buy_now_price &&
-      Number(formData.buy_now_price) <= Number(formData.start_price)
-    ) {
+    
+    if (formData.buy_now_price && Number(formData.buy_now_price) > 0 && Number(formData.buy_now_price) <= Number(formData.start_price)) {
       return ToastNotification("Giá mua ngay phải lớn hơn giá khởi điểm!", "error");
     }
+
     if (images.length < 3) {
       return ToastNotification("Vui lòng chọn ít nhất 3 ảnh chi tiết!", "error");
     }
+    const auctionEndTime = new Date(formData.auction_end);
+    const now = new Date();
+    
+    if (auctionEndTime <= now) {
+      return ToastNotification("Thời gian kết thúc phải lớn hơn thời gian hiện tại!", "error");
+    }
 
+    // Hiển thị confirm dialog
+    setShowConfirm(true);
+  };
+  const handleConfirmSubmit = async () => {
+    setShowConfirm(false);
     setIsLoading(true);
 
     try {
@@ -267,7 +319,6 @@ const CreateProduct = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -420,7 +471,7 @@ const CreateProduct = () => {
                 />
                 
                 {thumbnailPreview ? (
-                  <div className="relative h-full">
+                  <div className="relative h-full group">
                     <img
                       src={thumbnailPreview}
                       alt="Thumbnail preview"
@@ -429,9 +480,9 @@ const CreateProduct = () => {
                     <button
                       type="button"
                       onClick={removeThumbnail}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                      className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-700 text-3xl font-bold leading-none"
                     >
-                      ✕
+                      ×
                     </button>
                   </div>
                 ) : (
@@ -503,16 +554,15 @@ const CreateProduct = () => {
                       <button
                         type="button"
                         onClick={(e) => removeImage(index, e)}
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        className="cursor-pointer absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-700 text-2xl font-bold leading-none"
                       >
-                        ✕
+                        ×
                       </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
             <div className="flex gap-4 pt-4">
               <button
                 type="button"
@@ -532,6 +582,13 @@ const CreateProduct = () => {
           </form>
         </div>
       </div>
+      {showConfirm && (
+        <ConfirmDialog
+          message={getConfirmMessage()}
+          onYes={handleConfirmSubmit}
+          onNo={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   );
 };
