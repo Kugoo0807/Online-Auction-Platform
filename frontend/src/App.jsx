@@ -24,6 +24,7 @@ import { useAuth } from './context/AuthContext'
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
+import SellerRoute from './components/SellerRoute'
 
 function RoleDashboard() {
   const { user } = useAuth();
@@ -55,6 +56,10 @@ export default function App() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
+        </Route>
+
+        {/* Seller Only */}
+        <Route element={<SellerRoute />}>
           <Route path="/products/create" element={<CreateProduct />} />
         </Route>
 

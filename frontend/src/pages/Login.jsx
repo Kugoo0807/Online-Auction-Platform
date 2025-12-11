@@ -203,7 +203,7 @@ export default function Login() {
             to="/signup" 
             className="font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
           >
-            Đăng ký miễn phí
+            Đăng ký ngay
           </Link>
         </div>
 
