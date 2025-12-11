@@ -563,7 +563,7 @@ const CreateProduct = () => {
                 </div>
               )}
             </div>
-              <div className="flex gap-4 pt-4">
+            <div className="flex gap-4 pt-4">
               <button
                 type="button"
                 onClick={() => navigate('/')}
