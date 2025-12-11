@@ -227,7 +227,9 @@ const CreateProduct = () => {
       parts.push(`Giá mua ngay: ${formatPrice(formData.buy_now_price)}`);
     }
     
-    return parts.join('\n');
+    return parts.map((line, idx) => (
+      <span key={idx}>{line}<br /></span>
+    ));
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
