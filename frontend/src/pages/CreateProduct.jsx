@@ -211,7 +211,10 @@ const CreateProduct = () => {
   };
   
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    if (price === undefined || price === null || price === '' || isNaN(Number(price)) || !isFinite(Number(price))) {
+      return 'N/A';
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(price));
   };
 
   const getConfirmMessage = () => {
