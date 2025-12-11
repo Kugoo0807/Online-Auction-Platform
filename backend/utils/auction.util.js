@@ -45,7 +45,7 @@ export const recalculateAuctionState = async (product, session = null) => {
             const priceWithStep = second.price + product.bid_increment;
             newPrice = Math.min(priceWithStep, winner.price);
 
-            // === LOGIC XỬ LÝ SYSTEM BID ===
+            /* === LOGIC XỬ LÝ SYSTEM BID ===
 
             // Tìm bản ghi mới nhất trong lịch sử
             const latestHistoryBid = await Bid.findOne({
@@ -82,6 +82,7 @@ export const recalculateAuctionState = async (product, session = null) => {
                     // TODO: Gửi email thông báo cho người này rằng họ đã bị vượt mất vị trí cao nhất
                 }
             }
+            */
         }
         // Nếu sàn chỉ còn 1 người giá hiện tại vẫn là giá ban đầu
     }
