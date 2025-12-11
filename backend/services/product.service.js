@@ -165,6 +165,12 @@ class ProductService {
                 return { success: true, message: "Người dùng đã bị cấm trước đó" };
             }
 
+            // Hủy tất cả các giá hợp lệ của bidder này trong phiên đấu giá
+            await bidRepository.banBidsByUser(bidderIdToBan, session);
+
+            // Xóa khỏi bản đồ auto bid
+            product.auto_bid_map.delete(bidderIdToBan);
+
             // === LOGIC XỬ LÍ SAU KHI CẤM ===
             await recalculateAuctionState(product, null, session);
 
@@ -196,9 +202,6 @@ class ProductService {
             product.banned_bidder = product.banned_bidder.filter(
                 id => id.toString() !== bidderIdToUnban
             );
-
-            // === LOGIC XỬ LÍ SAU KHI MỞ CẤM ===
-            await recalculateAuctionState(product, null, session);
 
             await productRepository.save(product, session);
 

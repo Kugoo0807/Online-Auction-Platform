@@ -5,6 +5,7 @@ import { auctionResultRepository } from '../repositories/auction.result.reposito
 import { productRepository } from '../repositories/product.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
 import { otpRepository } from '../repositories/otp.repository.js';
+import { bidRepository } from '../repositories/bid.repository.js';
 
 import bcrypt from 'bcryptjs';
 
@@ -97,6 +98,9 @@ class UserService {
 
             // Tìm sản phẩm user đang dẫn đầu trước khi xóa
             const leadingProducts = await productRepository.findProductsUserIsLeading(userId, session);
+
+            // Invalidate tất cả các lượt ra giá của user này
+            await bidRepository.banBidsByUser(userId, session);
 
             // Xóa User
             const deletedUser = await userRepository.softDelete(userId, session);

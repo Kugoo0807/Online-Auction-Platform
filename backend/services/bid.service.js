@@ -73,8 +73,10 @@ class BidService {
             product.current_highest_bidder = userId;
             product.current_highest_price = Math.min(amount, currentHolderMaxBid + product.bid_increment);
 
-            // Tạo bản ghi đấu giá cho người giữ giá cũ
-            if (currentHolderId) {
+            // Tạo bản ghi đấu giá cho người giữ giá cũ (nếu chưa có bản ghi nào đang giữ max bid)
+            const existingBidForCurrentHolder = await bidRepository.findHighestByUser(currentHolderId, session);
+
+            if (existingBidForCurrentHolder && existingBidForCurrentHolder.price < currentHolderMaxBid) {
                 await bidRepository.create({
                     user: currentHolderId,
                     product: product._id,
@@ -238,16 +240,16 @@ class BidService {
             const bidObj = h.toObject ? h.toObject() : h;
             const user = bidObj.user;
 
-            // === KIỂM TRA TÍNH HỢP LỆ CỦA USER ===
-            const userIdStr = user?._id?.toString();
-            const isBanned = userIdStr ? bannedSet.has(userIdStr) : false;
-            const isDeleted = user?.is_deleted === true;
-            const isInvalid = !user || isDeleted || isBanned;
+            // Nếu user bị ban thì đánh dấu is_banned
+            let is_banned = false;
+            if (bannedSet.has(user._id.toString())) {
+                is_banned = true;
+            }
 
             // === XÁC ĐỊNH GIÁ HIỂN THỊ ===
             let finalDisplayPrice = undefined;
 
-            if (!isInvalid) {
+            if (bidObj.is_valid) {
                 if (bidObj.price > currentPrice) {
                     finalDisplayPrice = currentPrice;
                 } else {
@@ -259,9 +261,7 @@ class BidService {
                 ...bidObj,
                 price: finalDisplayPrice,
                 user: user,
-                is_valid: !isInvalid,
-                is_banned: isBanned,
-                is_deleted: isDeleted
+                is_banned: is_banned
             };
         })
 
