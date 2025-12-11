@@ -105,7 +105,7 @@ export default function Header() {
           <>
             {isSeller ? (
               // Giao diện cho Seller
-              <Link to="/products/create">
+              <Link to="/product/create">
                 <button className="
                     relative px-6 py-2 rounded-lg font-bold text-cyan-400 border border-cyan-400 
                     bg-gray-900 shadow-[0_0_10px_rgba(34,211,238,0.3)] 
