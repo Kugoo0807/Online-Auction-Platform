@@ -37,7 +37,7 @@ class CronService {
         for (const product of expiredProducts) {
             try {
                 await executeTransaction(async (session) => {
-                    const currentProduct = await productRepository.findById(product._id, null, session); 
+                    const currentProduct = await productRepository.findById(product._id, false, session); 
                     
                     // Kiểm tra trạng thái
                     if (!currentProduct || currentProduct.auction_status !== 'active') {
@@ -67,8 +67,8 @@ class CronService {
                             throw new Error('Không tìm thấy kết quả đấu giá cho sản phẩm này!');
                         }
             
-                        const winner = await userRepository.findById(currentProduct.current_highest_bidder._id);
-                        const seller = await userRepository.findById(currentProduct.seller._id);
+                        const winner = await userRepository.findById(currentProduct.current_highest_bidder._id, session);
+                        const seller = await userRepository.findById(currentProduct.seller._id, session);
             
                         // Gửi email cho winner và seller
                         const productUrl = PRODUCT_URL_PREFIX + currentProduct._id;
