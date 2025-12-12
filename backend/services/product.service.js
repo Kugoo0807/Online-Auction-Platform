@@ -269,12 +269,20 @@ class ProductService {
             throw new Error('Sản phẩm không tồn tại!');
         }
 
+        const recipientsEmails = [];
         if (product.seller?.email) {
-            await mailService.notifyAuctionCancelled(product.seller.email, product.product_name);
+            recipientsEmails.push(product.seller.email);
         }
 
         if (product.current_highest_bidder?.email) {
-            await mailService.notifyAuctionCancelled(product.current_highest_bidder.email, product.product_name);
+            recipientsEmails.push(product.current_highest_bidder.email);
+        }
+
+        if (recipientsEmails.length > 0) {
+            dispatchEmail('NOTIFY_AUCTION_CANCELLED', {
+                recipientsEmails,
+                productName: product.product_name
+            });
         }
 
         return await productRepository.cancelProduct(productId);
@@ -347,33 +355,56 @@ class ProductService {
                 }
             }
 
+            // Lưu previous holder ID để gửi email sau
+            const previousHolderId = product.current_highest_bidder ? product.current_highest_bidder.toString() : null;
+
             // Thực hiện mua ngay
             await this.logicBuyProductNow(userId, product, session);
             const finalPrice = product.buy_it_now_price;
             const finalWinnerId = userId;
 
-            // Gửi email thông báo
-            const winnerEmail = bidder?.email;
-            const productUrl = PRODUCT_URL_PREFIX + (productId || '');
-            if (winnerEmail) {
-                dispatchEmail('NOTIFY_AUCTION_WINNER', {
-                    winnerEmail,
+            // --- Gửi email thông báo ---
+            
+            // Lấy thông tin cần thiết để gửi email
+            const auctionResult = await auctionResultRepository.findByProduct(product._id, session);
+            if (!auctionResult) {
+                throw new Error('Không tìm thấy kết quả đấu giá cho sản phẩm này!');
+            }
+
+            const winner = await userRepository.findById(finalWinnerId);
+            const seller = await userRepository.findById(product.seller);
+            const previousHolder = previousHolderId ? await userRepository.findById(previousHolderId) : null;
+
+            // Gửi email cho winner và seller
+            const productUrl = PRODUCT_URL_PREFIX + product?._id;
+            const checkOutUrl = ORDER_URL_PREFIX + auctionResult?._id;
+
+            dispatchEmail('NOTIFY_AUCTION_WINNER', {
+                winnerEmail: winner.email,
+                productName: product.product_name,
+                finalPrice: finalPrice,
+                checkoutLink: checkOutUrl
+            });
+
+            dispatchEmail('NOTIFY_AUCTION_SOLD', {
+                sellerEmail: seller.email,
+                productName: product.product_name,
+                winnerName: winner.full_name,
+                finalPrice: finalPrice,
+                productLink: productUrl
+            });
+
+            // Gửi email cho previous holder nếu có và khác winner
+            if (previousHolder && previousHolder._id.toString() !== finalWinnerId.toString()) {
+                dispatchEmail('NOTIFY_HOLDER', {
+                    holderEmail: previousHolder.email,
                     productName: product.product_name,
-                    finalPrice,
-                    productUrl
+                    currentPrice: finalPrice,
+                    top1Email: winner.email,
+                    productLink: productUrl
                 });
             }
-            const seller = await userRepository.findById(product.seller, session);
-            const sellerEmail = seller?.email;
-            if (sellerEmail) {
-                dispatchEmail('NOTIFY_AUCTION_SOLD', {
-                    sellerEmail,
-                    productName: product.product_name,
-                    finalWinnerName: bidder.full_name,
-                    finalPrice,
-                    productUrl
-                });
-            }
+
             return {
                 success: true,
                 current_price: finalPrice,

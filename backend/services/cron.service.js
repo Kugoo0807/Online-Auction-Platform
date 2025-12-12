@@ -6,11 +6,12 @@ import mongoose from 'mongoose';
 import { productRepository } from '../repositories/product.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
-import { notifyAuctionEndedSold, notifyAuctionEndedNoBid, notifyAuctionWinner } from '../services/email.service.js';
+import { dispatchEmail } from './email.service.queue.js';
 
 import { executeTransaction } from '../../db/db.helper.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
+const ORDER_URL_PREFIX = process.env.VITE_URL + 'orders/' || 'http://localhost:3000/orders/';
 
 class CronService {
     start() {
@@ -58,26 +59,36 @@ class CronService {
 
                         console.log(`[CRON] [SOLD] ID: ${currentProduct._id} | Price: ${currentProduct.current_highest_price}`);
                         
-                        // Gửi email thông báo seller và bidder
-                        const mailSeller = currentProduct.seller.email;
-                        const mailBidder = currentProduct.current_highest_bidder.email;
-                        const productLink = PRODUCT_URL_PREFIX + currentProduct._id.toString();
-
-                        await notifyAuctionEndedSold(
-                            mailSeller,
-                            currentProduct.product_name,
-                            currentProduct.current_highest_bidder.full_name,
-                            currentProduct.current_highest_price,
-                            productLink
-                        );
-
-                        await notifyAuctionWinner(
-                            mailBidder,
-                            currentProduct.product_name,
-                            currentProduct.current_highest_price,
-                            productLink
-                        );
+                        // --- Gửi email thông báo ---
                         
+                        // Lấy thông tin cần thiết để gửi email
+                        const auctionResult = await auctionResultRepository.findByProduct(currentProduct._id, session);
+                        if (!auctionResult) {
+                            throw new Error('Không tìm thấy kết quả đấu giá cho sản phẩm này!');
+                        }
+            
+                        const winner = await userRepository.findById(currentProduct.current_highest_bidder._id);
+                        const seller = await userRepository.findById(currentProduct.seller._id);
+            
+                        // Gửi email cho winner và seller
+                        const productUrl = PRODUCT_URL_PREFIX + currentProduct._id;
+                        const checkOutUrl = ORDER_URL_PREFIX + auctionResult?._id;
+            
+                        dispatchEmail('NOTIFY_AUCTION_WINNER', {
+                            winnerEmail: winner.email,
+                            productName: currentProduct.product_name,
+                            finalPrice: currentProduct.current_highest_price,
+                            checkoutLink: checkOutUrl
+                        });
+            
+                        dispatchEmail('NOTIFY_AUCTION_SOLD', {
+                            sellerEmail: seller.email,
+                            productName: currentProduct.product_name,
+                            winnerName: winner.full_name,
+                            finalPrice: currentProduct.current_highest_price,
+                            productLink: productUrl
+                        });
+
                     } else {
                         // Không có bidder nào
                         currentProduct.auction_status = 'ended';
@@ -89,11 +100,11 @@ class CronService {
                         const mailSeller = currentProduct.seller.email;
                         const productLink = PRODUCT_URL_PREFIX + currentProduct._id.toString();
 
-                        await notifyAuctionEndedNoBid(
-                            mailSeller,
-                            currentProduct.product_name,
-                            productLink
-                        );
+                        dispatchEmail('NOTIFY_AUCTION_NO_BID', {
+                            sellerEmail: mailSeller,
+                            productName: currentProduct.product_name,
+                            productLink: productLink
+                        });
                     }
                 });
 

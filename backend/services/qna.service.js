@@ -43,7 +43,7 @@ class QnaService {
 				sellerEmail,
 				productName: populated.product?.product_name || 'Sản phẩm của bạn',
 				questionContent: populated.question_content,
-				productUrl
+				productLink: productUrl
 			});
 		}
 
@@ -94,7 +94,7 @@ class QnaService {
 				productName,
 				questionContent: populated?.question_content || '',
 				answerContent: answerData.answer_content,
-				productUrl
+				productLink: productUrl
 			});
 		}
 

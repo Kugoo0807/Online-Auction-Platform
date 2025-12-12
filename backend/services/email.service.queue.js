@@ -63,8 +63,7 @@ const emailQueue = async.queue(async (task, callback) => {
         }
     } else {
         console.error(`[MAIL QUEUE] Loại công việc không xác định: ${type}`);
-    }   
-    callback();
+    }
 }, 1);
 
 export const dispatchEmail = (type, data) => {
