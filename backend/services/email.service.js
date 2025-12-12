@@ -271,6 +271,34 @@ export async function notifyAuctionWinner(winnerEmail, productName, finalPrice, 
     });
 }
 
+export async function notifyBidUnBan(bidderEmail, productName, productLink) {
+    return sendMailBase({
+        to: bidderEmail,
+        subject: `[Thông báo] Bạn đã được khôi phục quyền đấu giá: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">Quyền đấu giá đã được khôi phục</h2>
+                </div>
+
+                <div style="padding: 20px;">
+                    <h3 style="color: #333;">Sản phẩm: ${productName}</h3>
+
+                    <div style="color: #444; line-height: 1.6;">
+                        <p>Người bán đã khôi phục quyền tham gia đấu giá của bạn.</p>
+                        <p>Bạn có thể tiếp tục ra giá cho sản phẩm này.</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            XEM SẢN PHẨM
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+
 export async function notifyAuctionEndedSold(sellerEmail, productName, winnerName, finalPrice, productLink) {
     return sendMailBase({
         to: sellerEmail,
