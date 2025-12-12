@@ -27,6 +27,21 @@ class BidController {
             res.status(400).json({ message: error.message });
         }
     }
+
+    async getActiveBiddedProductsByUser(req, res) {
+        try {
+            const userId = req.user._id.toString();
+
+            const products = await bidService.getActiveBiddedProductsByUser(userId);
+
+            return res.status(200).json({
+                message: 'Lấy danh sách sản phẩm đang bid thành công',
+                data: products
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export const bidController = new BidController();

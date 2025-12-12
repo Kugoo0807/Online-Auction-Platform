@@ -33,6 +33,14 @@ class AuctionResultService {
         return order;
     }
 
+    async getOrdersByWinner(userId, session = null) {
+        return await auctionResultRepository.findByWinner(userId, session);
+    }
+
+    async getOrdersBySeller(userId, session = null) {
+        return await auctionResultRepository.findBySeller(userId, session);
+    }
+
     // ======= NGƯỜI MUA THANH TOÁN =======
     async submitPayment(orderId, userId, address, paymentProofUrl) {
         const order = await auctionResultRepository.findById(orderId);

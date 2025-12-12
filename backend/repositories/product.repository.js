@@ -113,6 +113,17 @@ class ProductRepository {
             .populate('current_highest_bidder', 'full_name email rating_score rating_count');
     }
 
+    async findActive(productIds, selectAutoBidMap = false, session = null) {
+        return await Product.find({
+            _id: { $in: productIds },
+            auction_status: 'active'
+        }).session(session)
+            .select(selectAutoBidMap ? '' : '-auto_bid_map')
+            .populate('seller', 'full_name email rating_score rating_count') 
+            .populate('category', 'category_name slug')
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count');
+    }
+
     // Xử lí transaction
     async findByIdForUpdate(id, session) {
         return await Product.findById(id).session(session);
