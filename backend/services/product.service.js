@@ -295,7 +295,7 @@ class ProductService {
         // Tạo bản ghi đấu giá
         await bidRepository.create({
             user: userId,
-            product: productId,
+            product: product._id,
             price: amount
         }, session);
     }
@@ -334,7 +334,7 @@ class ProductService {
             }
 
             // Thực hiện mua ngay
-            await this.logicBuyProductNow(userId, productId, session);
+            await this.logicBuyProductNow(userId, product, session);
             const finalPrice = product.buy_it_now_price;
             const finalWinnerId = userId;
 

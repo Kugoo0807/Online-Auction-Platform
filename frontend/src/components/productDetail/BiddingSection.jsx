@@ -151,7 +151,7 @@ export default function BiddingSection({ product, minValidPrice, user, isRealSel
                                 <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Thời điểm</th>
                                 <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Người đấu giá</th>
                                 <th className="py-3 px-4 text-left font-semibold text-gray-700 border-b">Giá vào sản phẩm</th>
-                                {isRealSeller && product.auction_status === 'active' && (
+                                {isRealSeller && (
                                     <th className="py-3 px-4 text-center font-semibold text-gray-700 border-b">Kiểm duyệt</th>
                                 )}
                                 </tr>
@@ -165,6 +165,7 @@ export default function BiddingSection({ product, minValidPrice, user, isRealSel
                                     isRealSeller={isRealSeller}
                                     currentUserId={user?._id}
                                     onBanUser={handleBanUser}
+                                    product={product}
                                 />
                                 ))}
                             </tbody>
