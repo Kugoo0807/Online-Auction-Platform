@@ -8,7 +8,7 @@ import { bidRepository } from '../repositories/bid.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { watchListRepository } from '../repositories/watch.list.repository.js';
-import * as mailService from './email.service.js';
+import { dispatchEmail } from './email.service.queue.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 class ProductService {
@@ -178,7 +178,13 @@ class ProductService {
             
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToBan, session);
-
+            const bidderEmail = bidder?.email;
+            if (bidderEmail) {
+                dispatchEmail('NOTIFY_BID_REJECTED', {
+                    bidderEmail,
+                    productName: product.product_name,
+                });
+            }
             return { success: true };
         });
     }
@@ -207,7 +213,15 @@ class ProductService {
 
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToUnban, session);
-            
+            const bidderEmail = bidder?.email;
+            const productUrl = PRODUCT_URL_PREFIX + productId;
+            if (bidderEmail) {
+                dispatchEmail('NOTIFY_UNBAN', {
+                    bidderEmail,
+                    productName: product.product_name,
+                    productLink: productUrl
+                });
+            }
             return { success: true };
         });
     }
@@ -339,7 +353,27 @@ class ProductService {
             const finalWinnerId = userId;
 
             // Gửi email thông báo
-
+            const winnerEmail = bidder?.email;
+            const productUrl = PRODUCT_URL_PREFIX + (productId || '');
+            if (winnerEmail) {
+                dispatchEmail('NOTIFY_AUCTION_WINNER', {
+                    winnerEmail,
+                    productName: product.product_name,
+                    finalPrice,
+                    productUrl
+                });
+            }
+            const seller = await userRepository.findById(product.seller, session);
+            const sellerEmail = seller?.email;
+            if (sellerEmail) {
+                dispatchEmail('NOTIFY_AUCTION_SOLD', {
+                    sellerEmail,
+                    productName: product.product_name,
+                    finalWinnerName: bidder.full_name,
+                    finalPrice,
+                    productUrl
+                });
+            }
             return {
                 success: true,
                 current_price: finalPrice,
