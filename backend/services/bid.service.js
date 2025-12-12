@@ -172,7 +172,7 @@ class BidService {
 
             // ==== MUA NGAY ====
             if (product.buy_it_now_price && amount >= product.buy_it_now_price) {
-                await productService.logicBuyProductNow(userId, productId, session);
+                await productService.logicBuyProductNow(userId, product, session);
                 const finalPrice = product.buy_it_now_price;
                 const finalWinnerId = userId;
 
