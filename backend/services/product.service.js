@@ -369,7 +369,7 @@ class ProductService {
                 dispatchEmail('NOTIFY_AUCTION_SOLD', {
                     sellerEmail,
                     productName: product.product_name,
-                    finalWinnerName: bidder.full_name,
+                    winnerName: bidder.full_name,
                     finalPrice,
                     productUrl
                 });
