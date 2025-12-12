@@ -24,6 +24,11 @@ class BidRepository {
             { session: session }
         );
     }
+
+    async findByUser(userId, session = null) {
+        return await Bid.find({ user: userId }).session(session)
+            .distinct('product');
+    }
 }
 
 export const bidRepository = new BidRepository();

@@ -23,6 +23,36 @@ class AuctionResultController {
         }
     }
 
+    async getOrdersByWinner(req, res) {
+        try {
+            const userId = req.user._id.toString();
+
+            const orders = await auctionResultService.getOrdersByWinner(userId);
+
+            res.status(200).json({
+                message: 'Lấy danh sách đơn hàng đấu giá thắng cuộc thành công',
+                data: orders
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    async getOrdersBySeller(req, res) {
+        try {
+            const userId = req.user._id.toString();
+
+            const orders = await auctionResultService.getOrdersBySeller(userId);
+
+            res.status(200).json({
+                message: 'Lấy danh sách đơn hàng đấu giá bán thành công',
+                data: orders
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
     async submitPayment(req, res) {
         try {
             const userId = req.user._id.toString();

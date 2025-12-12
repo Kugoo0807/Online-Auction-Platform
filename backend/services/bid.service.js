@@ -345,6 +345,32 @@ class BidService {
 
         return result;
     }
+
+    async getActiveBiddedProductsByUser(userId) {
+        const productIds = await bidRepository.findByUser(userId);
+        const products = await productRepository.findActive(productIds, true);
+
+        const result = products
+            .map(product => {
+                const productObj = product.toObject ? product.toObject() : product;
+                const userIdStr = userId.toString();
+                const bidCount = productObj.bid_counts?.get(userIdStr) || 0;
+                const maxBid = productObj.auto_bid_map?.get(userIdStr) || null;
+
+                // Loại bỏ auto_bid_map và thêm user_bid_info
+                const { auto_bid_map, ...cleanProduct } = productObj;
+
+                return {
+                    ...cleanProduct,
+                    user_bid_info: {
+                        bid_count: bidCount,
+                        max_bid: maxBid
+                    }
+                };
+            });
+
+        return result;
+    }
 }
 
 export const bidService = new BidService();
