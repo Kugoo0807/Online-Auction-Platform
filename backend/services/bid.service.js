@@ -6,10 +6,11 @@ import { userRepository } from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 
 import { executeTransaction } from '../../db/db.helper.js';
-import * as mailService from '../services/email.service.js';
+import { dispatchEmail } from './email.service.queue.js';
 import { productService } from './product.service.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
+const ORDER_URL_PREFIX = process.env.VITE_URL + 'orders/' || 'http://localhost:3000/orders/';
 
 class BidService {
     // Hàm logic trả về true nếu người đặt giá là người giữ giá cao nhất sau khi đặt
@@ -176,7 +177,47 @@ class BidService {
                 const finalPrice = product.buy_it_now_price;
                 const finalWinnerId = userId;
 
-                // TODO: Gửi email thông báo (cho winner, seller, và holder cũ nếu có)
+                // --- Gửi email thông báo (cho winner, seller, và holder cũ nếu có) ---
+
+                // Lấy thông tin cần thiết để gửi email
+                const auctionResult = await auctionResultRepository.findByProduct(product._id, session);
+                if (!auctionResult) {
+                    throw new Error('Không tìm thấy kết quả đấu giá cho sản phẩm này!');
+                }
+
+                const winner = await userRepository.findById(finalWinnerId);
+                const seller = await userRepository.findById(product.seller);
+                const previousHolder = previousHolderId ? await userRepository.findById(previousHolderId) : null;
+
+                // Gửi email cho winner và seller
+                const productUrl = PRODUCT_URL_PREFIX + product?._id;
+                const checkOutUrl = ORDER_URL_PREFIX + auctionResult?._id;
+
+                dispatchEmail('NOTIFY_AUCTION_WINNER', {
+                    winnerEmail: winner.email,
+                    productName: product.product_name,
+                    finalPrice: finalPrice,
+                    checkoutLink: checkOutUrl
+                });
+
+                dispatchEmail('NOTIFY_AUCTION_SOLD', {
+                    sellerEmail: seller.email,
+                    productName: product.product_name,
+                    winnerName: winner.full_name,
+                    finalPrice: finalPrice,
+                    productLink: productUrl
+                });
+
+                // Gửi email cho previous holder nếu có và khác winner
+                if (previousHolder && previousHolder._id.toString() !== winner._id.toString()) {
+                    dispatchEmail('NOTIFY_HOLDER', {
+                        holderEmail: previousHolder.email,
+                        productName: product.product_name,
+                        currentPrice: finalPrice,
+                        top1Email: winner.email,
+                        productLink: productUrl
+                    });
+                }
 
                 return {
                     success: true,
@@ -211,7 +252,44 @@ class BidService {
             const isNowHolder = await this._logicPlaceBid(userId, product, amount, session);
             const notification = isNowHolder ? 'Bạn hiện là người giữ giá cao nhất!' : 'Bạn đã bị vượt giá bởi người khác. Hãy thử lại!';
 
-            // TODO: Gửi email thông báo (cho seller, bidder, previous holder nếu có)
+            // --- Gửi email thông báo (cho seller, bidder, previous holder nếu có) ---
+
+            // Lấy thông tin cần thiết để gửi email
+            const user = await userRepository.findById(userId);
+            const seller = await userRepository.findById(product.seller);
+            const holder = await userRepository.findById(product.current_highest_bidder);
+            const previousHolder = previousHolderId ? await userRepository.findById(previousHolderId) : null;
+
+            // Gửi email cho user và seller
+            const productUrl = PRODUCT_URL_PREFIX + product?._id;
+
+            dispatchEmail('NOTIFY_BID_SUCCESS', {
+                bidderEmail: user.email,
+                productName: product.product_name,
+                holderName: holder.full_name,
+                bidderPrice: amount,
+                currentPrice: product.current_highest_price,
+                productLink: productUrl
+            });
+
+            dispatchEmail('NOTIFY_NEW_BID_SELLER', {
+                sellerEmail: seller.email,
+                productName: product.product_name,
+                newPrice: product.current_highest_price,
+                bidderName: user.full_name,
+                productLink: productUrl
+            });
+
+            // Gửi email cho previous holder nếu có và khác user hiện tại
+            if (previousHolder && previousHolder._id.toString() !== user._id.toString()) {
+                dispatchEmail('NOTIFY_HOLDER', {
+                    holderEmail: previousHolder.email,
+                    productName: product.product_name,
+                    currentPrice: product.current_highest_price,
+                    top1Email: holder.email,
+                    productLink: productUrl
+                });
+            }
 
             return {
                 success: true,
