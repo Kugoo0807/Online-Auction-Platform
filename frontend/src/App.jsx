@@ -19,6 +19,7 @@ import UserProfile from './pages/UserProfile'
 import WatchList from './pages/WatchList';
 import AdminDashboard from './pages/AdminDashboard'
 import CreateProduct from './pages/CreateProduct'
+import MyProducts from './pages/MyProducts'
 import { useAuth } from './context/AuthContext'
 
 // Components
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
+          <Route path="/manage-products" element={<MyProducts />} />
         </Route>
 
         {/* Seller Only */}
