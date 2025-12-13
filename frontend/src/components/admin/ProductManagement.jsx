@@ -11,9 +11,9 @@ export default function ProductManagementTab() {
 
   useEffect(() => {
     setLoading(true);
-    productService.searchProducts('', 1, 200) 
-      .then(data => {
-        const productList = Array.isArray(data) ? data : [];
+    productService.getAllProducts()
+      .then(response => {
+        const productList = response.data || [];
         setProducts(productList);
       })
       .catch(err => {
@@ -99,6 +99,7 @@ export default function ProductManagementTab() {
             <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4">Tên sản phẩm</th>
+                <th className="px-6 py-4">Danh mục</th>
                 <th className="px-6 py-4">Giá hiện tại</th>
                 <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
@@ -110,6 +111,7 @@ export default function ProductManagementTab() {
                  return (
                   <tr key={product._id} className={`transition-all ${isPending ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
                     <td className={`px-6 py-4 font-medium text-gray-900 max-w-[200px] truncate ${isPending ? 'opacity-50' : ''}`}>{product.product_name}</td>
+                    <td className={`px-6 py-4 text-gray-600 ${isPending ? 'opacity-50' : ''}`}>{product.category?.category_name || 'Chưa phân loại'}</td>
                     <td className={`px-6 py-4 font-bold text-gray-800 ${isPending ? 'opacity-50' : ''}`}>
                       {new Intl.NumberFormat('vi-VN').format(product.current_highest_price)}₫
                     </td>

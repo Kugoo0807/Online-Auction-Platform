@@ -89,6 +89,17 @@
       }
     }
 
+    async getAllProducts() {
+        try {
+            // This hits the route: router.get('/', [checkAuth, checkRole('admin')], ...)
+            const response = await api.get('/products'); 
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi getAllProducts:", error);
+            throw error;
+        }
+    }
+
     // --- WATCH LIST / FAVORITE APIS ---
 
     // 6. Lấy danh sách yêu thích
