@@ -29,8 +29,8 @@ const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
     if (isChecked && scriptLoaded) {
       try {
         if (window.grecaptcha) {
-          const token = await window.grecaptcha.execute(SITE_KEY, { 
-            action: 'register' 
+          const token = await window.grecaptcha.execute(SITE_KEY, {
+            action: 'register'
           })
           if (onChange) onChange(token)
         }
@@ -60,14 +60,14 @@ const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
           <label htmlFor="captcha-checkbox" className="text-sm text-slate-700 cursor-pointer">
             <span className="font-medium">Tôi không phải là robot</span>
             <p className="text-xs text-slate-500 mt-1">
-              Bằng cách tick vào ô này, bạn xác nhận bạn không phải là robot và đồng ý với 
-              <a href="#" className="text-blue-600 hover:underline ml-1">Điều khoản dịch vụ</a> và 
+              Bằng cách tick vào ô này, bạn xác nhận bạn không phải là robot và đồng ý với
+              <a href="#" className="text-blue-600 hover:underline ml-1">Điều khoản dịch vụ</a> và
               <a href="#" className="text-blue-600 hover:underline ml-1">Chính sách bảo mật</a>
             </p>
           </label>
         </div>
       </div>
-      
+
       {error && (
         <div className="flex items-center gap-2 text-red-600 text-sm">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -210,7 +210,7 @@ export default function SignUp() {
 
       if (result.success) {
         navigate('/login', {
-          state: { 
+          state: {
             message: 'Đăng ký thành công! Vui lòng đăng nhập.',
             email: formData.email
           }
@@ -302,24 +302,25 @@ export default function SignUp() {
               <div key={field}>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   {field === 'full_name' ? 'Họ và tên' :
-                   field === 'email' ? 'Email' :
-                   field === 'address' ? 'Địa chỉ' :
-                   field === 'password' ? 'Mật khẩu' : 'Xác nhận mật khẩu'}
+                    field === 'email' ? 'Email' :
+                      field === 'address' ? 'Địa chỉ' :
+                        field === 'password' ? 'Mật khẩu' : 'Xác nhận mật khẩu'}
                 </label>
                 <input
-                  type={field.includes('password') ? 'password' : 'text'}
+                  type={field === 'password' || field === 'confirmPassword' ? 'password' : 'text'}
                   name={field}
                   placeholder={
                     field === 'email' ? 'name@example.com' :
-                    field === 'password' ? '•••••••• (ít nhất 6 ký tự)' :
-                    field === 'confirmPassword' ? '••••••••' :
-                    field === 'full_name' ? 'Nguyễn Văn A' :
-                    'Số nhà, đường, quận/huyện, tỉnh/thành phố'
+                      field === 'password' ? '•••••••• (ít nhất 6 ký tự)' :
+                        field === 'confirmPassword' ? '••••••••' :
+                          field === 'full_name' ? 'Nguyễn Văn A' :
+                            'Số nhà, đường, quận/huyện, tỉnh/thành phố'
                   }
                   value={formData[field]}
                   onChange={handleChange}
                   required
                   disabled={loading}
+                  autoComplete={field === 'password' || field === 'confirmPassword' ? 'new-password' : 'off'}
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm disabled:opacity-70"
                 />
               </div>
@@ -353,7 +354,7 @@ export default function SignUp() {
                   </svg>
                   Đang xử lý...
                 </span>
-              ) : 'Tiếp tục - Gửi OTP'}
+              ) : 'Gửi OTP'}
             </button>
           </form>
         ) : (
