@@ -57,12 +57,12 @@ export default function App() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
+          <Route path="/manage-products" element={<MyProducts />} />
         </Route>
 
         {/* Seller Only */}
         <Route element={<SellerRoute />}>
           <Route path="/product/create" element={<CreateProduct />} />
-          <Route path="/manage-products" element={<MyProducts />} />
         </Route>
 
         {/* Not Found */}
