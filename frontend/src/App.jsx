@@ -28,7 +28,11 @@ import SellerRoute from './components/SellerRoute'
 
 function RoleDashboard() {
   const { user } = useAuth();
-  return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
+  if (user?.role === 'admin') {
+    return <AdminDashboard />;
+  }
+  
+  return <NotFound />;
 }
 
 export default function App() {
