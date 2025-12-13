@@ -1,69 +1,73 @@
 import React, { useEffect, useState } from 'react';
 import { authService } from '../services/authService';
+import { profileService } from '../services/profileService';
 
 import ToastNotification from '../components/common/ToastNotification.jsx'; 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const UserProfile = () => {
-  // --- 1. STATE ---
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // State hiển thị đánh giá %
-  const [ratingStats, setRatingStats] = useState({
-    percent: 100, // Mặc định 100%
-    count: 0
-  });
+  const [ratingStats, setRatingStats] = useState({ percent: 0, count: 0 });
 
-  // Modal đổi mật khẩu
   const [showPassModal, setShowPassModal] = useState(false);
   const [passData, setPassData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
-  // Form chỉnh sửa thông tin
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [pendingEmailUpdate, setPendingEmailUpdate] = useState(null);
+
   const [formData, setFormData] = useState({
     full_name: '',
     phone_number: '',
-    address: ''
+    address: '',
+    email: ''
   });
 
-  // --- 2. LOGIC LOAD DỮ LIỆU & TÍNH TOÁN % ---
-  useEffect(() => {
+  const validatePhone = (phone) => {
+    const regex = /^\d{9,15}$/;
+    return regex.test(phone);
+  };
+
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+ useEffect(() => {
     const fetchProfile = async () => {
       try {
-        console.log("=== ĐANG GỌI API PROFILE ===");
         const rawData = await authService.getProfile();
-        
-        // Xử lý dữ liệu trả về từ backend
         let finalUser = rawData.data || rawData.user || rawData.result || rawData;
 
         if (finalUser) {
           setUser(finalUser);
           
-          setFormData({
-            full_name: finalUser.full_name || '',
-            phone_number: finalUser.phone_number || '',
-            address: finalUser.address || ''
-          });
+          if (!isEditing) {
+              setFormData({
+                full_name: finalUser.full_name || '',
+                phone_number: finalUser.phone_number || '',
+                address: finalUser.address || '',
+                email: finalUser.email || '' 
+              });
+          } 
 
-          // === TÍNH TOÁN RATING ===
           const count = finalUser.rating_count || 0; 
           const score = finalUser.rating_score || 0;
 
           if (count > 0) {
-            const pos = (count + score) / 2;
-            let ratio = (pos / count) * 100;
-
-            if (ratio > 100) ratio = 100;
-            if (ratio < 0) ratio = 0;
-
+            let ratio = ((count + score) / 2 / count) * 100;
+            ratio = Math.min(Math.max(ratio, 0), 100);
+            
             setRatingStats({
               percent: ratio.toFixed(1),
               count: count
             });
           } else {
-            setRatingStats({ percent: 100, count: 0 });
+            setRatingStats({ percent: 0, count: 0 });
           }
         }
       } catch (error) {
@@ -71,63 +75,102 @@ const UserProfile = () => {
         ToastNotification("Không thể tải thông tin người dùng", "error");
       }
     };
-    fetchProfile();
-  }, []);
 
-  // --- 3. CÁC HÀM XỬ LÝ ---
-  
-  // Xử lý đóng modal & reset form
+    fetchProfile();
+
+    const intervalId = setInterval(fetchProfile, 5000);
+
+    return () => clearInterval(intervalId);
+
+  }, [isEditing]);
+
   const handleCloseModal = () => {
     setShowPassModal(false);
     setPassData({ oldPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  // Xử lý nhập liệu form
   const handleChangeInfo = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Xử lý LƯU THÔNG TIN
   const handleSaveInfo = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await authService.updateProfile(formData);
-      
-      setUser(prev => ({ ...prev, ...formData }));
-      setIsEditing(false);
-      
-      ToastNotification("Cập nhật thông tin thành công!", "success");
+    
+    if (!formData.full_name.trim()) return ToastNotification("Họ tên không được để trống", "warning");
+    
+    if (formData.phone_number && !validatePhone(formData.phone_number)) {
+      return ToastNotification("Số điện thoại không hợp lệ (chỉ chứa số, 9-15 ký tự)", "warning");
+    }
 
-    } catch (error) {
-      console.error(error);
-      const msg = error.response?.data?.message || "Không thể cập nhật thông tin";
-      ToastNotification(msg, "error");
-    } finally {
+    if (!validateEmail(formData.email)) {
+      return ToastNotification("Email không đúng định dạng", "warning");
+    }
+
+    const isEmailChanged = formData.email !== user.email;
+
+    if (isEmailChanged) {
+      setLoading(true);
+      const res = await profileService.sendEmailUpdateOtp(formData.email);
       setLoading(false);
+
+      if (res.success) {
+        setPendingEmailUpdate(formData);
+        setOtpCode('');
+        setShowOtpModal(true);     
+        ToastNotification(res.message, "info");
+      } else {
+        ToastNotification(res.message, "error");
+      }
+    } else {
+      await executeUpdate(formData);
     }
   };
 
-  // Xử lý ĐỔI MẬT KHẨU
+  const executeUpdate = async (dataToUpdate) => {
+    setLoading(true);
+    const res = await profileService.updateProfile(dataToUpdate);
+    setLoading(false);
+
+    if (res.success) {
+      setUser(prev => ({ ...prev, ...dataToUpdate }));
+      setIsEditing(false);
+      setShowOtpModal(false);
+      setPendingEmailUpdate(null);
+      ToastNotification("Cập nhật thông tin thành công!", "success");
+    } else {
+      ToastNotification(res.message, "error");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const cleanOtp = otpCode.trim();
+    if (!cleanOtp || cleanOtp.length !== 6) {
+      return ToastNotification("Vui lòng nhập mã OTP đầy đủ", "warning");
+    }
+    const finalPayload = {
+      ...pendingEmailUpdate,
+      otp: cleanOtp 
+    };
+    await executeUpdate(finalPayload);
+  };
+
   const handleChangePass = async (e) => {
     e.preventDefault();
     if (passData.newPassword !== passData.confirmPassword) {
-      ToastNotification("Mật khẩu xác nhận không khớp!", "warning");
-      return;
+      return ToastNotification("Mật khẩu xác nhận không khớp!", "warning");
+    }
+    if (passData.oldPassword === passData.newPassword) {
+      return ToastNotification("Mật khẩu mới không được trùng mật khẩu cũ!", "warning");
     }
     
-    try {
-      await authService.changePassword(passData.oldPassword, passData.newPassword);
-      
+    const res = await profileService.changePassword(passData.oldPassword, passData.newPassword);
+    
+    if (res.success) {
       ToastNotification("Đổi mật khẩu thành công!", "success");
-      
-      // Đóng modal và reset form
       handleCloseModal();
-    } catch (error) {
-      console.error(error);
-      const msg = error.response?.data?.message || "Mật khẩu cũ không đúng";
-      ToastNotification(msg, "error");
+    } else {
+      ToastNotification(res.message, "error");
     }
   };
 
@@ -136,17 +179,18 @@ const UserProfile = () => {
     setFormData({
       full_name: user.full_name || '',
       phone_number: user.phone_number || '',
-      address: user.address || ''
+      address: user.address || '',
+      email: user.email || ''
     });
   };
 
-  // --- 4. GIAO DIỆN ---
-  
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-gray-500 animate-pulse">Đang tải dữ liệu...</div>
     </div>
   );
+
+  const isAdmin = user.role === 'admin';
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-900">
@@ -154,10 +198,8 @@ const UserProfile = () => {
 
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* === HEADER SECTION === */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row items-center md:items-start justify-between gap-4">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            {/* Avatar */}
             <div className="relative">
               <img 
                 src={user.avatar || `https://ui-avatars.com/api/?name=${formData.full_name}&background=random&color=fff`} 
@@ -166,33 +208,22 @@ const UserProfile = () => {
               />
             </div>
             
-            {/* Info Header */}
             <div className="text-center md:text-left">
               <h1 className="text-2xl font-bold text-gray-900">{formData.full_name || "Người dùng"}</h1>
               <p className="text-gray-500 mb-3">{user.email}</p>
-              
               <div className="flex gap-2 justify-center md:justify-start">
                 <span className="bg-black text-white text-xs font-semibold px-3 py-1 rounded-full uppercase">{user.role || 'MEMBER'}</span>
               </div>
             </div>
           </div>
 
-          {/* Nút Action */}
           <div className="flex gap-3">
              {!isEditing && (
                <>
-                <button 
-                  onClick={() => setShowPassModal(true)}
-                  className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <button onClick={() => setShowPassModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                   Đổi mật khẩu
                 </button>
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                   Chỉnh sửa hồ sơ
                 </button>
                </>
@@ -200,7 +231,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* === MAIN CONTENT GRID === */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -210,18 +240,18 @@ const UserProfile = () => {
             </div>
             
             <form onSubmit={handleSaveInfo} className="space-y-6">
-              {/* Email (Read only) */}
               <div className="flex items-start gap-4">
-                <div className="mt-1 text-gray-400">
+                <div className="mt-2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
                 <div className="w-full">
-                  <p className="text-sm text-gray-500 mb-1">Email</p>
-                  <p className="font-medium text-gray-900 py-1">{user.email}</p>
+                  <p className="text-sm text-gray-500 mb-1">Email {isEditing && <span className='text-xs text-red-500'>(Cần xác thực OTP nếu đổi)</span>}</p>
+                  {isEditing ? (
+                     <input type="email" name="email" value={formData.email} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                  ) : <p className="font-medium text-gray-900 py-1">{user.email}</p>}
                 </div>
               </div>
 
-              {/* Full Name */}
               <div className="flex items-start gap-4">
                 <div className="mt-2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -229,20 +259,11 @@ const UserProfile = () => {
                 <div className="w-full">
                   <p className="text-sm text-gray-500 mb-1">Họ tên</p>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="full_name" 
-                      value={formData.full_name} 
-                      onChange={handleChangeInfo} 
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
-                    />
-                  ) : (
-                    <p className="font-medium text-gray-900 py-1">{formData.full_name || "Chưa cập nhật"}</p>
-                  )}
+                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                  ) : <p className="font-medium text-gray-900 py-1">{formData.full_name || "Chưa cập nhật"}</p>}
                 </div>
               </div>
 
-              {/* Phone */}
               <div className="flex items-start gap-4">
                 <div className="mt-2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -250,20 +271,11 @@ const UserProfile = () => {
                 <div className="w-full">
                   <p className="text-sm text-gray-500 mb-1">Số điện thoại</p>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="phone_number" 
-                      value={formData.phone_number} 
-                      onChange={handleChangeInfo} 
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
-                    />
-                  ) : (
-                    <p className="font-medium text-gray-900 py-1">{formData.phone_number || "Chưa cập nhật"}</p>
-                  )}
+                    <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                  ) : <p className="font-medium text-gray-900 py-1">{formData.phone_number || "Chưa cập nhật"}</p>}
                 </div>
               </div>
 
-              {/* Address */}
               <div className="flex items-start gap-4">
                 <div className="mt-2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -271,20 +283,11 @@ const UserProfile = () => {
                 <div className="w-full">
                   <p className="text-sm text-gray-500 mb-1">Địa chỉ</p>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="address" 
-                      value={formData.address} 
-                      onChange={handleChangeInfo} 
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
-                    />
-                  ) : (
-                    <p className="font-medium text-gray-900 py-1">{formData.address || "Chưa cập nhật"}</p>
-                  )}
+                    <input type="text" name="address" value={formData.address} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                  ) : <p className="font-medium text-gray-900 py-1">{formData.address || "Chưa cập nhật"}</p>}
                 </div>
               </div>
 
-              {/* Buttons */}
               {isEditing && (
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
                   <button type="submit" disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer">
@@ -298,49 +301,107 @@ const UserProfile = () => {
             </form>
           </div>
 
-          {/* RIGHT COLUMN: RATING THEO PHẦN TRĂM (%) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-6">Đánh giá & Uy tín</h2>
-              
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">{ratingStats.percent}%</span>
-                <span className="text-gray-500 text-sm ml-2">tích cực</span>
+          {isAdmin ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Quyền Quản Trị Viên</h2>
+                
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                     <div className="flex items-center gap-3 mb-3">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                       <span className="text-base font-bold text-red-900">ADMIN</span>
+                     </div>
+                     <p className="text-sm text-gray-700">Quyền toàn quyền quản lý hệ thống</p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                     <h3 className="font-semibold text-gray-900 mb-3">Quyền truy cập</h3>
+                     <ul className="space-y-2">
+                       <li className="flex items-center gap-2 text-sm text-gray-700">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                         Quản lý người dùng
+                       </li>
+                       <li className="flex items-center gap-2 text-sm text-gray-700">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                         Quản lý sản phẩm & đấu giá
+                       </li>
+                       <li className="flex items-center gap-2 text-sm text-gray-700">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                         Quản lý danh mục
+                       </li>
+                     </ul>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                     <div className="flex items-center gap-2 mb-2">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                       <span className="text-sm text-blue-700 font-medium">Ngày tham gia</span>
+                     </div>
+                     <p className="font-bold text-blue-900 pl-6">
+                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
+                     </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
-                <div 
-                    className="bg-black h-3 rounded-full transition-all duration-1000 ease-out" 
-                    style={{ width: `${ratingStats.percent}%` }}
-                ></div>
+              <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600 mt-0.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">Lưu ý bảo mật</p>
+                    <p className="text-xs text-gray-600">Vui lòng bảo mật thông tin đăng nhập và không chia sẻ cho người khác</p>
+                  </div>
+                </div>
               </div>
-
-              <div className="flex items-center gap-1 mb-2">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                 <span className="font-medium text-gray-700">Đánh giá uy tín</span>
-              </div>
-              <p className="text-gray-500 text-sm mb-6">Dựa trên {ratingStats.count} lượt đánh giá</p>
             </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Đánh giá & Uy tín</h2>
+                
+                {ratingStats.count > 0 ? (
+                  <>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold text-gray-900">{ratingStats.percent}%</span>
+                      <span className="text-gray-500 text-sm ml-2">tích cực</span>
+                    </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-               <div className="flex items-center gap-2 mb-2">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                 <span className="text-sm text-gray-500">Ngày tham gia</span>
-               </div>
-               <p className="font-medium text-gray-900 pl-6">
-                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
-               </p>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                      <div className="bg-black h-3 rounded-full transition-all duration-1000 ease-out" style={{ width: `${ratingStats.percent}%` }}></div>
+                    </div>
+
+                    <div className="flex items-center gap-1 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <span className="font-medium text-gray-700">Đánh giá uy tín</span>
+                    </div>
+                    <p className="text-gray-500 text-sm mb-6">Dựa trên {ratingStats.count} lượt đánh giá</p>
+                  </>
+                ) : (
+                  <div className="py-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200 mb-6">
+                    <p className="text-gray-500">Chưa có đánh giá nào.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                 <div className="flex items-center gap-2 mb-2">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                   <span className="text-sm text-gray-500">Ngày tham gia</span>
+                 </div>
+                 <p className="font-medium text-gray-900 pl-6">
+                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
+                 </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* === BOTTOM: FOOTER INFO === */}
-        <div className="bg-red-50 rounded-xl border border-red-100 p-6">
+        <div className="bg-green-100 rounded-xl border border-green-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <h3 className="text-lg font-bold text-gray-900">Thông tin tài khoản</h3>
           </div>
-          
           <div className="flex items-start gap-4 pl-1">
              <div className="mt-1 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -350,7 +411,6 @@ const UserProfile = () => {
                <p className="font-medium text-gray-900">{user.is_deleted ? 'Đã khóa' : 'Đang hoạt động'}</p>
              </div>
           </div>
-          
           {user.seller_expiry_date && (
             <div className="flex items-start gap-4 pl-1 mt-4">
                <div className="mt-1 text-gray-500">
@@ -358,7 +418,7 @@ const UserProfile = () => {
                </div>
                <div>
                  <p className="text-sm text-gray-500 mb-1">Hạn quyền Seller</p>
-                 <p className="font-medium text-red-600">{new Date(user.seller_expiry_date).toLocaleDateString('vi-VN')}</p>
+                 <p className="font-medium text-green-700">{new Date(user.seller_expiry_date).toLocaleDateString('vi-VN')}</p>
                </div>
             </div>
           )}
@@ -366,7 +426,37 @@ const UserProfile = () => {
 
       </div>
 
-      {/* === MODAL ĐỔI MẬT KHẨU === */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+           <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+              <h3 className="text-xl font-bold mb-2">Xác thực Email</h3>
+              <p className="text-sm text-gray-500 mb-4">Mã OTP đã được gửi tới <b>{formData.email}</b>.</p>
+              
+              <input 
+                type="text" 
+                placeholder="Nhập mã OTP" 
+                value={otpCode}
+                maxLength={6}
+                inputMode="numeric"
+                onChange={(e) => {
+                const val = e.target.value;
+                  if (/^\d*$/.test(val) && val.length <= 6) {
+                    setOtpCode(val);
+                  }
+                }}
+                className="w-full p-3 border border-gray-300 rounded-lg text-center text-lg tracking-widest font-bold mb-4 focus:border-black outline-none"
+              />
+              
+              <div className="flex gap-3">
+                 <button onClick={() => setShowOtpModal(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 py-2 rounded-lg font-medium cursor-pointer">Hủy</button>
+                 <button onClick={handleVerifyOtp} disabled={loading} className="flex-1 bg-black hover:bg-gray-800 text-white py-2 rounded-lg font-medium cursor-pointer">
+                   {loading ? '...' : 'Xác nhận'}
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {showPassModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={handleCloseModal}>
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>

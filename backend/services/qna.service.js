@@ -3,8 +3,7 @@ dotenv.config();
 
 import { qnaRepository } from '../repositories/qna.repository.js';
 import { productRepository } from '../repositories/product.repository.js';
-import * as mailService from './email.service.js';
-
+import { dispatchEmail } from './email.service.queue.js';
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 
 class QnaService {
@@ -17,10 +16,17 @@ class QnaService {
 		if (!product) {
 			throw new Error('Sản phẩm không tồn tại');
 		}
-		
+
 		const sellerId = product.seller._id || product.seller;
 		if (sellerId.toString() === asker.toString()) {
 			throw new Error('Người bán không thể đặt câu hỏi cho chính sản phẩm của họ');
+		}
+
+		const bannedSet = new Set(
+            (product.banned_bidder || []).map(id => id.toString())
+        );
+		if (bannedSet.has(asker.toString())) {
+			throw new Error('Người dùng đã bị cấm tham gia đấu giá sản phẩm này, không thể đặt câu hỏi');
 		}
 
 		const qna = await qnaRepository.create({
@@ -29,20 +35,16 @@ class QnaService {
 			question_content: question_content.trim()
 		});
 
-		try {
-			const populated = await qnaRepository.findById(qna._id);
-			const sellerEmail = populated?.product?.seller?.email;
-			const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
-			if (sellerEmail) {
-				await mailService.notifyNewQuestion(
-					sellerEmail,
-					populated.product?.product_name || 'Sản phẩm của bạn',
-					populated.question_content,
-					productUrl
-				);
-			}
-		} catch (e) {
-			// non-blocking
+		const populated = await qnaRepository.findById(qna._id);
+		const sellerEmail = populated?.product?.seller?.email;
+		const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
+		if (sellerEmail) {
+			dispatchEmail('NOTIFY_NEW_QUESTION', {
+				sellerEmail,
+				productName: populated.product?.product_name || 'Sản phẩm của bạn',
+				questionContent: populated.question_content,
+				productLink: productUrl
+			});
 		}
 
 		return qna;
@@ -74,29 +76,26 @@ class QnaService {
 			answerer,
 			answer_content: answer_content.trim(),
 			answer_timestamp: new Date()
-		};		
+		};
 		await qnaRepository.addAnswer(qnaId, answerData);
 
 		// Refetch with population for email and return
 		let populated;
 		try {
 			populated = await qnaRepository.findById(qnaId);
-		} catch (e) {}
+		} catch (e) { }
 
-		try {
-			const askerEmail = populated?.asker?.email;
-			const productName = populated?.product?.product_name || 'Sản phẩm';
-			const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
-			if (askerEmail) {
-				await mailService.notifyNewAnswer(
-					[askerEmail],
-					productName,
-					populated?.question_content || '',
-					answerData.answer_content,
-					productUrl
-				);
-			}
-		} catch (e) {
+		const askerEmail = populated?.asker?.email;
+		const productName = populated?.product?.product_name || 'Sản phẩm';
+		const productUrl = PRODUCT_URL_PREFIX + (populated?.product?._id || '');
+		if (askerEmail) {
+			dispatchEmail('NOTIFY_NEW_ANSWER', {
+				recipientsEmails: [askerEmail],
+				productName,
+				questionContent: populated?.question_content || '',
+				answerContent: answerData.answer_content,
+				productLink: productUrl
+			});
 		}
 
 		return populated || (await qnaRepository.findById(qnaId));

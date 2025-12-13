@@ -3,6 +3,7 @@ import './App.css'
 import MainLayout from './components/layout/MainLayout'
 
 // Pages
+import NotFound from './pages/NotFound'
 import HomePages from './pages/HomePages'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp' 
@@ -17,11 +18,18 @@ import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile'
 import WatchList from './pages/WatchList';
 import AdminDashboard from './pages/AdminDashboard'
+import CreateProduct from './pages/CreateProduct'
 import { useAuth } from './context/AuthContext'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
+import SellerRoute from './components/SellerRoute'
+
+function RoleDashboard() {
+  const { user } = useAuth();
+  return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
+}
 
 function RoleDashboard() {
   const { user } = useAuth();
@@ -54,6 +62,14 @@ export default function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
         </Route>
+
+        {/* Seller Only */}
+        <Route element={<SellerRoute />}>
+          <Route path="/product/create" element={<CreateProduct />} />
+        </Route>
+
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

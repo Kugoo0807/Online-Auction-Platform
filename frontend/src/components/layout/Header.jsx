@@ -105,7 +105,7 @@ export default function Header() {
           <>
             {isSeller ? (
               // Giao diện cho Seller
-              <Link to="/products/create">
+              <Link to="/product/create">
                 <button className="
                     relative px-6 py-2 rounded-lg font-bold text-cyan-400 border border-cyan-400 
                     bg-gray-900 shadow-[0_0_10px_rgba(34,211,238,0.3)] 
@@ -113,8 +113,7 @@ export default function Header() {
                     transition-all duration-300 ease-in-out transform hover:scale-105
                     flex items-center gap-2 uppercase tracking-wider cursor-pointer
                 ">
-                  <span className="hidden sm:inline ml-1">Tạo đấu giá</span>
-                  <span className="sm:hidden text-lg">+</span>
+                  <span className="hidden sm:inline ml-1">Đăng sản phẩm</span>
                 </button>
               </Link>
             ) : isBidder ? (
@@ -173,8 +172,12 @@ export default function Header() {
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-2 text-gray-200 hover:text-white hover:bg-gray-800 px-2 md:px-3 py-2 rounded-lg transition-all focus:outline-none select-none"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white border border-gray-600">
-                  {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                <div className="relative">
+                  <img 
+                    src={user.avatar || `https://ui-avatars.com/api/?name=${user.full_name}&background=random&color=fff`} 
+                    alt="Avatar" 
+                    className="w-8 h-8 rounded-full object-cover shadow-sm"
+                  />
                 </div>
               </button>
 

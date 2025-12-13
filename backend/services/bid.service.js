@@ -6,18 +6,132 @@ import { userRepository } from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 
 import { executeTransaction } from '../../db/db.helper.js';
-import { recalculateAuctionState } from '../utils/auction.util.js';
-import * as mailService from '../services/email.service.js';
+import { dispatchEmail } from './email.service.queue.js';
+import { productService } from './product.service.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
+const ORDER_URL_PREFIX = process.env.VITE_URL + 'orders/' || 'http://localhost:3000/orders/';
 
 class BidService {
+    // Hàm logic trả về true nếu người đặt giá là người giữ giá cao nhất sau khi đặt
+    async _logicPlaceBid(userId, product, amount, session) {
+        /* Check first bid
+            Case 1: Chưa ai bid (bid_count === 0)
+            Case 2: Holder cũ bị ban => current_highest_bidder được reset về undefined
+        */
+        const isFirstBid = product.bid_count === 0 || !product.current_highest_bidder;
+        const userIdStr = userId.toString();
+
+        // Cập nhật dữ liệu
+        const currentBidCount = product.bid_counts.get(userIdStr) || 0;
+        product.bid_counts.set(userIdStr, currentBidCount + 1);
+        product.auto_bid_map.set(userIdStr, amount);
+        product.bid_count += 1;
+        
+        const now = new Date();
+        if (product.auto_renew) {
+            const timeLeft = product.auction_end_time.getTime() - now.getTime();
+            if (timeLeft > 0 && timeLeft < 5 * 60 * 1000) {
+                product.auction_end_time = new Date(product.auction_end_time.getTime() + 10 * 60 * 1000);
+            }
+        }
+
+        // ====== PLACE BID LOGIC ======
+        
+        // 0. LÀ NGƯỜI ĐẶT GIÁ ĐẦU TIÊN
+        if (isFirstBid) {
+            product.current_highest_price = product.start_price;
+            product.current_highest_bidder = userId;
+            await productRepository.save(product, session);
+
+            // Tạo bản ghi đấu giá
+            await bidRepository.create({
+                user: userId,
+                product: product._id,
+                price: product.start_price,
+            }, session);
+
+            return true;
+        }
+
+        // 1. BIDDER LÀ NGƯỜI ĐẶT GIÁ CAO NHẤT BAN ĐẦU (TĂNG MAX BID)
+        if (product.current_highest_bidder?.toString() === userIdStr) {
+            // Không làm tăng số lượt bid
+            product.bid_counts.set(userIdStr, currentBidCount);
+            product.bid_count -= 1;
+            await productRepository.save(product, session);
+            return true;
+        }
+
+        // 2.1. BIDDER KHÁC NGƯỜI GIỮ GIÁ CAO NHẤT (VÀ ĐẶT GIÁ CAO HƠN NGƯỜI GIỮ GIÁ CAO NHẤT)
+        const currentHolderId = product.current_highest_bidder ? product.current_highest_bidder.toString() : null;
+        const currentHolderIdStr = currentHolderId ? currentHolderId.toString() : null;
+        const currentHolderMaxBid = currentHolderIdStr ? product.auto_bid_map.get(currentHolderIdStr) : 0;
+
+        if (amount > currentHolderMaxBid) {
+            // Cập nhật người giữ giá mới và giá hiện tại
+            // Giá = min(amount người mới, max_bid holder cũ + increment)
+            product.current_highest_bidder = userId;
+            product.current_highest_price = Math.min(amount, currentHolderMaxBid + product.bid_increment);
+
+            // Tạo bản ghi đấu giá cho người giữ giá cũ (nếu chưa có bản ghi nào đang giữ max bid)
+            const existingBidForCurrentHolder = await bidRepository.findHighestByUser(currentHolderId, session);
+
+            if (existingBidForCurrentHolder && existingBidForCurrentHolder.price < currentHolderMaxBid) {
+                await bidRepository.create({
+                    user: currentHolderId,
+                    product: product._id,
+                    price: currentHolderMaxBid,
+                    is_auto: true
+                }, session);
+            }
+            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
+            product.bid_count += 1;
+            await productRepository.save(product, session);
+
+            // Tạo bản ghi đấu giá
+            await bidRepository.create({
+                user: userId,
+                product: product._id,
+                price: product.current_highest_price
+            }, session);
+
+            return true;
+        }
+        // 2.2. BIDDER KHÁC NGƯỜI GIỮ GIÁ CAO NHẤT (NHƯNG ĐẶT GIÁ THẤP HƠN HOẶC BẰNG NGƯỜI GIỮ GIÁ CAO NHẤT)
+        else {
+            // Cập nhật giá hiện tại
+            product.current_highest_price = Math.min(currentHolderMaxBid, amount + product.bid_increment);
+
+            // Tạo bản ghi đấu giá cho người vừa đấu giá
+            await bidRepository.create({
+                user: userId,
+                product: product._id,
+                price: amount
+            }, session);
+
+            // Tạo bản ghi đấu giá đè cho người giữ giá cao nhất
+            await bidRepository.create({
+                user: currentHolderId,
+                product: product._id,
+                price: product.current_highest_price,
+                is_auto: true
+            }, session);
+            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
+            product.bid_count += 1;
+            await productRepository.save(product, session);
+
+            return false;
+        }
+    }
+
     async placeBid(userId, productId, amount) {
         return await executeTransaction(async (session) => {
             // Lock & Load Product
             const product = await productRepository.findByIdForUpdate(productId, session);
             if (!product) throw new Error("Sản phẩm không tồn tại!");
 
+            // ==== VALIDATE ====
             // Validate Trạng thái & Thời gian
             if (product.auction_status !== 'active') {
                 throw new Error("Phiên đấu giá này không còn hoạt động (Đã kết thúc, đã bán hoặc bị hủy)");
@@ -52,174 +166,139 @@ class BidService {
                     throw new Error(`Điểm uy tín thấp (${(positiveRatio * 100).toFixed(1)}%). Yêu cầu trên 80% mới được đấu giá.`);
                 }
             }
+            // ==================
 
-            // LOGIC MUA NGAY HOẶC ĐẤU GIÁ
-            let isBuyItNow = false;
-
-            // Check mua Ngay
-            if (product.buy_it_now_price && amount >= product.buy_it_now_price) {
-                isBuyItNow = true;
-                amount = product.buy_it_now_price;
-            }
-            else {
-                // === VALIDATE GIÁ CHO ĐẤU GIÁ THƯỜNG ===
-
-                // Check giá phải cao hơn giá cũ của chính mình
-                const userCurrentMaxBid = product.auto_bid_map.get(userId);
-                if (userCurrentMaxBid !== undefined && amount <= userCurrentMaxBid) {
-                    throw new Error(`Giá mới phải cao hơn mức giá cũ bạn đã đặt (${userCurrentMaxBid})`);
-                }
-
-                // Check giá phải cao hơn sàn toàn cục
-                const globalMinPrice = product.bid_count === 0
-                    ? product.start_price
-                    : product.current_highest_price + product.bid_increment;
-
-                if (amount < globalMinPrice) {
-                    throw new Error(`Giá đặt không hợp lệ. Sàn hiện tại yêu cầu tối thiểu: ${globalMinPrice}`);
-                }
-            }
             // Lưu previous holder để gửi email sau
             const previousHolderId = product.current_highest_bidder;
-            // Cập nhật dữ liệu
-            const currentBidCount = product.bid_counts.get(userId) || 0;
-            product.bid_counts.set(userId, currentBidCount + 1);
-            product.auto_bid_map.set(userId, amount);
-            product.bid_count += 1;
 
-            // XỬ LÝ LOGIC RIÊNG
-            if (isBuyItNow) {
-                // === TRƯỜNG HỢP MUA NGAY ===
-                product.auction_status = 'sold';
-                product.current_highest_price = amount;
-                product.current_highest_bidder = userId;
+            // ==== MUA NGAY ====
+            if (product.buy_it_now_price && amount >= product.buy_it_now_price) {
+                await productService.logicBuyProductNow(userId, product, session);
+                const finalPrice = product.buy_it_now_price;
+                const finalWinnerId = userId;
 
-                // Tạo đơn hàng
-                await auctionResultRepository.create({
-                    product: product._id,
-                    winning_bidder: userId,
-                    seller: product.seller,
-                    final_price: amount,
-                    status: 'pending_payment'
-                }, session);
-                // Gửi email thông báo
-                try {
-			        const productUrl = PRODUCT_URL_PREFIX + (product?._id || '');
-                    const [seller, winner] = await Promise.all([
-                        userRepository.findById(product.seller),
-                        userRepository.findById(userId)
-                    ]);
+                // --- Gửi email thông báo (cho winner, seller, và holder cũ nếu có) ---
 
-                    if (seller?.email) {
-                        await mailService.notifyAuctionEndedSold(
-                            seller.email,
-                            product.product_name,
-                            winner?.full_name || 'Người mua',
-                            amount,
-                            productUrl
-                        );
-                    }
-                    if (winner?.email) {
-                        await mailService.notifyAuctionWinner(
-                            winner.email,
-                            product.product_name,
-                            amount,
-                            productUrl
-                        );
-                    }
-                } catch (emailError) {
-                    console.error('Lỗi gửi email mua ngay:', emailError);
+                // Lấy thông tin cần thiết để gửi email
+                const auctionResult = await auctionResultRepository.findByProduct(product._id, session);
+                if (!auctionResult) {
+                    throw new Error('Không tìm thấy kết quả đấu giá cho sản phẩm này!');
                 }
-            } else {
-                // === TRƯỜNG HỢP ĐẤU GIÁ THƯỜNG ===
 
-                // Lưu người giữ giá cũ trước khi recalculate
+                const winner = await userRepository.findById(finalWinnerId);
+                const seller = await userRepository.findById(product.seller);
+                const previousHolder = previousHolderId ? await userRepository.findById(previousHolderId) : null;
 
-                // Tính toán lại winner và price dựa trên thuật toán
-                await recalculateAuctionState(product, userId, session);
+                // Gửi email cho winner và seller
+                const productUrl = PRODUCT_URL_PREFIX + product?._id;
+                const checkOutUrl = ORDER_URL_PREFIX + auctionResult?._id;
 
-                // Logic Auto Renew (Gia hạn 10p nếu còn < 5p)
-                if (product.auto_renew) {
-                    const timeLeft = product.auction_end_time.getTime() - now.getTime();
-                    if (timeLeft > 0 && timeLeft < 5 * 60 * 1000) {
-                        product.auction_end_time = new Date(product.auction_end_time.getTime() + 10 * 60 * 1000);
-                    }
+                dispatchEmail('NOTIFY_AUCTION_WINNER', {
+                    winnerEmail: winner.email,
+                    productName: product.product_name,
+                    finalPrice: finalPrice,
+                    checkoutLink: checkOutUrl
+                });
+
+                dispatchEmail('NOTIFY_AUCTION_SOLD', {
+                    sellerEmail: seller.email,
+                    productName: product.product_name,
+                    winnerName: winner.full_name,
+                    finalPrice: finalPrice,
+                    productLink: productUrl
+                });
+
+                // Gửi email cho previous holder nếu có và khác winner
+                if (previousHolder && previousHolder._id.toString() !== winner._id.toString()) {
+                    dispatchEmail('NOTIFY_HOLDER', {
+                        holderEmail: previousHolder.email,
+                        productName: product.product_name,
+                        currentPrice: finalPrice,
+                        top1Email: winner.email,
+                        productLink: productUrl
+                    });
                 }
+
+                return {
+                    success: true,
+                    current_price: finalPrice,
+                    winner_id: finalWinnerId,
+                    status: product.auction_status,
+                    message: 'Mua ngay thành công!'
+                };
+            }
+            // ==================
+
+            // ==== ĐẤU GIÁ THƯỜNG ====
+
+            // --- VALIDATE GIÁ ---
+            // Check giá phải cao hơn giá cũ của chính mình
+            const userCurrentMaxBid = product.auto_bid_map.get(userId);
+            if (userCurrentMaxBid !== undefined && amount <= userCurrentMaxBid) {
+                throw new Error(`Giá mới phải cao hơn mức giá cũ bạn đã đặt (${userCurrentMaxBid})`);
             }
 
-            await productRepository.save(product, session);
-            const finalPrice = product.current_highest_price;
-            const finalWinnerId = product.current_highest_bidder;
+            // Check giá phải cao hơn sàn toàn cục
+            const globalMinPrice = product.bid_count === 0
+                ? product.start_price
+                : product.current_highest_price + product.bid_increment;
 
-            await bidRepository.create({
-                user: userId,
-                product: productId,
-                price: finalPrice,
-                max_bid_price: amount,
-                holder: finalWinnerId
-            }, session);
+            if (amount < globalMinPrice) {
+                throw new Error(`Giá đặt không hợp lệ. Sàn hiện tại yêu cầu tối thiểu: ${globalMinPrice}`);
+            }
+            // --------------------
 
-            // === GỬI EMAIL SAU KHI ĐẤU GIÁ THÀNH CÔNG ===
-            if (!isBuyItNow) {
-                try {
-                    const productUrl = PRODUCT_URL_PREFIX + productId;
-                    
-                    // Lấy thông tin đầy đủ của các bên liên quan
-                    const [seller, bidder, currentHolder, previousHolder] = await Promise.all([
-                        userRepository.findById(product.seller),
-                        userRepository.findById(userId),
-                        finalWinnerId ? userRepository.findById(finalWinnerId) : null,
-                        previousHolderId ? userRepository.findById(previousHolderId) : null
-                    ]);
+            // --- LOGIC ĐẤU GIÁ ---
+            const isNowHolder = await this._logicPlaceBid(userId, product, amount, session);
+            const notification = isNowHolder ? 'Bạn hiện là người giữ giá cao nhất!' : 'Bạn đã bị vượt giá bởi người khác. Hãy thử lại!';
 
-                    // 1. GỬI CHO NGƯỜI BÁN
-                    if (seller?.email) {
-                        await mailService.notifyNewBidToSeller(
-                            seller.email,
-                            product.product_name,
-                            finalPrice,
-                            bidder?.full_name || 'Người dùng',
-                            productUrl
-                        );
-                    }
+            // --- Gửi email thông báo (cho seller, bidder, previous holder nếu có) ---
 
-                    // 2. GỬI CHO NGƯỜI RA GIÁ (xác nhận)
-                    if (bidder?.email) {
-                        await mailService.notifyBidSuccess(
-                            bidder.email,
-                            product.product_name,
-                            currentHolder?.full_name || 'Bạn',
-                            amount,
-                            finalPrice,
-                            productUrl
-                        );
-                    }
+            // Lấy thông tin cần thiết để gửi email
+            const user = await userRepository.findById(userId);
+            const seller = await userRepository.findById(product.seller);
+            const holder = await userRepository.findById(product.current_highest_bidder);
+            const previousHolder = previousHolderId ? await userRepository.findById(previousHolderId) : null;
 
-                    // 3. GỬI CHO NGƯỜI GIỮ GIÁ TRƯỚC ĐÓ (nếu có và khác người vừa ra giá)
-                    if (previousHolderId && previousHolderId.toString() !== userId && previousHolder?.email) {
-                        await mailService.notifyHolder(
-                            previousHolder.email,
-                            product.product_name,
-                            finalPrice,
-                            finalWinnerId?.toString() === previousHolder._id.toString() 
-                                ? previousHolder.email 
-                                : bidder?.email || '',
-                            productUrl
-                        );
-                    }
-                } catch (emailError) {
-                    console.error('Lỗi gửi email sau khi đấu giá:', emailError);
-                    // Không throw error để không ảnh hưởng transaction
-                }
+            // Gửi email cho user và seller
+            const productUrl = PRODUCT_URL_PREFIX + product?._id;
+
+            dispatchEmail('NOTIFY_BID_SUCCESS', {
+                bidderEmail: user.email,
+                productName: product.product_name,
+                holderName: holder.full_name,
+                bidderPrice: amount,
+                currentPrice: product.current_highest_price,
+                productLink: productUrl
+            });
+
+            dispatchEmail('NOTIFY_NEW_BID_SELLER', {
+                sellerEmail: seller.email,
+                productName: product.product_name,
+                newPrice: product.current_highest_price,
+                bidderName: user.full_name,
+                productLink: productUrl
+            });
+
+            // Gửi email cho previous holder nếu có và khác user hiện tại
+            if (previousHolder && previousHolder._id.toString() !== user._id.toString()) {
+                dispatchEmail('NOTIFY_HOLDER', {
+                    holderEmail: previousHolder.email,
+                    productName: product.product_name,
+                    currentPrice: product.current_highest_price,
+                    top1Email: holder.email,
+                    productLink: productUrl
+                });
             }
 
             return {
                 success: true,
-                current_price: finalPrice,
-                winner_id: finalWinnerId,
+                outBid: !isNowHolder,
+                current_price: product.current_highest_price,
+                highest_bidder_id: product.current_highest_bidder,
                 status: product.auction_status,
-                message: isBuyItNow ? "Chúc mừng! Bạn đã mua ngay sản phẩm thành công." : "Ra giá thành công"
-            };
+                message: `Ra giá thành công (đã đặt giá ${amount})! ` + notification
+            }
         });
     }
 
@@ -238,51 +317,57 @@ class BidService {
         const result = history.map(h => {
             const bidObj = h.toObject ? h.toObject() : h;
             const user = bidObj.user;
-            const holder = bidObj.holder;
 
-            let displayPrice = bidObj.price;
-
-            if (bidObj.price > currentPrice) {
-                displayPrice = currentPrice;
+            // Nếu user bị ban thì đánh dấu is_banned
+            let is_banned = false;
+            if (bannedSet.has(user._id.toString())) {
+                is_banned = true;
             }
 
-            if (!user) {
-                return {
-                    ...bidObj,
-                    price: displayPrice,
-                    user: user,
+            // === XÁC ĐỊNH GIÁ HIỂN THỊ ===
+            let finalDisplayPrice = undefined;
 
-                    is_valid: !isInvalid,
-                    is_deleted: isDeleted,
-                    is_banned: isBanned,
-                    max_price: undefined,
-
-                    invalid_holder: null,
-                    holder: holder
-                };
+            if (bidObj.is_valid) {
+                if (bidObj.price > currentPrice) {
+                    finalDisplayPrice = currentPrice;
+                } else {
+                    finalDisplayPrice = bidObj.price;
+                }
             }
-
-            const userIdStr = user._id.toString();
-            const isBanned = bannedSet.has(userIdStr);
-            const isDeleted = user.is_deleted === true;
-            const isInvalid = isDeleted || isBanned;
-
-            const isHolderInvalid = holder?.is_deleted === true || bannedSet.has(holder?._id.toString());
 
             return {
                 ...bidObj,
-                price: displayPrice,
+                price: finalDisplayPrice,
                 user: user,
-
-                is_valid: !isInvalid,
-                is_deleted: isDeleted,
-                is_banned: isBanned,
-                max_price: undefined,
-
-                invalid_holder: isHolderInvalid,
-                holder: holder
-            }
+                is_banned: is_banned
+            };
         })
+
+        return result;
+    }
+
+    async getActiveBiddedProductsByUser(userId) {
+        const productIds = await bidRepository.findByUser(userId);
+        const products = await productRepository.findActive(productIds, true);
+
+        const result = products
+            .map(product => {
+                const productObj = product.toObject ? product.toObject() : product;
+                const userIdStr = userId.toString();
+                const bidCount = productObj.bid_counts?.get(userIdStr) || 0;
+                const maxBid = productObj.auto_bid_map?.get(userIdStr) || null;
+
+                // Loại bỏ auto_bid_map và thêm user_bid_info
+                const { auto_bid_map, ...cleanProduct } = productObj;
+
+                return {
+                    ...cleanProduct,
+                    user_bid_info: {
+                        bid_count: bidCount,
+                        max_bid: maxBid
+                    }
+                };
+            });
 
         return result;
     }

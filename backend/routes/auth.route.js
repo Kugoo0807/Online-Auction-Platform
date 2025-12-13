@@ -40,6 +40,8 @@ export function AuthRoutes(authController) {
     // Đổi mật khẩu
     router.post('/change-password', [checkAuth], authController.changePassword);
 
+    router.post('/verify-captcha', authController.verifyCaptcha);
+    
     // Hàm test get me (kiểm tra đăng nhập)
     router.get('/me', [checkAuth], (req, res) => {
         req.user.password = undefined;

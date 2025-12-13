@@ -8,7 +8,7 @@ export default function WatchList() {
   const [watchList, setWatchList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // State cho undo feature
   const [removingId, setRemovingId] = useState(null);
   const [undoTimeout, setUndoTimeout] = useState(null);
@@ -17,7 +17,7 @@ export default function WatchList() {
 
   useEffect(() => {
     fetchWatchList();
-    
+
     // Cleanup timeout khi component unmount
     return () => {
       if (undoTimeout) {
@@ -32,7 +32,7 @@ export default function WatchList() {
     try {
       const response = await productService.getWatchList();
       console.log('WatchList API Response:', response);
-      
+
       // Xử lý response theo cấu trúc backend trả về
       const watchListItems = response.data || [];
       console.log('Số lượng item yêu thích:', watchListItems.length);
@@ -52,7 +52,7 @@ export default function WatchList() {
       clearTimeout(undoTimeout);
       setUndoTimeout(null);
     }
-    
+
     // Tìm watchlist item cần xóa
     const itemToRemove = watchList.find(item => item.product?._id === productId);
     if (!itemToRemove) return;
@@ -86,9 +86,9 @@ export default function WatchList() {
   const performRemove = async (productId) => {
     try {
       const result = await productService.toggleWatchList(productId);
-      
+
       console.log('Toggle result:', result);
-      
+
       if (result.action === 'removed' || result.message?.includes('xóa') || result.message?.includes('removed')) {
         // Cập nhật local state ngay lập tức
         setWatchList(prev => prev.filter(item => item.product?._id !== productId));
@@ -101,9 +101,9 @@ export default function WatchList() {
     } catch (err) {
       console.error('Lỗi khi xóa khỏi danh sách yêu thích:', err);
       console.error('Error details:', err.response?.data);
-      
+
       const errorMsg = err.response?.data?.message || err.message || 'Không thể xóa sản phẩm. Vui lòng thử lại.';
-      
+
       // Xử lý trường hợp sản phẩm không tồn tại
       if (errorMsg.includes('không tồn tại') || errorMsg.includes('not exist')) {
         // Sản phẩm không tồn tại nữa, vẫn cần remove khỏi local state
@@ -115,7 +115,7 @@ export default function WatchList() {
       } else {
         ToastNotification(errorMsg, 'error');
       }
-      
+
       // Khôi phục trạng thái
       setRemovingId(null);
     }
@@ -156,20 +156,20 @@ export default function WatchList() {
   // Calculate time remaining
   const calculateTimeRemaining = (endTime) => {
     if (!endTime) return { minutes: 0, hours: 0, days: 0 };
-    
+
     try {
       const end = new Date(endTime);
       const now = new Date();
-      
+
       if (isNaN(end.getTime())) return { minutes: 0, hours: 0, days: 0 };
-      
+
       const diffMs = end - now;
       if (diffMs <= 0) return { minutes: 0, hours: 0, days: 0 };
-      
+
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      
+
       return { minutes, hours, days };
     } catch {
       return { minutes: 0, hours: 0, days: 0 };
@@ -182,7 +182,7 @@ export default function WatchList() {
     .map(item => {
       const product = item.product;
       const timeRemaining = calculateTimeRemaining(product.auction_end_time);
-      
+
       return {
         // Format data cho ProductCard
         id: product._id,
@@ -196,10 +196,10 @@ export default function WatchList() {
         start_time: product.auction_start_time,
         formatted_start_time: formatDate(product.auction_start_time),
         time_remaining: timeRemaining,
-        time_remaining_text: timeRemaining.days > 0 
-          ? `${timeRemaining.days} ngày` 
-          : timeRemaining.hours > 0 
-            ? `${timeRemaining.hours} giờ` 
+        time_remaining_text: timeRemaining.days > 0
+          ? `${timeRemaining.days} ngày`
+          : timeRemaining.hours > 0
+            ? `${timeRemaining.hours} giờ`
             : `${timeRemaining.minutes} phút`,
         images: product.thumbnail ? [product.thumbnail] : [],
         thumbnail: product.thumbnail,
@@ -242,9 +242,9 @@ export default function WatchList() {
               Sản phẩm yêu thích của bạn
             </h2>
             <p className="text-gray-500 mt-2">
-              {productsForDisplay.length > 0 
+              {productsForDisplay.length > 0
                 ? `Bạn có ${productsForDisplay.length} sản phẩm trong danh sách yêu thích`
-                : watchList.length > 0 
+                : watchList.length > 0
                   ? `Có ${watchList.length} item trong danh sách nhưng không có sản phẩm hợp lệ`
                   : 'Chưa có sản phẩm nào trong danh sách yêu thích'
               }
@@ -258,8 +258,8 @@ export default function WatchList() {
             <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-4 flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded overflow-hidden">
-                  <img 
-                    src={itemToRemove.product.thumbnail || '/placeholder.jpg'} 
+                  <img
+                    src={itemToRemove.product.thumbnail || '/placeholder.jpg'}
                     alt={itemToRemove.product.product_name}
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = '/placeholder.jpg' }}
@@ -301,10 +301,10 @@ export default function WatchList() {
 
         {/* Products Grid - Custom Display */}
         {productsForDisplay.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {productsForDisplay.map((product) => {
               const isRemoving = removingId === product.id;
-              
+
               console.log('Product for display:', product); // Debug log
 
               return (
@@ -313,9 +313,9 @@ export default function WatchList() {
                   className={`transition-all duration-300 ${isRemoving ? 'opacity-50' : ''}`}
                 >
                   {/* Custom Product Card thay vì dùng ProductCard component */}
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100">
                     {/* Product Image */}
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-40 overflow-hidden">
                       <Link to={`/product/${product.id}`}>
                         <img
                           src={product.thumbnail || '/placeholder.jpg'}
@@ -325,87 +325,78 @@ export default function WatchList() {
                         />
                       </Link>
                       {/* Watchlist Badge */}
-                      <div className="absolute top-3 right-3">
-                        <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                           Yêu thích
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Product Info */}
-                    <div className="p-4">
+                    <div className="p-3">
                       <Link to={`/product/${product.id}`}>
-                        <h3 className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-2 h-12 mb-2">
+                        <h3 className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-2 h-10 text-sm mb-1">
                           {product.name}
                         </h3>
                       </Link>
-                      
+
                       {/* Price */}
-                      <div className="mb-3">
-                        <div className="text-sm text-gray-500">Giá hiện tại</div>
-                        <div className="text-lg font-bold text-red-600">
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-500">Giá hiện tại</div>
+                        <div className="text-base font-bold text-red-600">
                           {product.formatted_price}
                         </div>
                       </div>
-                      
+
                       {/* Auction Info */}
-                      <div className="space-y-2 text-sm text-gray-600">
+                      <div className="space-y-1 text-xs text-gray-600">
                         <div className="flex justify-between">
-                          <span>Số lượt đầu giá:</span>
+                          <span>Lượt đấu:</span>
                           <span className="font-medium">{product.formatted_bid_count}</span>
                         </div>
-                        
+
                         <div className="flex justify-between">
                           <span>Người bán:</span>
-                          <span className="font-medium">{product.seller_name}</span>
+                          <span className="font-medium truncate ml-1 max-w-[60%]">{product.seller_name}</span>
                         </div>
-                        
+
                         <div className="flex justify-between">
-                          <span>Ngày đăng:</span>
+                          <span>Đăng lúc:</span>
                           <span className="font-medium">{product.formatted_start_time}</span>
                         </div>
-                        
+
                         <div className="flex justify-between">
-                          <span>Thời gian còn lại:</span>
-                          <span className="font-medium text-green-600">
+                          <span>Còn lại:</span>
+                          <span className="font-medium text-green-600 text-xs">
                             {product.time_remaining_text}
                           </span>
                         </div>
                       </div>
-                      
-                      {/* View Details Button */}
-                      <Link to={`/product/${product.id}`}>
-                        <button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors cursor-pointer">
-                          Xem chi tiết
-                        </button>
-                      </Link>
+
+                      {/* Remove from favorites Button */}
+                      <button
+                        onClick={() => handleRemove(product.id)}
+                        disabled={isRemoving}
+                        className="w-full mt-3 bg-red-50 hover:bg-red-100 text-red-600 py-2 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm font-medium flex items-center justify-center gap-1.5 border border-red-200"
+                      >
+                        {isRemoving ? (
+                          <>
+                            <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Đang xóa...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Xóa khỏi yêu thích
+                          </>
+                        )}
+                      </button>
                     </div>
-                  </div>
-                  
-                  {/* Remove Button */}
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      onClick={() => handleRemove(product.id)}
-                      disabled={isRemoving}
-                      className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
-                    >
-                      {isRemoving ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Đang xóa...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Xóa khỏi yêu thích
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               );
@@ -421,14 +412,8 @@ export default function WatchList() {
             </div>
             <p className="text-xl mb-6">Danh sách yêu thích trống</p>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Bạn chưa có sản phẩm nào trong danh sách yêu thích. Hãy duyệt sản phẩm và thêm vào danh sách yêu thích!
+              Bạn chưa có sản phẩm nào trong danh sách yêu thích. Hãy thêm nhiều sản phẩm hơn để theo dõi và không bỏ lỡ các cuộc đấu giá hấp dẫn!
             </p>
-            <Link
-              to="/product"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors cursor-pointer"
-            >
-              Duyệt sản phẩm
-            </Link>
           </div>
         )}
       </div>

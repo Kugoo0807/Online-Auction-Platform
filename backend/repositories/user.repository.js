@@ -1,67 +1,67 @@
 import { User } from '../../db/schema.js';
 
 class UserRepository {
-  async findAll() {
-    return await User.find({ is_deleted: false });
+  async findAll(session = null) {
+    return await User.find({ is_deleted: false }).session(session);
   }
 
-  async findByEmail(email) {
-    return await User.findOne({ email, is_deleted: false });
+  async findByEmail(email, session = null) {
+    return await User.findOne({ email, is_deleted: false }).session(session);
   }
 
-  async findById(id) {
-    return await User.findOne({ _id: id, is_deleted: false });
+  async findById(id, session = null) {
+    return await User.findOne({ _id: id, is_deleted: false }).session(session);
   }
 
-  async findByEmailAndProvider(email, provider) {
+  async findByEmailAndProvider(email, provider, session = null) {
     return await User.findOne({
       email,
       is_deleted: false,
       providers: { $elemMatch: { provider } }
-    });
+    }).session(session);
   }
 
-  async hasProvider(userId, provider) {
+  async hasProvider(userId, provider, session = null) {
     return await User.exists({
       _id: userId,
       is_deleted: false,
       providers: { $elemMatch: { provider } }
-    });
+    }).session(session);
   }
 
-  async findByProvider(provider, providerId) {
+  async findByProvider(provider, providerId, session = null) {
     return await User.findOne({
         "providers.provider": provider,
         "providers.provider_id": providerId,
         is_deleted: false,
-    });
+    }).session(session);
   }
 
-  async create(userData) {
+  async create(userData, session = null) {
     const user = new User(userData);
-    return await user.save();
+    return await user.save({ session });
   }
 
-  async createSocialUser({ full_name, email, provider, provider_id }) {
+  async createSocialUser({ full_name, email, provider, provider_id }, session = null) {
     const user = new User({
       full_name,
       email,
       password: null,
       providers: [{ provider, provider_id }],
     });
-    return await user.save();
+    return await user.save({ session });
   }
 
 
-  async updatePassword(userId, newHashedPassword) {
+  async updatePassword(userId, newHashedPassword, session = null) {
     return await User.findOneAndUpdate(
       { _id: userId, is_deleted: false },
       { password: newHashedPassword },
-      { new: true }
+      { new: true, session }
     );
   }
 
-  async addProvider(userId, provider, providerId) {
+  async addProvider(userId, provider, providerId, session = null) {
     return await User.findOneAndUpdate(
         { _id: userId, is_deleted: false }, 
         {
@@ -69,7 +69,7 @@ class UserRepository {
                 providers: { provider, provider_id: providerId }
             }
         },
-        { new: true }
+        { new: true, session }
     );
   }
 
@@ -101,7 +101,7 @@ class UserRepository {
     );
   }
 
-  async clearOtp(userId) {
+  async clearOtp(userId, session = null) {
     return await User.findOneAndUpdate(
       { _id: userId, is_deleted: false },
       {
@@ -110,7 +110,7 @@ class UserRepository {
           otp_expires: 1
         }
       },
-      { new: true }
+      { new: true, session }
     );
   }
 
@@ -125,18 +125,18 @@ class UserRepository {
     );
   }
 
-  async upgradeSeller(userId) {
+  async upgradeSeller(userId, session = null) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 7);
 
     return await User.findOneAndUpdate(
       { _id: userId, is_deleted: false },
       { role: 'seller', seller_expiry_date: expiryDate },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, session }
     );
   }
 
-  async downgradeExpiredSellers() {
+  async downgradeExpiredSellers(session = null) {
     const now = new Date();
 
     return await User.updateMany(
@@ -148,21 +148,22 @@ class UserRepository {
       {
         $set: { role: 'bidder' },
         $unset: { seller_expiry_date: 1 }
-      }
+      },
+      { session }
     )
   }
 
   // --- ADMIN & DELETE ---
-  async findByIdIncludingDeleted(id) {
-    return await User.findById(id); 
+  async findByIdIncludingDeleted(id, session = null) {
+    return await User.findById(id).session(session); 
   }
 
-  async findByEmailIncludingDeleted(email) {
-    return await User.findOne({ email });
+  async findByEmailIncludingDeleted(email, session = null) {
+    return await User.findOne({ email }).session(session);
   }
 
-  async findDeleted() {
-    return await User.find({ is_deleted: true });
+  async findDeleted(session = null) {
+    return await User.find({ is_deleted: true }).session(session);
   }
 
   async softDelete(userId, session = null) {

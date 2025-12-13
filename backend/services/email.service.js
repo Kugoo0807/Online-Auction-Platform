@@ -15,10 +15,27 @@ const transporter = nodemailer.createTransport({
 });
 
 const maskName = (name) => {
-  if (!name) return 'Người dùng ẩn danh';
-  if (name.length <= 2) return "****" + name.slice(-1);
-  const visibleLength = Math.min(name.length - 1, 4); 
-  return "****" + name.slice(-visibleLength);
+  if (!name || typeof name !== 'string') return 'u***r'; 
+
+  // Lọc bỏ phần trong ngoặc () và khoảng trắng thừa
+  const cleanName = name.split('(')[0].trim();
+  
+  if (!cleanName) return 'u***r';
+
+  const chars = Array.from(cleanName);
+  const len = chars.length;
+
+  if (len === 1) {
+      return `${chars[0]}***${chars[0]}`;
+  }
+
+  // CÔNG THỨC EBAY: Ký tự đầu + *** + Ký tự cuối
+  const first = chars[0];
+  const last = chars[len - 1];
+  const middleLength = Math.min(len - 2, 6); 
+  const middle = "*".repeat(middleLength);
+  
+  return `${first}${middle}${last}`;
 };
 
 async function sendMailBase({ to, subject, html }) {
@@ -248,6 +265,34 @@ export async function notifyAuctionWinner(winnerEmail, productName, finalPrice, 
                 
                 <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #888;">
                     Cảm ơn bạn đã tham gia đấu giá tại AuctionHub.
+                </div>
+            </div>
+        `
+    });
+}
+
+export async function notifyBidUnBan(bidderEmail, productName, productLink) {
+    return sendMailBase({
+        to: bidderEmail,
+        subject: `[Thông báo] Bạn đã được khôi phục quyền đấu giá: ${productName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">Quyền đấu giá đã được khôi phục</h2>
+                </div>
+
+                <div style="padding: 20px;">
+                    <h3 style="color: #333;">Sản phẩm: ${productName}</h3>
+
+                    <div style="color: #444; line-height: 1.6;">
+                        <p>Người bán đã khôi phục quyền tham gia đấu giá của bạn.</p>
+                        <p>Bạn có thể tiếp tục ra giá cho sản phẩm này.</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            XEM SẢN PHẨM
+                        </a>
+                    </div>
                 </div>
             </div>
         `

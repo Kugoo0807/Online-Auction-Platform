@@ -1,6 +1,35 @@
 import api from './api';
 
 export const authService = {
+  verifyCaptcha: async (captchaToken, action = 'register') => {
+    try {
+      const response = await api.post('/auth/verify-captcha', {
+        captchaToken,
+        action // Thêm action cho reCAPTCHA v3
+      });
+
+      console.log('Captcha verification response:', response.data);
+
+      return {
+        success: response.status === 200,
+        isValid: response.data.success || false,
+        message: response.data.message || '',
+        score: response.data.score || 0,
+        action: response.data.action,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('CAPTCHA verification error:', error);
+
+      return {
+        success: false,
+        isValid: false,
+        message: error.response?.data?.message || 'Failed to verify captcha',
+        error: error
+      };
+    }
+  },
+
   // Đăng nhập - backend trả về { token: "Bearer <accessToken>" }
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
@@ -107,24 +136,7 @@ export const authService = {
       };
     }
   },
-  // 1. Đổi mật khẩu
-  changePassword: async (oldPassword, newPassword) => {
-    const response = await api.post('/auth/change-password', {
-      oldPassword: oldPassword,
-      newPassword: newPassword
-    });
-    return { success: true, message: response.data.message };
-  },
 
-  // 2. Cập nhật thông tin cá nhân
-  updateProfile: async (profileData) => {
-    const response = await api.put('/users/profile', {
-      full_name: profileData.full_name,
-      address: profileData.address,
-      phone_number: profileData.phone_number,
-    });
-    return { success: true, data: response.data };
-  },
   sendSignupOTP: async (email, captchaToken) => {
     try {
       const response = await api.post('/auth/send-otp', {
@@ -145,7 +157,9 @@ export const authService = {
       return {
         success: false,
         message: message,
-        isEmailExists: status === 400 && message.includes('đã tồn tại')
+        isEmailExists: errorData.isEmailExists || false,
+        isCaptchaInvalid: errorData.isCaptchaInvalid || false,
+        error: error
       };
     }
   },
