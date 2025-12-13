@@ -31,11 +31,6 @@ function RoleDashboard() {
   return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
 }
 
-function RoleDashboard() {
-  const { user } = useAuth();
-  return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
-}
-
 export default function App() {
   return (
     <Routes>
