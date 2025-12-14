@@ -10,6 +10,7 @@ import OrderInfoTab from '../components/order/OrderInfoTab';
 import PaymentTab from '../components/order/PaymentTab';
 import ShippingTab from '../components/order/ShippingTab';
 import RatingTab from '../components/order/RatingTab';
+import Chat from '../components/chat/Chat';
 import { Box } from 'lucide-react';
 
 const Order = () => {
@@ -226,6 +227,14 @@ const Order = () => {
                         />
                     )}
                 </div>
+                
+                {/* Chat Component */}
+                {orderData && (
+                    <Chat 
+                        resultId={orderData._id}
+                        otherUser={isBuyer ? orderData.seller : orderData.winning_bidder}
+                    />
+                )}
                 
                 {/* Confirmation Modal */}
                 {showCancelConfirm && (

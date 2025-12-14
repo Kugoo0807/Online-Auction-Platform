@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ChatMessage, { MessageType } from '../components/chat/ChatMessage';
-import * as chatService from '../services/chatService';
-import { useAuth } from '../context/AuthContext';
+import ChatMessage, { MessageType } from './ChatMessage';
+import * as chatService from '../../services/chatService';
+import { useAuth } from '../../context/AuthContext';
 import EmojiPicker from 'emoji-picker-react';
 
 export const avatar = (name, background = 'random') => {
@@ -42,13 +42,13 @@ const Chat = ({ resultId, otherUser }) => {
     }
   }, [isOpen, resultId]);
 
-  // Polling: Fetch new messages every 10 seconds
+  // Polling: Fetch new messages every 5 seconds
   useEffect(() => {
     if (!isOpen || !resultId) return;
 
     const pollInterval = setInterval(() => {
       loadMessages(true); // silent load
-    }, 10000); // 10 seconds
+    }, 5000); // 5 seconds
 
     return () => clearInterval(pollInterval);
   }, [isOpen, resultId]);
@@ -120,10 +120,13 @@ const Chat = ({ resultId, otherUser }) => {
           id: newMessage._id,
           type: MessageType.Outbound,
           text: newMessage.content,
-          avatar: avatar(user.name, '3B82F6'),
+          avatar: avatar(user.full_name, '3B82F6'),
           timestamp: newMessage.createdAt
         } : msg
       ));
+
+      // Reload messages to get any new ones
+      await loadMessages(true);
     } catch (error) {
       console.error('Failed to send message:', error);
       // Remove temp message on error
@@ -137,8 +140,7 @@ const Chat = ({ resultId, otherUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-
+    <>
       {/* Chat Bubble Button */}
       {!isOpen && (
         <button
@@ -154,7 +156,7 @@ const Chat = ({ resultId, otherUser }) => {
 
       {/* Chat Box */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[380px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-slideUp">
+        <div className="fixed bottom-6 right-6 w-[380px] h-[480px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-slideUp">
           {/* Header with Gradient */}
           <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -174,7 +176,7 @@ const Chat = ({ resultId, otherUser }) => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all hover:rotate-90 duration-300"
+              className="text-white hover:bg-white hover:text-red-600 hover:bg-opacity-20 rounded-full p-2 transition-all hover:rotate-90 duration-300"
               aria-label="Close chat"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +270,7 @@ const Chat = ({ resultId, otherUser }) => {
           </form>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
