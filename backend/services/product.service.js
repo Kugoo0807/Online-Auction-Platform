@@ -11,6 +11,7 @@ import { watchListRepository } from '../repositories/watch.list.repository.js';
 import { dispatchEmail } from './email.service.queue.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
+const ORDER_URL_PREFIX = process.env.VITE_URL + 'order/' || 'http://localhost:3000/order/';
 class ProductService {
     async createProduct(productData) {
         const requiredFields = [

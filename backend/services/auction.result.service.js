@@ -106,12 +106,12 @@ class AuctionResultService {
                 throw new Error("Không thể huỷ đơn hàng đã hoàn tất hoặc đã huỷ trước đó");
             }
 
-            // Update trạng thái đơn hàng & đánh giá -1 cho bidder
-            const updatedOrder = await auctionResultRepository.cancelTransaction(order._id, reason, session);
-
             if (!reason || reason.trim() === '') {
                 reason = 'Người thắng không thanh toán';
             }
+
+            // Update trạng thái đơn hàng & đánh giá -1 cho bidder
+            const updatedOrder = await auctionResultRepository.cancelTransaction(order._id, reason, session);
             
             await ratingService.addRating({
                 rater: sellerId,
