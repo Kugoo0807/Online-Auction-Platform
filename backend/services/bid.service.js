@@ -4,6 +4,7 @@ import { productRepository } from '../repositories/product.repository.js';
 import { bidRepository } from '../repositories/bid.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+import { configRepository } from '../repositories/config.repository.js';
 
 import { executeTransaction } from '../../db/db.helper.js';
 import { dispatchEmail } from './email.service.queue.js';
@@ -11,6 +12,16 @@ import { productService } from './product.service.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 const ORDER_URL_PREFIX = process.env.VITE_URL + 'orders/' || 'http://localhost:3000/orders/';
+
+const EXTEND_THRESHOLD_MINUTES = await (async () => {
+    const config = await configRepository.getConfigs();
+    return config.extend_threshold_minutes || 5;
+})();
+
+const EXTEND_DURATION_MINUTES = await (async () => {
+    const config = await configRepository.getConfigs();
+    return config.extend_duration_minutes || 10;
+})();
 
 class BidService {
     // Hàm logic trả về true nếu người đặt giá là người giữ giá cao nhất sau khi đặt
@@ -31,8 +42,8 @@ class BidService {
         const now = new Date();
         if (product.auto_renew) {
             const timeLeft = product.auction_end_time.getTime() - now.getTime();
-            if (timeLeft > 0 && timeLeft < 5 * 60 * 1000) {
-                product.auction_end_time = new Date(product.auction_end_time.getTime() + 10 * 60 * 1000);
+            if (timeLeft > 0 && timeLeft < EXTEND_THRESHOLD_MINUTES * 60 * 1000) {
+                product.auction_end_time = new Date(product.auction_end_time.getTime() + EXTEND_DURATION_MINUTES * 60 * 1000);
             }
         }
 
