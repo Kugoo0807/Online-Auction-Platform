@@ -1,17 +1,25 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('vi-VN', {
+  const date = new Date(dateString);
+
+  const d = date.toLocaleDateString('vi-VN', {
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const t = date.toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit'
   });
+
+  return `${d} ${t}`;
 };
 
 const getStatusBadge = (status) => {
@@ -29,7 +37,29 @@ const getStatusBadge = (status) => {
   );
 };
 
-export function SellerProductCard({ product, onAppendDescription, onRelistProduct, onViewDetail }) {
+const getStatusText = (status) => {
+  const statusMap = {
+      'pending_payment': 'Chờ thanh toán',
+      'pending_shipment': 'Chờ giao hàng',
+      'shipping': 'Đang giao hàng',
+      'completed': 'Đã hoàn thành',
+      'cancelled': 'Đã hủy'
+  };
+  return statusMap[status] || status;
+};
+
+const getStatusStyle = (status) => {
+  const styles = {
+      pending_payment:  'bg-amber-50 text-amber-700 border-amber-200',
+      pending_shipment: 'bg-blue-50 text-blue-700 border-blue-200',
+      shipping:         'bg-purple-50 text-purple-700 border-purple-200',
+      completed:        'bg-emerald-50 text-emerald-700 border-emerald-200',
+      cancelled:        'bg-red-50 text-red-700 border-red-200',
+  };
+  return styles[status] || 'bg-slate-50 text-slate-700 border-slate-200';
+};
+
+export function SellerProductCard({ product, onAppendDescription, onRelistProduct, onViewDetail, onViewOrder }) {
   const status = product.auction_status;
   const imageUrl = product.thumbnail || product.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image';
   const currentPrice = product.current_highest_price || product.start_price || 0;
@@ -55,10 +85,12 @@ export function SellerProductCard({ product, onAppendDescription, onRelistProduc
         </h3>
 
         <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">Giá hiện tại</span>
-            <span className="font-bold text-green-600">{formatCurrency(currentPrice)}</span>
-          </div>
+          {status === 'active' && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Giá hiện tại</span>
+              <span className="font-bold text-green-600">{formatCurrency(currentPrice)}</span>
+            </div>
+          )}
           
           {status === 'active' && endTime && (
             <div className="flex items-center justify-between">
@@ -68,12 +100,31 @@ export function SellerProductCard({ product, onAppendDescription, onRelistProduc
           )}
 
           {status === 'sold' && (
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span className="text-sm font-semibold text-blue-900">Đã bán thành công</span>
+            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg gap-3">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Đã bán</span>
+                </div>
+                <span className="text-base font-bold text-blue-600">
+                  {formatCurrency(product.final_price || currentPrice)}
+                </span>
               </div>
-              <p className="text-xs text-blue-700">Giá bán: {formatCurrency(product.final_price || currentPrice)}</p>
+              
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={`rounded-sm border px-3 py-1 text-sm font-semibold ${getStatusStyle(product.order?.status || 'Chưa có đơn hàng')}`}>
+                    {getStatusText(product.order?.status || 'Chưa có đơn hàng')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => onViewOrder(product)}
+                  className="px-4 py-2 bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-700 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2"
+                >
+                  <span>Chi tiết</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -133,6 +184,7 @@ export default function SellerProductGrid({
   onAppendDescription, 
   onRelistProduct, 
   onViewDetail,
+  onViewOrder,
   emptyMessage = "Không có sản phẩm nào ở trạng thái này."
 }) {
   if (!products || products.length === 0) {
@@ -158,6 +210,7 @@ export default function SellerProductGrid({
           onAppendDescription={onAppendDescription}
           onRelistProduct={onRelistProduct}
           onViewDetail={onViewDetail}
+          onViewOrder={onViewOrder}
         />
       ))}
     </div>

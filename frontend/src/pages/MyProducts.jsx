@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productService } from '../services/product.service';
+import { auctionResultService } from '../services/auctionResultService.js';
 import ToastNotification from '../components/common/ToastNotification.jsx'; 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,42 +14,55 @@ const MyProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showDescModal, setShowDescModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [newDescription, setNewDescription] = useState('');
   const [descLoading, setDescLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const interval = setInterval(() => {
-      fetchProducts();
+      fetchProducts(false);
     }, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (loading) => {
     try {
-      if (isInitialLoad) {
+      if (loading) {
         setLoading(true);
       }
       const response = await productService.getSellerProducts();
       const data = response.data || response.products || [];
-      console.log("Products data:", data);
+
+      // Nếu product đã sold, lấy thông tin order tương ứng cho product đó
+      for (let product of data) {
+        if (product.auction_status === 'sold') {
+          try {
+            const order = await auctionResultService.getOrdersByProductId(product._id || product.id);
+            product.order = order;
+          } catch (error) {
+            console.error(`Lỗi lấy đơn hàng cho sản phẩm ${product._id || product.id}:`, error);
+          }
+        }
+      }
+
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Lỗi tải sản phẩm:", error);
-      if (isInitialLoad) {
+      if (loading) {
         ToastNotification("Không thể tải danh sách sản phẩm", "error");
         setProducts([]);
       }
     } finally {
-      if (isInitialLoad) {
+      if (loading) {
         setLoading(false);
-        setIsInitialLoad(false);
       }
     }
   };
@@ -79,17 +93,13 @@ const MyProducts = () => {
       const productId = selectedProduct._id || selectedProduct.id;
       const response = await productService.appendDescription(productId, newDescription);
       
-      if (response.success) {
-        ToastNotification("Đã bổ sung mô tả thành công!", "success");
-        setShowDescModal(false);
-        setNewDescription('');
-        fetchProducts();
-      } else {
-        ToastNotification(response.message || "Có lỗi xảy ra", "error");
-      }
+      ToastNotification("Đã bổ sung mô tả thành công!", "success");
+      setShowDescModal(false);
+      setNewDescription('');
+      fetchProducts();
     } catch (error) {
-      console.error("Lỗi bổ sung mô tả:", error);
-      ToastNotification(error.response?.data?.message || "Không thể bổ sung mô tả", "error");
+      const message = error?.response?.data?.message || "Có lỗi xảy ra!";
+      ToastNotification(message, 'error');
     } finally {
       setDescLoading(false);
     }
@@ -104,9 +114,30 @@ const MyProducts = () => {
     navigate(`/product/${productId}`);
   };
 
+  const handleViewOrder = async (product) => {
+    const order = product.order;
+
+    if (!order) {
+      return ToastNotification("Không tìm thấy đơn hàng liên quan đến sản phẩm này", "error");
+    }
+
+    navigate(`/orders/${order._id}`);
+  };
+
   const filterProducts = (status) => {
-    if (status === 'all') return products;
-    return products.filter(p => p.auction_status === status);
+    let filtered = products;
+    
+    // Filter theo trạng thái đấu giá
+    if (status !== 'all') {
+      filtered = filtered.filter(p => p.auction_status === status);
+    }
+    
+    // Filter theo trạng thái đơn hàng nếu tab 'Đã bán' được chọn
+    if (status === 'sold' && orderStatusFilter !== 'all') {
+      filtered = filtered.filter(p => p.order?.status === orderStatusFilter);
+    }
+    
+    return filtered;
   };
 
   const filteredProducts = filterProducts(activeTab);
@@ -204,11 +235,80 @@ const MyProducts = () => {
           </div>
         </div>
 
+        {/* Order Status Filter - Chỉ hiển thị khi tab 'Đã bán' được chọn */}
+        {activeTab === 'sold' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setOrderStatusFilter('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'all'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Tất cả
+              </button>
+              <button
+                onClick={() => setOrderStatusFilter('pending_payment')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'pending_payment'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chờ thanh toán
+              </button>
+              <button
+                onClick={() => setOrderStatusFilter('pending_shipment')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'pending_shipment'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chờ giao hàng
+              </button>
+              <button
+                onClick={() => setOrderStatusFilter('shipping')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'shipping'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Đang giao hàng
+              </button>
+              <button
+                onClick={() => setOrderStatusFilter('completed')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'completed'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Đã hoàn thành
+              </button>
+              <button
+                onClick={() => setOrderStatusFilter('cancelled')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  orderStatusFilter === 'cancelled'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Đã hủy
+              </button>
+            </div>
+          </div>
+        )}
+
         <SellerProductGrid
           products={filteredProducts}
           onAppendDescription={handleAppendDescription}
           onRelistProduct={handleRelistProduct}
           onViewDetail={handleViewDetail}
+          onViewOrder={handleViewOrder}
           emptyMessage={activeTab === 'all' 
             ? 'Bạn chưa có sản phẩm nào. Hãy tạo sản phẩm mới để bắt đầu!' 
             : 'Không có sản phẩm nào ở trạng thái này.'}
