@@ -3,16 +3,17 @@ const bcrypt = require('bcryptjs');
 const connectDB = require('./connect');
 const {
   User,
+  UpgradeRequest,
+  WatchList,
   Category,
   Product,
   Bid,
-  WatchList,
   QnA,
   AuctionResult,
   Rating,
-  UpgradeRequest,
-  DeletionHistory,
-  RefreshToken
+  RefreshToken,
+  ChatMessage,
+  OtpModel,
 } = require('./schema');
 
 const seedDatabase = async () => {
@@ -31,8 +32,9 @@ const seedDatabase = async () => {
     try { await AuctionResult.collection.drop(); } catch(e) {} 
     try { await Rating.collection.drop(); } catch(e) {}
     try { await UpgradeRequest.collection.drop(); } catch(e) {}
-    try { await DeletionHistory.collection.drop(); } catch(e) {}
     try { await RefreshToken.collection.drop(); } catch(e) {}
+    try { await ChatMessage.collection.drop(); } catch(e) {}
+    try { await OtpModel.collection.drop(); } catch(e) {}
 
     console.log('✅ Đã xóa dữ liệu và index cũ.');
 
