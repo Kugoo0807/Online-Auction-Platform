@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ShieldBan, Clock } from 'lucide-react';
 
-const AuctionStatusAlert = ({ product, user }) => {
+const AuctionStatusAlert = ({ product, user, orderId }) => {
   if (!product) return null;
 
   const { auction_status, current_highest_bidder, seller, _id, name } = product;
@@ -14,8 +14,6 @@ const AuctionStatusAlert = ({ product, user }) => {
   switch (auction_status) {
   // CASE I: Sản phẩm đã bán
   case 'sold':
-    // TODO: Lấy id đơn hàng từ product
-    const orderId = 'TODO_GET_ORDER_ID';
 
     // Người dùng là Seller hoặc Winner
     if (isSeller || isHighestBidder) {

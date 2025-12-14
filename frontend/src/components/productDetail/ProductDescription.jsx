@@ -29,20 +29,20 @@ export default function ProductDescription({ product, isRealSeller, onRefresh })
 
         setIsSaving(true);
         try {
-        await productService.appendDescription(product._id, newContent); 
-        ToastNotification('Cập nhật mô tả thành công!', 'success');
+            await productService.appendDescription(product._id, newContent); 
+            ToastNotification('Cập nhật mô tả thành công!', 'success');
 
-        // Clear
-        if (onRefresh) {
-            await onRefresh(); 
-        }
-        setNewContent('');
-        setIsEditing(false);
+            // Clear
+            if (onRefresh) {
+                await onRefresh(); 
+            }
+            setNewContent('');
+            setIsEditing(false);
         } catch (error) {
-        const message = error?.response?.data?.message || "Có lỗi xảy ra!";
-        ToastNotification(message, 'error');
+            const message = error?.response?.data?.message || "Có lỗi xảy ra!";
+            ToastNotification(message, 'error');
         } finally {
-        setIsSaving(false);
+            setIsSaving(false);
         }
     };
 
