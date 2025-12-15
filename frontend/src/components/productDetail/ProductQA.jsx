@@ -54,6 +54,8 @@ export default function ProductQA({ product, user, isRealSeller, questions = [],
     );
     const bannedBidder = bannedSet.has(user?._id.toString());
 
+    const isAdmin = user?.role === 'admin';
+
     return (
         <div className="mb-12">
             <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 inline-block text-gray-800">
@@ -61,7 +63,7 @@ export default function ProductQA({ product, user, isRealSeller, questions = [],
             </h2>
             <div className="bg-white p-10 text-center rounded-xl border border-gray-200 text-gray-500 italic">
                 {/* LOGIC NHẬP CÂU HỎI: Chỉ hiện khi là User thường (Bidder), không phải Seller, không phải Guest, không bị chặn */}
-                {!isRealSeller && user && !bannedBidder ? (
+                {!isRealSeller && !isAdmin && user && !bannedBidder ? (
                 <form onSubmit={handlePostQuestion} className="mb-8">
                     <div className="flex gap-4">
                     {avatar(user?.full_name)}
@@ -88,8 +90,8 @@ export default function ProductQA({ product, user, isRealSeller, questions = [],
                     </div>
                 </form>
                 ) : !user ? (
-                <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
-                    Vui lòng <span className="font-semibold text-blue-600 cursor-pointer">đăng nhập</span> để đặt câu hỏi.
+                <div className="mb-8 p-4 bg-gray-200 border border-gray-300 rounded-lg text-center text-gray-800 text-sm">
+                    Vui lòng <span className="font-semibold text-blue-800 cursor-pointer">đăng nhập</span> để đặt câu hỏi.
                 </div>
                 ) : null}
 

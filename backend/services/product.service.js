@@ -173,9 +173,11 @@ class ProductService {
             product.auto_bid_map.delete(bidderIdToBan);
 
             // === LOGIC XỬ LÍ SAU KHI CẤM ===
-            await recalculateAuctionState(product, null, session);
+            await recalculateAuctionState(product, product.current_highest_bidder, session);
 
             await productRepository.save(product, session);
+
+            await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
             
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToBan, session);

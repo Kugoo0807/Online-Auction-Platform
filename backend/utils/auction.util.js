@@ -1,7 +1,7 @@
 import { User } from '../../db/schema.js';
 import { Bid } from '../../db/schema.js';
 
-export const recalculateAuctionState = async (product, session = null) => {
+export const recalculateAuctionState = async (product, currentHolderId, session = null) => {
     const allBids = Array.from(product.auto_bid_map.entries())
         .map(([uid, price]) => ({ userId: uid.toString(), price }));
 
@@ -29,7 +29,20 @@ export const recalculateAuctionState = async (product, session = null) => {
 
     // Sort
     activeIds.sort((a, b) => {
-        return b.price - a.price;
+        if (b.price !== a.price) {
+            return b.price - a.price;
+        }
+
+        // Nếu giá bằng nhau, ưu tiên người đang giữ giá cao nhất hiện tại
+        if (currentHolderId && a.userId === currentHolderId.toString()) {
+            return -1;
+        }
+
+        if (currentHolderId && b.userId === currentHolderId.toString()) {
+            return 1;
+        }
+
+        return 0;
     });
 
     const winner = activeIds[0];
@@ -42,8 +55,7 @@ export const recalculateAuctionState = async (product, session = null) => {
     if (winner) {
         newWinnerId = winner.userId;
         if (second) {
-            const priceWithStep = second.price + product.bid_increment;
-            newPrice = Math.min(priceWithStep, winner.price);
+            newPrice = Math.min(winner.price, second.price);
 
             /* === LOGIC XỬ LÝ SYSTEM BID ===
 
@@ -64,7 +76,7 @@ export const recalculateAuctionState = async (product, session = null) => {
                     user: latestHistoryBid.user,
                     product: product._id,
                     price: amountForHolder,
-                    is_auto: true
+                    is_priority: true
                 });
                 await revealBid.save({ session });
 
@@ -75,7 +87,7 @@ export const recalculateAuctionState = async (product, session = null) => {
                         user: winner.userId,
                         product: product._id,
                         price: newPrice,
-                        is_auto: true
+                        is_priority: true
                     });
                     await winnerBid.save({ session });
 

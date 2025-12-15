@@ -46,21 +46,23 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
 
     const FavoriteButton = () => (
         <button
-        type="button"
-        disabled={isLoading}
-        onClick={handleToggleFavorite}
-        title={isFavorite ? "Bỏ theo dõi" : "Theo dõi sản phẩm"}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50 cursor-pointer"
-        style={{
-            backgroundColor: isFavorite ? '#FEE2E2' : '#F3F4F6',
-            borderColor: isFavorite ? '#FCA5A5' : '#D1D5DB',
-            color: isFavorite ? '#DC2626' : '#4B5563'
+            type="button"
+            disabled={isLoading}
+            onClick={handleToggleFavorite}
+            title="Yêu thích sản phẩm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50 cursor-pointer"
+            style={{
+                backgroundColor: isFavorite ? '#FEE2E2' : '#F3F4F6',
+                borderColor: isFavorite ? '#FCA5A5' : '#D1D5DB',
+                color: isFavorite ? '#DC2626' : '#4B5563'
         }}
         >
         <img src={isFavorite ? "/red_heart.png" : "/white_heart.png"} alt="Icon" className="w-5 h-5 object-contain" />
-        <span className="font-semibold">{isFavorite ? "Đang theo dõi" : "Theo dõi sản phẩm"}</span>
+        <span className="font-semibold">Theo dõi</span>
         </button>
     );
+
+    const isAdmin = user && user.role === 'admin';
 
     return (
         <div className="p-6 border border-gray-200 rounded-xl bg-white shadow-sm h-fit">
@@ -73,7 +75,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 <div className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${isAuctionActive(product) ? 'bg-green-100 border-green-200 text-green-700' : 'bg-red-100 border-red-200 text-red-700'}`}>
                     {isAuctionActive(product) ? '🟢 Đang đấu giá' : '🔴 Đã kết thúc'}
                 </div>
-                {!isRealSeller && product.auction_status === 'active' && <FavoriteButton />}
+                {!isRealSeller && !isAdmin && product.auction_status === 'active' && <FavoriteButton />}
             </div>
 
             {/* Giá hiện tại, Giá mua ngay, Giá đặt tối thiểu */}

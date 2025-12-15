@@ -10,9 +10,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchHomepageData = async () => {
+    const fetchHomepageData = async (loading) => {
       try {
-        setLoading(true)
+        if (loading) setLoading(true)
 
         const [endingRes, priceRes, biddedRes] = await Promise.all([
           productService.getTopEnding(),
@@ -26,13 +26,18 @@ export default function HomePage() {
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu homepage:', error)
       } finally {
-        setLoading(false)
+        if (loading) setLoading(false)
       }
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    fetchHomepageData()
+    fetchHomepageData(true)
+
+    // Polling mỗi 60 giây
+    const intervalId = setInterval(() => fetchHomepageData(false), 60000)
+
+    return () => clearInterval(intervalId)
   }, [])
 
   return (

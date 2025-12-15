@@ -84,20 +84,6 @@ class BidService {
             // Giá = min(amount người mới, max_bid holder cũ + increment)
             product.current_highest_bidder = userId;
             product.current_highest_price = Math.min(amount, currentHolderMaxBid + product.bid_increment);
-
-            // Tạo bản ghi đấu giá cho người giữ giá cũ (nếu chưa có bản ghi nào đang giữ max bid)
-            const existingBidForCurrentHolder = await bidRepository.findHighestByUser(currentHolderId, session);
-
-            if (existingBidForCurrentHolder && existingBidForCurrentHolder.price < currentHolderMaxBid) {
-                await bidRepository.create({
-                    user: currentHolderId,
-                    product: product._id,
-                    price: currentHolderMaxBid,
-                    is_auto: true
-                }, session);
-            }
-            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
-            product.bid_count += 1;
             await productRepository.save(product, session);
 
             // Tạo bản ghi đấu giá
@@ -111,8 +97,8 @@ class BidService {
         }
         // 2.2. BIDDER KHÁC NGƯỜI GIỮ GIÁ CAO NHẤT (NHƯNG ĐẶT GIÁ THẤP HƠN HOẶC BẰNG NGƯỜI GIỮ GIÁ CAO NHẤT)
         else {
-            // Cập nhật giá hiện tại
-            product.current_highest_price = Math.min(currentHolderMaxBid, amount + product.bid_increment);
+            // Cập nhật giá hiện tại (= amount)
+            product.current_highest_price = amount;
 
             // Tạo bản ghi đấu giá cho người vừa đấu giá
             await bidRepository.create({
@@ -126,7 +112,7 @@ class BidService {
                 user: currentHolderId,
                 product: product._id,
                 price: product.current_highest_price,
-                is_auto: true
+                is_priority: true
             }, session);
             product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
             product.bid_count += 1;
