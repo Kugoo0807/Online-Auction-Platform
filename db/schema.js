@@ -203,8 +203,9 @@ const bidSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   price: { type: Number, required: true },
-  is_auto: { type: Boolean, default: false },
+  is_priority: { type: Boolean, default: false },
   is_valid: { type: Boolean, default: true },
+  is_adjusted: { type: Boolean, default: false },
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 bidSchema.plugin(checkForeignKeys);

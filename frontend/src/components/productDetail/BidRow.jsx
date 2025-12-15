@@ -8,13 +8,6 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
     const isUserMe = currentUserId === bid.user?._id?.toString();
     const isInvalid = !bid.is_valid;
 
-    // Ghost bid
-    const isTopRow = index === 0;
-    const isDuplicatePrice = bid.price === product.current_highest_price;
-    const isWinner = bid.user?._id?.toString() === product.current_highest_bidder._id;
-
-    const isGhostBid = !isTopRow && isDuplicatePrice && isWinner;
-
     // Product is sold and having a winner
     const winnerExists = product.auction_status === 'sold' && product.current_highest_bidder?._id && isTopRow;
 
@@ -56,16 +49,24 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
 
                     <div className="flex flex-wrap items-center gap-1.5">
                         {/* Badge Auto Bid */}
-                        {!isInvalid && bid.is_auto && (
-                        <span className="w-fit bg-blue-100 text-blue-700 text-[12px] font-semibold px-2 py-0.5 rounded-full border border-gray-200 flex items-center justify-center gap-1 select-none">
-                            <span>Automated Bidding</span>
-                            <span>🤖</span>
+                        {!isInvalid && bid.is_priority && (
+                        <span className="group/scaled relative w-fit bg-orange-100 text-orange-700 text-[12px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 flex items-center justify-center gap-1 select-none">
+                            <span>Ưu thế</span>
+                            <span>⚡</span>
+
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/scaled:block z-50 w-72 pointer-events-none">
+                                <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-xl leading-relaxed opacity-95">
+                                    <p>Người chơi đạt mức giá này trước hoặc có mức đặt tối đa cao hơn nên được ưu tiên giữ thứ hạng cao hơn.</p>
+                                </div>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800 opacity-95"></div>
+                            </div>
                         </span>
                         )}
 
                         {/* Badge Scaled Price */}
-                        {!isInvalid && isGhostBid && (
-                        <span className="group/scaled relative w-fit bg-orange-100 text-orange-700 text-[12px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 flex items-center justify-center gap-1 select-none cursor-help">
+                        {!isInvalid && bid.is_adjusted && (
+                        <span className="group/scaled relative w-fit bg-blue-100 text-blue-700 text-[12px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 flex items-center justify-center gap-1 select-none">
                             <span>Điều chỉnh giá</span>
                             <span>🔄</span>
                             
