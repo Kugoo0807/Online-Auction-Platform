@@ -148,6 +148,11 @@ export function ProductCard({ product }) {
       return;
     }
 
+    if (user.role === 'admin') {
+      ToastNotification("Quản trị viên không thể theo dõi sản phẩm!", 'warning');
+      return;
+    }
+
     // --- Xử lý API ---
     if (isLoading) return;
 

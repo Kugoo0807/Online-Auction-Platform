@@ -6,6 +6,7 @@ const BlockingMessage = ({ title, message, type = 'blue' }) => {
         red: "text-red-800 bg-red-50 border-red-100",
         yellow: "text-yellow-800 bg-yellow-50 border-yellow-100",
         green: "text-green-800 bg-green-50 border-green-100",
+        gray: "text-gray-800 bg-gray-200 border-gray-300",
     };
 
     return (
@@ -52,7 +53,16 @@ export default function BiddingForm({
         );
     }
 
-    // Trường hợp 3: Là Seller (Chủ hàng)
+    // Trường hợp 3: Là Admin
+    if (user.role === 'admin') {
+        return <BlockingMessage
+        title="Quản trị viên không thể tham gia đấu giá"
+        message="Quản trị viên không có quyền tham gia đấu giá sản phẩm."
+        type="gray"
+        />;
+    }
+
+    // Trường hợp 4: Là Seller (Chủ hàng)
     if (isRealSeller) {
         return <BlockingMessage 
         title="Bạn là chủ sở hữu sản phẩm này" 
@@ -61,7 +71,7 @@ export default function BiddingForm({
         />;
     }
 
-    // Trường hợp 4: Bị cấm (Banned)
+    // Trường hợp 5: Bị cấm (Banned)
     if (isBannedUser) {
         return <BlockingMessage 
         title="Bạn đã bị chặn đấu giá" 
@@ -70,7 +80,7 @@ export default function BiddingForm({
         />;
     }
 
-    // Trường hợp 5: Là Newbie
+    // Trường hợp 6: Là Newbie
     if (isNewbie) {
         return <BlockingMessage 
         title="Giới hạn người tham gia" 
@@ -79,7 +89,7 @@ export default function BiddingForm({
         />;
     }
 
-    // Trường hợp 6: Hợp lệ -> Hiển thị Form đặt giá
+    // Trường hợp 7: Hợp lệ -> Hiển thị Form đặt giá
     return (
         <div className="mb-4">
         <label className="block mb-2 font-bold text-gray-700">Giá đặt của bạn (₫)</label>
