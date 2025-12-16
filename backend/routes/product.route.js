@@ -90,7 +90,7 @@ export function ProductRoutes(productController, qnaController) {
     router.post('/:id/buy-now', [checkAuth, checkNotAdmin], productController.buyProductNow);
 
     // Hủy sản phẩm
-    router.post('/:id/cancel', [checkAuth, checkNotAdmin], productController.cancelProduct);
+    router.post('/:id/cancel', checkAuth, productController.cancelProduct);
 
     return router;
 }
