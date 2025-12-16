@@ -19,6 +19,10 @@ export default function CategoryMenu({ show, onHover, onClickCategory }) {
       }
     };
     fetchData();
+
+    // Polling cứ 5 phút để cập nhật danh mục mới
+    const intervalId = setInterval(fetchData, 5 * 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
   // 2. Xử lý phân loại cha/con

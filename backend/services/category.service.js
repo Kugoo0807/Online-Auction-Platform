@@ -3,10 +3,17 @@ import { productRepository } from '../repositories/product.repository.js';
 
 class CategoryService {
     async createCategory(data) {
+        // Kiểm tra các field bắt buộc
+        if (!data.category_name) {
+            throw new Error("Tên danh mục là bắt buộc!");
+        }
+    
+        // Kiểm tra trùng tên danh mục
         const existed = await categoryRepository.findByName(data.category_name);
         if (existed) {
             throw new Error("Tên danh mục đã tồn tại!");
         }
+
         return await categoryRepository.create(data);
     }
 
@@ -20,6 +27,10 @@ class CategoryService {
 
     async getCategoryByName(category_name) {
         return await categoryRepository.findByName(category_name);
+    }
+
+    async getCategoryBySlug(slug) {
+        return await categoryRepository.findBySlug(slug);
     }
 
     async updateCategory(id, updateData) {
@@ -37,26 +48,29 @@ class CategoryService {
         return await categoryRepository.update(id, updateData);
     }
 
+    async existsActiveProductsInCategory(categoryId) {
+        const allRelatedIds = await categoryRepository.getAllDescendantIds(categoryId);
+        return await productRepository.existsInCategories(allRelatedIds);
+    }
+
     async deleteCategory(id) {
         const category = await categoryRepository.findById(id);
         if (!category) {
             throw new Error('Danh mục không tồn tại!');
         }
 
-        // Chứa danh mục con
-        const hasChildren = await categoryRepository.hasChildren(id);
-        if (hasChildren) {
-            throw new Error('Không thể xóa danh mục! Danh mục đang chứa danh mục con.')
+        // Kiểm tra sản phẩm active trong danh mục và các danh mục con
+        if (await this.existsActiveProductsInCategory(id)) {
+            throw new Error('Không thể xóa danh mục vì có sản phẩm đang đấu giá trong danh mục này hoặc các danh mục con.');
         }
 
-        // Chứa sản phẩm
+        // Xóa tất cả danh mục con trước, sau đó xóa danh mục cha
         const allRelatedIds = await categoryRepository.getAllDescendantIds(id);
-        const hasProduct = await productRepository.existsInCategories(allRelatedIds);
-        if (hasProduct) {
-            throw new Error('Không thể xóa danh mục! Danh mục đang chứa sản phẩm.');
+        for (const categoryId of allRelatedIds.reverse()) {
+            await categoryRepository.delete(categoryId);
         }
 
-        return await categoryRepository.delete(id);
+        return true;
     }
 }
 
