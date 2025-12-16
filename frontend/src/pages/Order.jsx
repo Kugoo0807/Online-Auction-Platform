@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auctionResultService } from '../services/auctionResultService';
+import { ratingService } from '../services/ratingService';
 import ToastNotification from '../components/common/ToastNotification';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import OrderHeader from '../components/order/OrderHeader';
@@ -21,6 +22,7 @@ const Order = () => {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('info');
+    const [ratings, setRatings] = useState([]);
     
     // Action loading states
     const [submittingPayment, setSubmittingPayment] = useState(false);
@@ -33,11 +35,15 @@ const Order = () => {
 
     useEffect(() => {
         fetchOrderDetails(true);
+        fetchRatings();
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Polling mỗi 30 giây để cập nhật trạng thái đơn hàng
-        const intervalId = setInterval(() => fetchOrderDetails(false), 30000);
+        // Polling mỗi 30 giây để cập nhật trạng thái đơn hàng và ratings
+        const intervalId = setInterval(() => {
+            fetchOrderDetails(false);
+            fetchRatings();
+        }, 30000);
         return () => clearInterval(intervalId);
     }, [orderId]);
 
@@ -133,6 +139,47 @@ const Order = () => {
     };
     // =====================================
 
+    // === Xử lý rating ===
+    const fetchRatings = async () => {
+        try {
+            const response = await ratingService.getRatingByAuctionResult(orderId);
+            setRatings(response.data || []);
+        } catch (error) {
+            console.error('Lỗi khi tải đánh giá:', error);
+        }
+    };
+
+    const handleCreateRating = async (rating_type, comment) => {
+        try {
+            const rated_user = isBuyer ? orderData.seller._id : orderData.winning_bidder._id;
+            
+            await ratingService.createRating(rated_user, orderId, rating_type, comment);
+            
+            ToastNotification('Đánh giá thành công!', 'success');
+            
+            // Refresh ratings data
+            await fetchRatings();
+        } catch (error) {
+            console.error('Lỗi khi tạo đánh giá:', error);
+            ToastNotification(error.response?.data?.message || 'Đã có lỗi xảy ra khi đánh giá. Vui lòng thử lại sau.', 'error');
+        }
+    };
+
+    const handleChangeRating = async (ratingId, newType, newComment) => {
+        try {
+            await ratingService.changeRatingType(ratingId, newType, newComment);
+            
+            ToastNotification('Cập nhật đánh giá thành công!', 'success');
+            
+            // Refresh ratings data
+            await fetchRatings();
+        } catch (error) {
+            console.error('Lỗi khi cập nhật đánh giá:', error);
+            ToastNotification(error.response?.data?.message || 'Đã có lỗi xảy ra khi cập nhật đánh giá. Vui lòng thử lại sau.', 'error');
+        }
+    };
+    // =====================================
+
     const isBuyer = user?._id === orderData?.winning_bidder?._id;
     const isSeller = user?._id === orderData?.seller?._id;
     const canCancel = isSeller && ['pending_payment', 'pending_shipment', 'shipping'].includes(orderData?.status);
@@ -224,6 +271,10 @@ const Order = () => {
                             orderData={orderData}
                             isBuyer={isBuyer}
                             isSeller={isSeller}
+                            user={user}
+                            ratings={ratings}
+                            onCreateRating={handleCreateRating}
+                            onChangeRating={handleChangeRating}
                         />
                     )}
                 </div>

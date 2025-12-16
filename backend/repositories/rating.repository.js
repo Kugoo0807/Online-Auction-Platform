@@ -76,6 +76,15 @@ class RatingRepository {
     async findById(ratingId, session = null) {
         return await Rating.findById(ratingId).session(session);
     }
+    
+    async findByAuctionResult(auctionResultId, session = null) {
+        return await Rating.find({
+            auction_result: auctionResultId
+        })
+            .populate('rater', 'full_name email')
+            .populate('rated_user', 'full_name email')
+            .session(session);
+    }
 
     async changeRatingType(ratingId, newType, newComment, session = null) {
         return await Rating.findByIdAndUpdate(

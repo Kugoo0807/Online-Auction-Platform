@@ -92,7 +92,7 @@ class UserService {
             if (activeProducts && activeProducts.length > 0) {
                 await Promise.all(
                     activeProducts.map(product =>
-                        productService.cancelProduct(product._id) 
+                        productService.cancelProduct(userId, product._id) 
                     )
                 );
             }

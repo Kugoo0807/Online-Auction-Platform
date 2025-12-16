@@ -57,7 +57,7 @@ const OrderInfoTab = ({ orderData }) => {
                     <InfoRow 
                         label="Điểm đánh giá" 
                         value={
-                            orderData.winning_bidder.rating_score !== 0 
+                            orderData.winning_bidder.rating_count !== 0 
                                 ? `${orderData.winning_bidder.rating_score} ⭐ (${orderData.winning_bidder.rating_count} lượt đánh giá)` 
                                 : 'Chưa có đánh giá'
                         } 
@@ -76,7 +76,7 @@ const OrderInfoTab = ({ orderData }) => {
                     <InfoRow 
                         label="Điểm đánh giá" 
                         value={
-                            orderData.seller.rating_score !== 0 
+                            orderData.seller.rating_count !== 0 
                                 ? `${orderData.seller.rating_score} ⭐ (${orderData.seller.rating_count} lượt đánh giá)`
                                 : 'Chưa có đánh giá'
                         } 

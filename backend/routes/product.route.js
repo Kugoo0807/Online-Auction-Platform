@@ -62,7 +62,7 @@ export function ProductRoutes(productController, qnaController) {
     // ======= ROUTER ĐỘNG =======
 
     // Cập nhật mô tả
-    router.post('/:id/description', [checkAuth, checkRole('seller')], productController.appendDescription);
+    router.post('/:id/description', [checkAuth, checkNotAdmin], productController.appendDescription);
 
     // Ban bidder
     router.post('/:id/ban', [checkAuth, checkNotAdmin], productController.banBidder);
@@ -88,6 +88,9 @@ export function ProductRoutes(productController, qnaController) {
 
     // Mua ngay
     router.post('/:id/buy-now', [checkAuth, checkNotAdmin], productController.buyProductNow);
+
+    // Hủy sản phẩm
+    router.post('/:id/cancel', checkAuth, productController.cancelProduct);
 
     return router;
 }

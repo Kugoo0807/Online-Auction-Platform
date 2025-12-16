@@ -111,7 +111,7 @@ export function SellerProductCard({ product, onAppendDescription, onRelistProduc
                 </span>
               </div>
               
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 items-center">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className={`rounded-sm border px-3 py-1 text-sm font-semibold ${getStatusStyle(product.order?.status || 'Chưa có đơn hàng')}`}>
                     {getStatusText(product.order?.status || 'Chưa có đơn hàng')}

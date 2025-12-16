@@ -28,6 +28,10 @@ class CategoryRepository {
         });
     }
 
+    async findBySlug(slug) {
+        return await Category.findOne({ slug }).populate("parent", "category_name");
+    }
+
     async update(id, updateData) {
         Object.keys(updateData).forEach(key => {
             if (updateData[key] === undefined) {

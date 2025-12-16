@@ -296,6 +296,23 @@ class ProductController {
             return res.status(400).json({ message: error.message });
         }   
     }
+
+    async cancelProduct(req, res) {
+        try {
+            const seller = req.user._id.toString();
+            const isAdmin = req.user.role === 'admin';
+            const productId = req.params.id;
+
+            const result = await productService.cancelProduct(seller, productId, isAdmin);
+
+            return res.status(200).json({
+                message: 'Hủy sản phẩm thành công!',
+                data: result
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export const productController = new ProductController();
