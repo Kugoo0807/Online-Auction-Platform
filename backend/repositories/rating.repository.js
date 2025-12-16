@@ -72,6 +72,22 @@ class RatingRepository {
 
         return { score: 0, count: 0 };
     }
+
+    async findById(ratingId, session = null) {
+        return await Rating.findById(ratingId).session(session);
+    }
+
+    async changeRatingType(ratingId, newType, newComment, session = null) {
+        return await Rating.findByIdAndUpdate(
+            ratingId,
+            { rating_type: newType, comment: newComment },
+            { new: true, session }
+        );
+    }
+
+    async deleteById(ratingId, session = null) {
+        return await Rating.findByIdAndDelete(ratingId).session(session);
+    }
 }
 
 export const ratingRepository = new RatingRepository();

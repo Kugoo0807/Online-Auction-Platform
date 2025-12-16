@@ -22,7 +22,7 @@ class RatingController {
 
     async getReviewsGiven(req, res) {
         try {
-            const userId = req.params.userId;
+            const userId = req.user._id;
             const reviews = await ratingService.getReviewsGiven(userId);
             return res.status(200).json({
                 message: 'Lấy danh sách đánh giá đã cho thành công!',
@@ -35,11 +35,28 @@ class RatingController {
 
     async getReviewsReceived(req, res) {
         try {
-            const userId = req.params.userId;
+            const userId = req.user._id;
             const reviews = await ratingService.getReviewsReceived(userId);
             return res.status(200).json({
                 message: 'Lấy danh sách đánh giá đã nhận thành công!',
                 data: reviews
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async changeRatingType(req, res) {
+        try {
+            const ratingId = req.params.ratingId;
+            const raterId = req.user._id;
+
+            const { newType, newComment } = req.body;
+
+            const updatedRating = await ratingService.changeRatingType(raterId, ratingId, newType, newComment);
+            return res.status(200).json({
+                message: 'Cập nhật loại đánh giá thành công!',
+                data: updatedRating
             });
         } catch (error) {
             return res.status(400).json({ message: error.message });

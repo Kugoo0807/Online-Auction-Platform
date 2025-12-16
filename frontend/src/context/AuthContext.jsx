@@ -57,6 +57,13 @@ export function AuthProvider({ children }) {
     };
 
     initAuth();
+
+    // Polling mỗi 1 phút để fetch lại thông tin user
+    const intervalId = setInterval(() => {
+      fetchCurrentUser();
+    }, 60000);
+
+    return () => clearInterval(fetchCurrentUser, intervalId);
   }, []);
 
   const login = async (credentials) => {
