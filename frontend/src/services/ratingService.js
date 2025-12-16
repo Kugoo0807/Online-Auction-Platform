@@ -25,18 +25,18 @@ class RatingService {
         }
     }
 
-    async getReviewsGiven(userId) {
+    async getReviewsGiven() {
         try {
-            const response = await api.get(`/ratings/given/${userId}`);
+            const response = await api.get(`/ratings/given`);
             return response.data;
         } catch (error) {
             throw error;
         }
     }
 
-    async getReviewsReceived(userId) {
+    async getReviewsReceived() {
         try {
-            const response = await api.get(`/ratings/received/${userId}`);
+            const response = await api.get(`/ratings/received`);
             return response.data;
         } catch (error) {
             throw error;
