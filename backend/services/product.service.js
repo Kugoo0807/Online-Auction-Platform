@@ -178,7 +178,7 @@ class ProductService {
             await productRepository.save(product, session);
 
             await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
-            
+
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToBan, session);
             const bidderEmail = bidder?.email;
@@ -277,18 +277,16 @@ class ProductService {
             throw new Error("Không có quyền thực hiện");
         }
 
-        const recipientsEmails = [];
         if (product.seller?.email) {
-            recipientsEmails.push(product.seller.email);
+            dispatchEmail('NOTIFY_AUCTION_CANCELLED_TO_SELLER', {
+                sellerEmail: product.seller?.email,
+                productName: product.product_name
+            });
         }
 
         if (product.current_highest_bidder?.email) {
-            recipientsEmails.push(product.current_highest_bidder.email);
-        }
-
-        if (recipientsEmails.length > 0) {
             dispatchEmail('NOTIFY_AUCTION_CANCELLED', {
-                recipientsEmails,
+                bidderEmail: product.current_highest_bidder?.email,
                 productName: product.product_name
             });
         }
@@ -321,7 +319,7 @@ class ProductService {
             final_price: amount,
             status: 'pending_payment'
         }, session);
-        
+
         // Tạo bản ghi đấu giá
         await bidRepository.create({
             user: userId,
@@ -372,7 +370,7 @@ class ProductService {
             const finalWinnerId = userId;
 
             // --- Gửi email thông báo ---
-            
+
             // Lấy thông tin cần thiết để gửi email
             const auctionResult = await auctionResultRepository.findByProduct(product._id, session);
             if (!auctionResult) {

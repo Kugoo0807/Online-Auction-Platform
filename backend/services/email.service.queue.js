@@ -33,7 +33,10 @@ const EMAIL_HANDLERS = {
         await mailService.notifyNewAnswer(data.recipientsEmails, data.productName, data.questionContent, data.answerContent, data.productLink);
     },
     'NOTIFY_AUCTION_CANCELLED': async (data) => {
-        await mailService.notifyAuctionCancelled(data.recipientsEmails, data.productName);
+        await mailService.notifyAuctionCancelled(data.bidderEmail, data.productName);
+    },
+    'NOTIFY_AUCTION_CANCELLED_TO_SELLER': async (data) => {
+        await mailService.notifyAuctionCancelledToSeller(data.sellerEmail, data.productName);
     },
     'NOTIFY_UPGRADE_APPROVED': async (data) => {
         await mailService.notifyUpgradeApproved(data.userEmail);
