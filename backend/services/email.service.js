@@ -426,9 +426,29 @@ export async function notifyNewAnswer(recipientsEmails, productName, questionCon
     });
 }
 
-export async function notifyAuctionCancelled(recipientsEmails, productName) {
+export async function notifyAuctionCancelledToSeller(sellerEmail, productName) {
     return sendMailBase({
-        to: recipientsEmails,
+        to: sellerEmail,
+        subject: `[HỦY ĐẤU GIÁ] "${productName}" đã bị hủy đấu giá`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">PHIÊN ĐẤU GIÁ BỊ HỦY</h2>
+                </div>
+
+                <div style="padding: 24px;">
+                    <p style="color: #333;">Phiên đấu giá cho sản phẩm: <strong>${productName}</strong> đã bị hủy</p>
+                    <div style="background-color: #fff3cd; color: #856404; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
+                        Mọi thắc mắc của bạn xin vui lòng liên hệ quản trị viên để được giải đáp.
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
+export async function notifyAuctionCancelled(bidderEmail, productName) {
+    return sendMailBase({
+        to: bidderEmail,
         subject: `[HỦY ĐẤU GIÁ] "${productName}" đã bị hủy đấu giá`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
