@@ -21,6 +21,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import CreateProduct from './pages/CreateProduct'
 import MyProducts from './pages/MyProducts'
 import Order from './pages/Order'
+import Ratings from "./pages/Ratings"
 import { useAuth } from './context/AuthContext'
 
 // Components
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/watch-list" element={<WatchList />} />
           <Route path="/manage-products" element={<MyProducts />} />
           <Route path="/orders/:orderId" element={<Order />} />
+          <Route path="/profile/ratings" element={<Ratings />} />
         </Route>
 
         {/* Seller Only */}

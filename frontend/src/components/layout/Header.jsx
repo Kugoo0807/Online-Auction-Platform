@@ -197,7 +197,7 @@ export default function Header() {
                   {isSeller || isBidder ? (
                     <>
                       <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Hồ sơ cá nhân</Link>
-                      <Link to="/profile/ratings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Đánh giá của tôi</Link>
+                      <Link to="/profile/ratings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Đánh giá và phản hồi</Link>
                       <Link to="/manage-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Quản lý sản phẩm</Link>
                       <Link to="/auctions/bidding" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Đang tham gia đấu giá</Link>
                       <Link to="/auctions/won" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors" onClick={() => setShowUserMenu(false)}>Sản phẩm đã thắng</Link>
