@@ -5,8 +5,12 @@ export function RatingRoutes(ratingController) {
     const router = express.Router();
 
     router.post('/', [checkAuth, checkNotAdmin], ratingController.createRating);
-    router.get('/given/:userId', ratingController.getReviewsGiven);
-    router.get('/received/:userId', ratingController.getReviewsReceived);
+
+    router.get('/given', [checkAuth, checkNotAdmin], ratingController.getReviewsGiven);
+    
+    router.get('/received', [checkAuth, checkNotAdmin], ratingController.getReviewsReceived);
+
+    router.put('/:ratingId/type', [checkAuth, checkNotAdmin], ratingController.changeRatingType);
 
     return router;
 }

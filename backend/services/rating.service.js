@@ -3,6 +3,7 @@ import { ratingRepository } from '../repositories/rating.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
 import { executeTransaction } from '../../db/db.helper.js';
+
 class RatingService {
     async _addRatingLogic(data, session) {
         const { rater, rated_user, auction_result, rating_type } = data;
@@ -51,8 +52,6 @@ class RatingService {
         });
     }
 
-
-
     async getReviewsGiven(userId) {
         const user = await userRepository.findById(userId);
         if (!user) {
@@ -67,6 +66,85 @@ class RatingService {
             throw new Error('Người dùng không tồn tại!');
         }
         return await ratingRepository.getReviewsReceived(userId);
+    }
+
+    async changeRatingType(raterId, ratingId, newType, newComment) {
+        return await executeTransaction(async (session) => {
+            const rating = await ratingRepository.findById(ratingId);
+            if (!rating) {
+                throw new Error('Đánh giá không tồn tại!');
+            }
+
+            if (rating.rater.toString() !== raterId.toString()) {
+                throw new Error('Bạn không có quyền thay đổi loại đánh giá này!');
+            }
+
+            const changed = await ratingRepository.changeRatingType(ratingId, newType, newComment, session);
+            if (!changed) {
+                throw new Error('Cập nhật loại đánh giá thất bại!');
+            }
+
+            // Tính toán lại chỉ số rating
+            const newStats = await ratingRepository.calculateUserStats(rating.rated_user, session);
+
+            // Cập nhật vào bảng User
+            await userRepository.updateRatingStats(
+                rating.rated_user, 
+                newStats.score, 
+                newStats.count, 
+                session
+            );
+
+            return changed;
+        });
+    }
+
+    async _deleteGivenRatingsByUserLogic(userId, session) {
+        // Lấy tất cả đánh giá đã đánh giá bởi userId
+        const ratings = await ratingRepository.getReviewsGiven(userId, session);
+
+        for (const rating of ratings) {
+            await ratingRepository.deleteById(rating._id, session);
+
+            // Tính toán lại chỉ số rating
+            const newStats = await ratingRepository.calculateUserStats(rating.rated_user, session);
+
+            // Cập nhật vào bảng User
+            await userRepository.updateRatingStats(
+                rating.rated_user,
+                newStats.score,
+                newStats.count,
+                session
+            );
+        }
+        return;
+    }
+
+    async deleteGivenRatingsByUser(userId, externalSession = null) {
+        if (externalSession) {
+            return await this._deleteGivenRatingsByUserLogic(userId, externalSession);
+        }
+
+        return await executeTransaction(async (session) => {
+            // Lấy tất cả đánh giá đã đánh giá bởi userId
+            const ratings = await ratingRepository.getReviewsGiven(userId, session);
+
+            for (const rating of ratings) {
+                await ratingRepository.deleteById(rating._id, session);
+
+                // Tính toán lại chỉ số rating
+                const newStats = await ratingRepository.calculateUserStats(rating.rated_user, session);
+
+                // Cập nhật vào bảng User
+                await userRepository.updateRatingStats(
+                    rating.rated_user, 
+                    newStats.score, 
+                    newStats.count, 
+                    session
+                );
+            }
+            return;
+        });
     }
 }
 
