@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { profileService } from '../services/profileService';
 
@@ -7,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const UserProfile = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -358,7 +360,18 @@ const UserProfile = () => {
           ) : (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-6">Đánh giá & Uy tín</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Đánh giá & Phản hồi</h2>
+                  <button 
+                    onClick={() => navigate('/profile/ratings')}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    Xem tất cả
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </button>
+                </div>
                 
                 {ratingStats.count > 0 ? (
                   <>
