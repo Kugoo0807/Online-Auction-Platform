@@ -266,10 +266,15 @@ class ProductService {
         return isWatching;
     }
 
-    async cancelProduct(productId) {
+    async cancelProduct(sellerId, productId) {
         const product = await productRepository.findById(productId);
         if (!product) {
             throw new Error('Sản phẩm không tồn tại!');
+        }
+
+        const realSellerId = product.seller._id ? product.seller._id.toString() : product.seller.toString();
+        if (realSellerId !== sellerId) {
+            throw new Error("Không có quyền thực hiện");
         }
 
         const recipientsEmails = [];
