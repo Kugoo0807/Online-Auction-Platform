@@ -13,6 +13,11 @@ class RatingService {
             throw new Error('Bạn đã đánh giá giao dịch này rồi!');
         }
 
+        // Validate input
+        if (![-1, 1].includes(rating_type)) {
+            throw new Error('Loại đánh giá không hợp lệ!');
+        }
+
         // Validate trạng thái đơn hàng
         const order = await auctionResultRepository.findById(auction_result, session);
         if (!order) {
@@ -38,7 +43,7 @@ class RatingService {
             newStats.count, 
             session
         );
-        // Gửi email thông báo cho người được đánh giá
+
         return { message: 'Đánh giá thành công!' };
     }
 
@@ -68,6 +73,10 @@ class RatingService {
         return await ratingRepository.getReviewsReceived(userId);
     }
 
+    async getByAuctionResult(auctionResultId) {
+        return await ratingRepository.findByAuctionResult(auctionResultId);
+    }
+
     async changeRatingType(raterId, ratingId, newType, newComment) {
         return await executeTransaction(async (session) => {
             const rating = await ratingRepository.findById(ratingId);
@@ -77,6 +86,10 @@ class RatingService {
 
             if (rating.rater.toString() !== raterId.toString()) {
                 throw new Error('Bạn không có quyền thay đổi loại đánh giá này!');
+            }
+
+            if (![-1, 1].includes(newType)) {
+                throw new Error('Loại đánh giá không hợp lệ!');
             }
 
             const changed = await ratingRepository.changeRatingType(ratingId, newType, newComment, session);

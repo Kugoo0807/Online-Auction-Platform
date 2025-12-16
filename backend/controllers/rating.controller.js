@@ -46,6 +46,20 @@ class RatingController {
         }
     }
 
+    async getByAuctionResult(req, res) {
+        try {
+            const auctionResultId = req.params.auctionResultId;
+
+            const ratings = await ratingService.getByAuctionResult(auctionResultId);
+            return res.status(200).json({
+                message: 'Lấy đánh giá theo kết quả đấu giá thành công!',
+                data: ratings
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
     async changeRatingType(req, res) {
         try {
             const ratingId = req.params.ratingId;

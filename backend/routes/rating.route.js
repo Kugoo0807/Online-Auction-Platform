@@ -10,6 +10,8 @@ export function RatingRoutes(ratingController) {
     
     router.get('/received', [checkAuth, checkNotAdmin], ratingController.getReviewsReceived);
 
+    router.get('/auction-result/:auctionResultId', [checkAuth, checkNotAdmin], ratingController.getByAuctionResult);
+
     router.put('/:ratingId/type', [checkAuth, checkNotAdmin], ratingController.changeRatingType);
 
     return router;
