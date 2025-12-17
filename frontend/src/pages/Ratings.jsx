@@ -16,7 +16,15 @@ const Ratings = () => {
     });
 
     useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }, []);
+
+    useEffect(() => {
         fetchRatings();
+
+        const intervalId = setInterval(fetchRatings, 30000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const fetchRatings = async () => {
@@ -43,6 +51,7 @@ const Ratings = () => {
             ToastNotification('Không thể tải danh sách đánh giá', 'error');
         } finally {
             setLoading(false);
+            window.scrollTo({ top: 0, behavior: 'auto' });
         }
     };
 

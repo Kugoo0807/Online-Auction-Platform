@@ -39,6 +39,10 @@ const UserProfile = () => {
     return regex.test(email);
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
  useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -75,6 +79,10 @@ const UserProfile = () => {
       } catch (error) {
         console.error("Lỗi tải profile:", error);
         ToastNotification("Không thể tải thông tin người dùng", "error");
+      } finally {
+        if (!isEditing) {
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }
       }
     };
 
