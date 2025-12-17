@@ -16,6 +16,10 @@ export default function WatchList() {
   const [itemToRemove, setItemToRemove] = useState(null);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  useEffect(() => {
     fetchWatchList();
 
     // Cleanup timeout khi component unmount

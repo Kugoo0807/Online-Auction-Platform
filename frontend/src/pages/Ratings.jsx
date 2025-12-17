@@ -16,7 +16,15 @@ const Ratings = () => {
     });
 
     useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
+    useEffect(() => {
         fetchRatings();
+
+        const intervalId = setInterval(fetchRatings, 30000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const fetchRatings = async () => {

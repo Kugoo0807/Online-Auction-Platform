@@ -39,6 +39,10 @@ const UserProfile = () => {
     return regex.test(email);
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
  useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -75,12 +79,12 @@ const UserProfile = () => {
       } catch (error) {
         console.error("Lỗi tải profile:", error);
         ToastNotification("Không thể tải thông tin người dùng", "error");
-      }
+      } 
     };
 
     fetchProfile();
 
-    const intervalId = setInterval(fetchProfile, 5000);
+    const intervalId = setInterval(fetchProfile, 30000);
 
     return () => clearInterval(intervalId);
 
