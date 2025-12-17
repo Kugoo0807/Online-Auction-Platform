@@ -79,16 +79,12 @@ const UserProfile = () => {
       } catch (error) {
         console.error("Lỗi tải profile:", error);
         ToastNotification("Không thể tải thông tin người dùng", "error");
-      } finally {
-        if (!isEditing) {
-          window.scrollTo({ top: 0, behavior: 'auto' });
-        }
-      }
+      } 
     };
 
     fetchProfile();
 
-    const intervalId = setInterval(fetchProfile, 5000);
+    const intervalId = setInterval(fetchProfile, 30000);
 
     return () => clearInterval(intervalId);
 

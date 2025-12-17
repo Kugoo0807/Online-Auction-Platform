@@ -51,7 +51,6 @@ const Ratings = () => {
             ToastNotification('Không thể tải danh sách đánh giá', 'error');
         } finally {
             setLoading(false);
-            window.scrollTo({ top: 0, behavior: 'auto' });
         }
     };
 
