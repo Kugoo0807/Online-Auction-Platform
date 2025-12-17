@@ -40,7 +40,7 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
  useEffect(() => {
