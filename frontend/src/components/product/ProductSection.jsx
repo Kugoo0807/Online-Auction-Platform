@@ -94,7 +94,7 @@ export default function ProductSection({ title, products, loading = false }) {
       </h2>
 
       {/* Vùng chứa các card - Sử dụng Grid để responsive tốt hơn */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {products.map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}
@@ -200,7 +200,7 @@ export function ProductCard({ product }) {
     return (
       <div
         // 1. Container
-        className="group relative bg-white border-2 border-orange-500 rounded-xl p-3 text-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] flex flex-col pb-2 h-[500px]"
+        className="group relative bg-white border-2 border-orange-500 rounded-xl p-2 sm:p-3 text-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] flex flex-col pb-2 min-h-[420px] sm:min-h-[450px] lg:min-h-[500px]"
       >
         {/* 2. Badge */}
         <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg shadow-sm animate-pulse">
@@ -213,19 +213,19 @@ export function ProductCard({ product }) {
           onClick={handleToggleFavorite} 
         />
 
-        <div className="relative overflow-hidden rounded-lg h-[200px]">
+        <div className="relative overflow-hidden rounded-lg h-[150px] sm:h-[180px] lg:h-[200px] group/image">
               <img
               src={product.thumbnail}
               alt={product.product_name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110"
               onError={(e) => {
                 e.target.src = "/images/placeholder.jpg";
               }}
             />
         </div>
 
-        <div className="flex flex-col flex-1 pt-3">
-          <h3 className="text-orange-900 text-lg font-bold mb-2 line-clamp-2 min-h-14 group-hover:text-orange-600 transition-colors">
+        <div className="flex flex-col flex-1 pt-2 sm:pt-3">
+          <h3 className="text-orange-900 text-base sm:text-lg font-semibold truncate min-h-[3rem] sm:min-h-10 group-hover:text-orange-600 transition-colors">
             {product.product_name}
           </h3>
 
@@ -235,7 +235,7 @@ export function ProductCard({ product }) {
           <div className="mt-auto pt-2">
             <Link
               to={`/product/${product._id}`}
-              className="block w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
+              className="block w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
             >
               Xem ngay
             </Link>
@@ -254,13 +254,13 @@ export function ProductCard({ product }) {
     return (
       <div
         // 1. Container
-        className="group relative bg-white border-2 border-blue-500 rounded-xl p-3 text-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] flex flex-col pb-2 h-[500px]"
+        className="group relative bg-white border-2 border-blue-500 rounded-xl p-2 sm:p-3 text-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] flex flex-col pb-2 min-h-[420px] sm:min-h-[450px] lg:min-h-[500px]"
       >
-        <div className="relative overflow-hidden rounded-lg h-[200px]">
+        <div className="relative overflow-hidden rounded-lg h-[150px] sm:h-[180px] lg:h-[200px] group/image">
              <img
               src={product.thumbnail}
               alt={product.product_name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110"
               onError={(e) => {
                 e.target.src = "/images/placeholder.jpg";
               }}
@@ -273,8 +273,8 @@ export function ProductCard({ product }) {
           onClick={handleToggleFavorite} 
         />
           
-        <div className="flex flex-col flex-1 pt-3">
-          <h3 className="text-gray-900 text-lg font-semibold line-clamp-2 min-h-14">
+        <div className="flex flex-col flex-1 pt-2 sm:pt-3">
+          <h3 className="text-blue-900 text-base sm:text-lg font-semibold truncate min-h-[3rem] sm:min-h-10 group-hover:text-blue-600 transition-colors">
             {product.product_name}
           </h3>
           
@@ -284,7 +284,7 @@ export function ProductCard({ product }) {
           <div className="mt-auto pt-2">
             <Link
               to={`/product/${product._id}`}
-              className="block w-full bg-blue-400 hover:bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
+              className="block w-full bg-blue-400 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 rounded-xl shadow-md transition-all duration-200 transform hover:scale-[1.02]"
             >
               Xem chi tiết
             </Link>
@@ -319,22 +319,22 @@ function ProductInfo({ product, user }) {
       <div className="flex justify-between items-end mb-1">
         {!product.current_highest_bidder ? (
           <div>
-            <p className="text-xs text-gray-400 font-medium">Giá khởi điểm</p>
-            <span className="text-xl font-bold text-red-600 leading-none">
+            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">Giá khởi điểm</p>
+            <span className="text-lg sm:text-xl font-bold text-red-600 leading-none">
               {formatPrice(product.current_highest_price || product.start_price)}₫
             </span>
           </div>
         ) : (
           <div>
-            <p className="text-xs text-gray-400 font-medium">Giá hiện tại</p>
-            <span className="text-xl font-bold text-red-600 leading-none">
+            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">Giá hiện tại</p>
+            <span className="text-lg sm:text-xl font-bold text-red-600 leading-none">
               {formatPrice(product.current_highest_price || product.start_price)}₫
             </span>
           </div>
         )}
         
         {/* SỐ LƯỢT BID */}
-        <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
+        <div className="flex items-center text-[11px] sm:text-[13px] text-gray-500 bg-gray-50 px-1.5 sm:px-2 py-1 rounded-lg">
           <span className="mr-1">Số lượt đấu giá</span>
           <b>{product.bid_count || 0}</b>
         </div>
@@ -343,13 +343,13 @@ function ProductInfo({ product, user }) {
       {/* TRẠNG THÁI MUA NGAY */}
       <div className="mb-2">
          {hasBuyNow ? (
-            <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-xs px-2 py-1 rounded border font-semibold`}>
+            <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-[11px] sm:text-[12px] px-1.5 sm:px-2 py-1 rounded border uppercase font-semibold`}>
               <span className={`${isNew ? 'text-red-600' : 'text-teal-600'} mr-1`}>
                 Mua ngay: {formatPrice(product.buy_it_now_price)}₫
               </span>
             </div>
          ) : (
-            <div className="inline-block bg-gray-100 text-gray-400 text-[10px] px-2 py-1 rounded border border-gray-200 uppercase tracking-wider font-medium">
+            <div className="inline-block bg-gray-100 text-gray-400 text-[11px] sm:text-[12px] px-1.5 sm:px-2 py-1 rounded border border-gray-200 uppercase tracking-wider font-medium">
               KHÔNG CÓ GIÁ MUA NGAY
             </div>
          )}
@@ -358,54 +358,54 @@ function ProductInfo({ product, user }) {
       {/* BIDDER GIỮ GIÁ */}
       <div className="mb-1">
          {product.current_highest_bidder ? (
-            <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-xs px-2 py-1 rounded border font-semibold`}>
+            <div className={`inline-flex items-center ${isNew ? 'bg-orange-50 border-red-400' : 'bg-blue-50 border-teal-400'} text-[11px] sm:text-[12px] px-1.5 sm:px-2 py-1 rounded border uppercase font-semibold`}>
               <span className={`${isNew ? 'text-red-600' : 'text-teal-600'} mr-1`}>
                 {user?._id?.toString() === product.current_highest_bidder?._id?.toString() ? 'BẠN' : maskName(product.current_highest_bidder.full_name)}
               </span>
               <span className="text-gray-700">
-                hiện đang giữ mức giá cao nhất!
+                hiện đang giữ mức giá cao nhất
               </span>
             </div>
          ) : (
-            <div className="inline-block bg-gray-100 text-gray-400 text-[10px] px-2 py-1 rounded border border-gray-200 uppercase tracking-wider font-medium">
+            <div className="inline-block bg-gray-100 text-gray-400 text-[11px] sm:text-[12px] px-1.5 sm:px-2 py-1 rounded border border-gray-200 uppercase tracking-wider font-medium">
               Phiên đấu giá hiện đang trống
             </div>
          )}
       </div>
 
       {/* THÔNG TIN PHỤ (GRID 2 CỘT) */}
-      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100 mt-2">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-2 sm:pt-3 border-t border-gray-100 mt-2">
         
         {/* CỘT TRÁI: Người bán & Ngày đăng */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
           {/* Block Người bán */}
           <div>
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">
+            <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">
               Người bán
             </p>
-            <p className="text-sm font-semibold text-gray-800 truncate cursor-pointer hover:text-blue-600 transition-colors" title={product.seller?.full_name}>
+            <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate cursor-pointer hover:text-blue-600 transition-colors" title={product.seller?.full_name}>
               {product.seller?.full_name || "Ẩn danh"}
             </p>
           </div>
 
           {/* Block Ngày đăng */}
           <div>
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">
+            <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">
               Ngày đăng
             </p>
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-xs sm:text-sm font-medium text-gray-600">
               {formatDate(product.auction_start_time || product.createdAt)}
             </p>
           </div>
         </div>
 
-        {/* CỘT PHẢI: Thời gian còn lại (Làm nổi bật hẳn) */}
+        {/* CỘT PHẢI: Thời gian còn lại */}
         <div className="flex flex-col justify-center items-center">
-          <div className={`flex flex-col items-center justify-center w-full h-full rounded-lg px-2 ${isNew ? 'bg-orange-50' : 'bg-blue-50'}`}>
-            <p className="text-center text-[11px] font-semibold text-gray-500 mb-1">
+          <div className={`flex flex-col items-center justify-center w-full h-full rounded-lg px-1.5 sm:px-2 ${isNew ? 'bg-orange-50' : 'bg-blue-50'}`}>
+            <p className="text-center text-[12px] sm:text-[14px] font-semibold text-gray-500 mb-1">
               Thời gian còn lại
             </p>
-            <p className={`text-base font-bold leading-none whitespace-nowrap ${isNew ? 'text-orange-600' : 'text-blue-600'}`}>
+            <p className={`text-base sm:text-lg font-bold leading-none whitespace-nowrap ${isNew ? 'text-orange-600' : 'text-blue-600'}`}>
               {timeLeft}
             </p>
           </div>
