@@ -2,21 +2,20 @@ import { User } from '../../db/schema.js';
 
 class UserRepository {
   async findAll(session = null) {
-    return await User.find({ is_deleted: false }).session(session);
+    return await User.find({}).session(session);
   }
 
   async findByEmail(email, session = null) {
-    return await User.findOne({ email, is_deleted: false }).session(session);
+    return await User.findOne({ email }).session(session);
   }
 
   async findById(id, session = null) {
-    return await User.findOne({ _id: id, is_deleted: false }).session(session);
+    return await User.findOne({ _id: id }).session(session);
   }
 
   async findByEmailAndProvider(email, provider, session = null) {
     return await User.findOne({
       email,
-      is_deleted: false,
       providers: { $elemMatch: { provider } }
     }).session(session);
   }

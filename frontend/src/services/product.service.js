@@ -260,7 +260,29 @@ try {
       return { data: [] };
     }
   }
+
+  // --- ADMIN APIS ---
+  async getProducts(params = {}) {
+    try {
+      const response = await api.get('/products', { params });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi getProducts:", error);
+      throw error;
+    }
+  }
+  
+  async adminCancelProduct(id) {
+    try {
+      const response = await api.post(`/products/${id}/cancel`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi adminCancelProduct:", error);
+      throw error;
+    }
+  }
 }
 
 
+  
 export const productService = new ProductService();
