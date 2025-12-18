@@ -4,6 +4,7 @@ import { productRepository } from '../repositories/product.repository.js';
 import { bidRepository } from '../repositories/bid.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { auctionResultRepository } from '../repositories/auction.result.repository.js';
+import { configRepository } from '../repositories/config.repository.js';
 
 import { executeTransaction } from '../../db/db.helper.js';
 import { dispatchEmail } from './email.service.queue.js';
@@ -11,6 +12,16 @@ import { productService } from './product.service.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
 const ORDER_URL_PREFIX = process.env.VITE_URL + 'orders/' || 'http://localhost:3000/orders/';
+
+const EXTEND_THRESHOLD_MINUTES = await (async () => {
+    const config = await configRepository.getConfigs();
+    return config.extend_threshold_minutes || 5;
+})();
+
+const EXTEND_DURATION_MINUTES = await (async () => {
+    const config = await configRepository.getConfigs();
+    return config.extend_duration_minutes || 10;
+})();
 
 class BidService {
     // Hàm logic trả về true nếu người đặt giá là người giữ giá cao nhất sau khi đặt
@@ -31,8 +42,8 @@ class BidService {
         const now = new Date();
         if (product.auto_renew) {
             const timeLeft = product.auction_end_time.getTime() - now.getTime();
-            if (timeLeft > 0 && timeLeft < 5 * 60 * 1000) {
-                product.auction_end_time = new Date(product.auction_end_time.getTime() + 10 * 60 * 1000);
+            if (timeLeft > 0 && timeLeft < EXTEND_THRESHOLD_MINUTES * 60 * 1000) {
+                product.auction_end_time = new Date(product.auction_end_time.getTime() + EXTEND_DURATION_MINUTES * 60 * 1000);
             }
         }
 
@@ -73,20 +84,6 @@ class BidService {
             // Giá = min(amount người mới, max_bid holder cũ + increment)
             product.current_highest_bidder = userId;
             product.current_highest_price = Math.min(amount, currentHolderMaxBid + product.bid_increment);
-
-            // Tạo bản ghi đấu giá cho người giữ giá cũ (nếu chưa có bản ghi nào đang giữ max bid)
-            const existingBidForCurrentHolder = await bidRepository.findHighestByUser(currentHolderId, session);
-
-            if (existingBidForCurrentHolder && existingBidForCurrentHolder.price < currentHolderMaxBid) {
-                await bidRepository.create({
-                    user: currentHolderId,
-                    product: product._id,
-                    price: currentHolderMaxBid,
-                    is_auto: true
-                }, session);
-            }
-            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
-            product.bid_count += 1;
             await productRepository.save(product, session);
 
             // Tạo bản ghi đấu giá
@@ -100,8 +97,8 @@ class BidService {
         }
         // 2.2. BIDDER KHÁC NGƯỜI GIỮ GIÁ CAO NHẤT (NHƯNG ĐẶT GIÁ THẤP HƠN HOẶC BẰNG NGƯỜI GIỮ GIÁ CAO NHẤT)
         else {
-            // Cập nhật giá hiện tại
-            product.current_highest_price = Math.min(currentHolderMaxBid, amount + product.bid_increment);
+            // Cập nhật giá hiện tại (= amount)
+            product.current_highest_price = amount;
 
             // Tạo bản ghi đấu giá cho người vừa đấu giá
             await bidRepository.create({
@@ -115,7 +112,7 @@ class BidService {
                 user: currentHolderId,
                 product: product._id,
                 price: product.current_highest_price,
-                is_auto: true
+                is_priority: true
             }, session);
             product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
             product.bid_count += 1;

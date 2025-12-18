@@ -72,6 +72,10 @@ const { cronService } = await import('./services/cron.service.js');
 cronService.start(); 
 console.log('Cron Service đã được khởi động...');
 
+// === CONFIG ROUTES ===
+const { configController } = await import('./controllers/config.controller.js');
+const { ConfigRoutes } = await import('./routes/config.route.js');
+
 // === ROUTER SETUP ===
 
 app.get('/api', (req, res) => {
@@ -82,6 +86,7 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: "API Sàn Đấu Giá đang chạy tốt!" });
 });
 
+app.use('/api/admin', ConfigRoutes(configController));
 app.use('/api/auth', AuthRoutes(authController));
 app.use('/api/users', UserRoutes(userController));
 app.use('/api/products', ProductRoutes(productController, qnaController));

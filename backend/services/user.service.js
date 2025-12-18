@@ -10,6 +10,7 @@ import { bidRepository } from '../repositories/bid.repository.js';
 import bcrypt from 'bcryptjs';
 
 import { productService } from './product.service.js';
+import { ratingService } from './rating.service.js';
 
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { executeTransaction } from '../../db/db.helper.js';
@@ -91,7 +92,7 @@ class UserService {
             if (activeProducts && activeProducts.length > 0) {
                 await Promise.all(
                     activeProducts.map(product =>
-                        productService.cancelProduct(product._id) 
+                        productService.cancelProduct(userId, product._id) 
                     )
                 );
             }
@@ -101,6 +102,9 @@ class UserService {
 
             // Invalidate tất cả các lượt ra giá của user này
             await bidRepository.banBidsByUser(userId, session);
+
+            // Xóa các rating đã cho
+            await ratingService.deleteGivenRatingsByUser(userId, session);
 
             // Xóa User
             const deletedUser = await userRepository.softDelete(userId, session);

@@ -3,16 +3,17 @@ const bcrypt = require('bcryptjs');
 const connectDB = require('./connect');
 const {
   User,
+  UpgradeRequest,
+  WatchList,
   Category,
   Product,
   Bid,
-  WatchList,
   QnA,
   AuctionResult,
   Rating,
-  UpgradeRequest,
-  DeletionHistory,
-  RefreshToken
+  RefreshToken,
+  ChatMessage,
+  OtpModel,
 } = require('./schema');
 
 const seedDatabase = async () => {
@@ -31,8 +32,9 @@ const seedDatabase = async () => {
     try { await AuctionResult.collection.drop(); } catch(e) {} 
     try { await Rating.collection.drop(); } catch(e) {}
     try { await UpgradeRequest.collection.drop(); } catch(e) {}
-    try { await DeletionHistory.collection.drop(); } catch(e) {}
     try { await RefreshToken.collection.drop(); } catch(e) {}
+    try { await ChatMessage.collection.drop(); } catch(e) {}
+    try { await OtpModel.collection.drop(); } catch(e) {}
 
     console.log('✅ Đã xóa dữ liệu và index cũ.');
 
@@ -40,8 +42,8 @@ const seedDatabase = async () => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash("password123", salt);
 
-    // --- 3. TẠO USERS (5 người) ---
-    console.log('👤 Đang tạo 5 Users...');
+    // --- 3. TẠO USERS ---
+    console.log('👤 Đang tạo Users...');
     const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create([
       { 
         full_name: "Seller Một", 
@@ -149,8 +151,8 @@ const seedDatabase = async () => {
       }
     ]);
 
-    // --- 4. TẠO CATEGORIES (6 danh mục: 3 cha, 3 con) ---
-    console.log('📂 Đang tạo 6 Categories...');
+    // --- 4. TẠO CATEGORIES ---
+    console.log('📂 Đang tạo Categories...');
     
     // 3 Danh mục cha
     const catElectronics = await Category.create({ category_name: "Đồ Điện Tử", description: "Các thiết bị điện tử" , slug: "do-dien-tu" });
@@ -178,8 +180,8 @@ const seedDatabase = async () => {
       slug: "giay-dep"
     });
 
-    // --- 5. TẠO PRODUCTS (10 sản phẩm) ---
-    console.log('📦 Đang tạo 10 Products...');
+    // --- 5. TẠO PRODUCTS ---
+    console.log('📦 Đang tạo Products...');
     
     // Mảng ảnh mẫu (3 ảnh để thỏa mãn validation)
     const sampleThumbnail = "https://bizweb.dktcdn.net/thumb/1024x1024/100/116/615/products/mbp-spacegray-select-202206-jpeg.jpg";
@@ -536,7 +538,6 @@ const seedDatabase = async () => {
     console.log('⭐ Đang tạo Ratings...');
 
     await Rating.create([
-        // Giao dịch 1: Khen nhau (+1)
         {
             rater: bidder1._id,
             rated_user: seller1._id, // Khen Seller 1
@@ -551,23 +552,6 @@ const seedDatabase = async () => {
             rating_type: 1,
             comment: "Khách chuyển khoản nhanh, very good."
         },
-
-        // Giao dịch 2: Seller chê Bidder (-1)
-        {
-            rater: seller2._id,
-            rated_user: bidder2._id, // Chê Bidder 2
-            auction_result: result[1]._id,
-            rating_type: -1,
-            comment: "Khách bom hàng, thái độ lồi lõm."
-        },
-        // Bidder 2 cay cú chê lại Seller 2 (-1)
-        {
-            rater: bidder2._id,
-            rated_user: seller2._id,
-            auction_result: result[1]._id,
-            rating_type: -1,
-            comment: "Hàng dỏm, đừng mua."
-        }
     ]);
 
     // --- 8. CẬP NHẬT ĐIỂM SỐ USER (Quan trọng để test logic) ---
@@ -578,12 +562,6 @@ const seedDatabase = async () => {
 
     // Bidder 1: +1 điểm (1 đánh giá) -> Uy tín 100%
     await User.findByIdAndUpdate(bidder1._id, { rating_score: 1, rating_count: 1 });
-
-    // Seller 2: -1 điểm (1 đánh giá)
-    await User.findByIdAndUpdate(seller2._id, { rating_score: -1, rating_count: 1 });
-
-    // Bidder 2: -1 điểm (1 đánh giá) -> Uy tín 0% -> Sẽ bị chặn khi bid hàng xịn
-    await User.findByIdAndUpdate(bidder2._id, { rating_score: -1, rating_count: 1 });
 
     // --- 9. TẠO QnA ---
     if (typeof currentActiveProducts !== 'undefined' && currentActiveProducts.length > 0) {

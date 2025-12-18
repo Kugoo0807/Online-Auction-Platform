@@ -29,6 +29,16 @@ class BidRepository {
         return await Bid.find({ user: userId }).session(session)
             .distinct('product');
     }
+
+
+    async scaleDownBids(productId, newPrice, session = null) {
+        return await Bid.updateMany({
+            product: productId,
+            price: { $gt: newPrice }
+        }, {
+            $set: { price: newPrice, is_adjusted: true }
+        }).session(session);
+    }
 }
 
 export const bidRepository = new BidRepository();

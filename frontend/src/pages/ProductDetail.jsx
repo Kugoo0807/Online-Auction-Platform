@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 
 import { bidService } from '../services/bidService'
 import { productService } from '../services/product.service'
+import { auctionResultService } from '../services/auctionResultService.js'
 
 // Import components
 import ProductImages from '../components/productDetail/ProductImages'
@@ -22,6 +23,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null)
   const [bidHistory, setBidHistory] = useState([])
   const [questions, setQuestions] = useState([])
+  const [orderId, setOrderId] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   
   const [loading, setLoading] = useState(true)
@@ -93,6 +95,18 @@ export default function ProductDetail() {
           setLastBid(minPriceRes.last_bid);
         } catch (error) {
           console.error("Lỗi khi lấy thông tin giá:", error);
+        }
+      }
+
+      // Lấy orderId (nếu product.auction_status === 'sold')
+      if (currentProduct.auction_status === 'sold') {
+        try {
+          const order = await auctionResultService.getOrdersByProductId(currentProduct._id);
+          if (order) {
+            setOrderId(order._id);
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy orderId:", error);
         }
       }
 
@@ -174,6 +188,7 @@ export default function ProductDetail() {
       <AuctionStatusAlert
         product={product}
         user={user}
+        orderId={orderId}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">

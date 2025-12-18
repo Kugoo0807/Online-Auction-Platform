@@ -11,6 +11,7 @@ import { watchListRepository } from '../repositories/watch.list.repository.js';
 import { dispatchEmail } from './email.service.queue.js';
 
 const PRODUCT_URL_PREFIX = process.env.VITE_URL + 'product/' || 'http://localhost:3000/product/';
+const ORDER_URL_PREFIX = process.env.VITE_URL + 'order/' || 'http://localhost:3000/order/';
 class ProductService {
     async createProduct(productData) {
         const requiredFields = [
@@ -172,10 +173,12 @@ class ProductService {
             product.auto_bid_map.delete(bidderIdToBan);
 
             // === LOGIC XỬ LÍ SAU KHI CẤM ===
-            await recalculateAuctionState(product, null, session);
+            await recalculateAuctionState(product, product.current_highest_bidder, session);
 
             await productRepository.save(product, session);
-            
+
+            await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
+
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToBan, session);
             const bidderEmail = bidder?.email;
@@ -263,24 +266,27 @@ class ProductService {
         return isWatching;
     }
 
-    async cancelProduct(productId) {
+    async cancelProduct(sellerId, productId, isAdmin) {
         const product = await productRepository.findById(productId);
         if (!product) {
             throw new Error('Sản phẩm không tồn tại!');
         }
 
-        const recipientsEmails = [];
+        const realSellerId = product.seller._id ? product.seller._id.toString() : product.seller.toString();
+        if (realSellerId !== sellerId && !isAdmin) {
+            throw new Error("Không có quyền thực hiện");
+        }
+
         if (product.seller?.email) {
-            recipientsEmails.push(product.seller.email);
+            dispatchEmail('NOTIFY_AUCTION_CANCELLED_TO_SELLER', {
+                sellerEmail: product.seller?.email,
+                productName: product.product_name
+            });
         }
 
         if (product.current_highest_bidder?.email) {
-            recipientsEmails.push(product.current_highest_bidder.email);
-        }
-
-        if (recipientsEmails.length > 0) {
             dispatchEmail('NOTIFY_AUCTION_CANCELLED', {
-                recipientsEmails,
+                bidderEmail: product.current_highest_bidder?.email,
                 productName: product.product_name
             });
         }
@@ -313,7 +319,7 @@ class ProductService {
             final_price: amount,
             status: 'pending_payment'
         }, session);
-        
+
         // Tạo bản ghi đấu giá
         await bidRepository.create({
             user: userId,
@@ -364,7 +370,7 @@ class ProductService {
             const finalWinnerId = userId;
 
             // --- Gửi email thông báo ---
-            
+
             // Lấy thông tin cần thiết để gửi email
             const auctionResult = await auctionResultRepository.findByProduct(product._id, session);
             if (!auctionResult) {

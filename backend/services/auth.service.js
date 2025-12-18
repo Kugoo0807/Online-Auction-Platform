@@ -8,7 +8,7 @@ import { userRepository } from '../repositories/user.repository.js';
 import { tokenRepository } from '../repositories/token.repository.js';
 import { otpRepository } from '../repositories/otp.repository.js';
 
-import { sendOtp } from './email.service.js';
+import { dispatchEmail } from './email.service.queue.js';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -165,7 +165,10 @@ class AuthService {
             await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
             console.log(`[REGISTER OTP] Gửi tới ${email}: ${otp}`);
-            // TODO: mail service
+            dispatchEmail('SEND_OTP', {
+                email,
+                otp
+            });
 
             return {
                 success: true,
@@ -561,7 +564,10 @@ class AuthService {
 
             await otpRepository.createOrUpdateOtp(email, hashedOtp);
 
-            await sendOtp(email, otp);
+            dispatchEmail('SEND_OTP', {
+                email,
+                otp
+            });
             console.log(`[UPDATE EMAIL OTP] Gửi tới ${email}: ${otp}`);
 
             return {
