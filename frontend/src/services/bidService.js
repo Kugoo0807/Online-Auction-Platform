@@ -68,6 +68,19 @@ class BidService {
       throw error;
     }
   }
+
+  // 5. Lấy danh sách sản phẩm user đang tham gia đấu giá (active)
+  async getActiveBiddedProducts() {
+    try {
+      // Endpoint: GET /bids/active-bidded-products
+      const response = await api.get('/bids/active-bidded-products');
+      // Theo docs: response.data = { message: "...", data: [...] }
+      return response.data; 
+    } catch (error) {
+      console.error("Lỗi getActiveBiddedProducts:", error);
+      throw error;
+    }
+  }
 }
 
 export const bidService = new BidService();
