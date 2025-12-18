@@ -1,43 +1,79 @@
 import api from './api';
 
-export const userService = {
-  // Lấy tất cả user (cho Admin)
-  getAllUsers: async () => {
+const userService = {  
+  // Lấy danh sách user (cho Admin)
+  getUsers: async () => {
     try {
-      const response = await api.get('/users'); // Route: /api/users
+      const response = await api.get('/users');
+      // Trả về response.data để component xử lý (có thể là { data: [...] } hoặc [...])
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Lấy user đã xóa
-  getDeletedUsers: async () => {
+  // Admin: Xóa (Vô hiệu hóa) user
+  deleteUser: async (userId) => {
     try {
-      const response = await api.get('/users/deleted');
+      const response = await api.delete(`/users/${userId}`);
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Xóa user (Soft delete)
-  deleteUser: async (id) => {
+  // Admin: Khôi phục user
+  restoreUser: async (userId) => {
     try {
-      const response = await api.delete(`/users/${id}`);
+      const response = await api.post(`/users/${userId}/restore`);
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Khôi phục user
-  restoreUser: async (id) => {
+  // --- USER PROFILE APIs (GIỮ NGUYÊN TỪ FILE CŨ) ---
+
+  // Lấy profile hiện tại
+  getProfile: async () => {
     try {
-      const response = await api.post(`/users/${id}/restore`);
+      const response = await api.get('/users/profile');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Cập nhật profile
+  updateProfile: async (userData) => {
+    try {
+      const response = await api.put('/users/profile', userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Đổi mật khẩu
+  changePassword: async (passwordData) => {
+      try {
+          const response = await api.put('/users/password', passwordData);
+          return response.data;
+      } catch (error) {
+          throw error;
+      }
+  },
+  
+  // Lấy đánh giá của user
+  getRatings: async () => {
+    try {
+      const response = await api.get('/users/ratings');
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 };
+
+export default userService;
+export { userService };

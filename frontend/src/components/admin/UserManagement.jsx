@@ -1,113 +1,164 @@
 import { useState, useEffect } from 'react';
-import { userService } from '../../services/userService';
-import { useDelayedAction } from '../../hooks/useDelayedAction';
+import userService from '../../services/userService';
 import ToastNotification from '../common/ToastNotification';
-import { Trash2, RotateCcw, Undo2 } from 'lucide-react';
+import ConfirmDialog from '../common/ConfirmDialog';
 
-export default function UserManagementTab() {
+export default function UserManagement() {
   const [users, setUsers] = useState([]);
-  const [viewDeleted, setViewDeleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    message: '',
+    onConfirm: null
+  });
 
-  // 1. Fetch Data
   const fetchData = async () => {
     try {
-      const res = viewDeleted 
-        ? await userService.getDeletedUsers() 
-        : await userService.getAllUsers();
-      setUsers(res.users || []);
-    } catch (error) {
-      console.error("Lỗi tải user:", error);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, [viewDeleted]);
-
-  // Logic Xóa/Khôi phục với Delay
-  const handleExecuteAction = async (id) => {
-    try {
-      if (viewDeleted) {
-        await userService.restoreUser(id);
-        ToastNotification("Đã khôi phục người dùng", "success");
-      } else {
-        await userService.deleteUser(id);
-        ToastNotification("Đã xóa người dùng", "success");
+      const res = await userService.getUsers();
+      
+      // Xử lý dữ liệu linh hoạt dựa trên cấu trúc backend bạn vừa sửa
+      // Bạn nói backend trả về: { data: users } -> res.data sẽ chứa mảng users
+      let userList = [];
+      if (res.data && Array.isArray(res.data)) {
+        userList = res.data;
+      } else if (Array.isArray(res)) {
+        userList = res; // Fallback nếu trả về mảng trực tiếp
       }
-      fetchData(); // Refresh data sau khi xong
+
+      setUsers(userList);
+      setLoading(false);
     } catch (error) {
-      ToastNotification(error.response?.data?.message || "Có lỗi xảy ra", "error");
+      console.error("Fetch users error:", error);
     }
   };
 
-  const { pendingIds, triggerAction, cancelAction } = useDelayedAction(handleExecuteAction);
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Polling 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleToggleStatus = (user) => {
+    const isDeleted = user.is_deleted; // Backend cần trả về field này
+    const actionName = isDeleted ? 'Khôi phục' : 'Vô hiệu hóa';
+    
+    setConfirmDialog({
+      isOpen: true,
+      message: `Bạn có chắc chắn muốn ${actionName} tài khoản "${user.email}"?`,
+      onConfirm: async () => {
+        try {
+          if (isDeleted) {
+            await userService.restoreUser(user._id);
+            ToastNotification('Khôi phục tài khoản thành công', 'success');
+          } else {
+            await userService.deleteUser(user._id);
+            ToastNotification('Vô hiệu hóa tài khoản thành công', 'success');
+          }
+          // Gọi lại API ngay lập tức để cập nhật UI
+          fetchData(); 
+        } catch (error) {
+          const msg = error.response?.data?.message || 'Có lỗi xảy ra';
+          ToastNotification(msg, 'error');
+        } finally {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
+  };
+
+  if (loading && users.length === 0) return <div className="p-8 text-center">Đang tải danh sách người dùng...</div>;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-bold text-gray-900">
-          {viewDeleted ? 'Thùng rác (Người dùng đã xóa)' : 'Danh sách người dùng'}
-        </h3>
-        <button 
-          onClick={() => setViewDeleted(!viewDeleted)}
-          className="text-sm text-blue-600 hover:underline font-medium"
-        >
-          {viewDeleted ? '← Quay lại danh sách chính' : 'Xem thùng rác'}
-        </button>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Quản lý Người dùng</h2>
+        <span className="text-sm text-gray-500">Tổng số: {users.length} tài khoản</span>
       </div>
-
+      
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4">Họ tên</th>
-              <th className="px-6 py-4">Email</th>
-              <th className="px-6 py-4">Vai trò</th>
-              <th className="px-6 py-4 text-right">Thao tác</th>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+              <th className="p-4 border-b">Họ tên</th>
+              <th className="p-4 border-b">Email</th>
+              <th className="p-4 border-b">Vai trò</th>
+              <th className="p-4 border-b">Trạng thái</th>
+              <th className="p-4 border-b text-right">Hành động</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {users.map((user) => {
-              const isPending = pendingIds.has(user._id);
-
-              return (
-                <tr key={user._id} className={`transition-all duration-300 ${isPending ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
-                  <td className={`px-6 py-4 font-medium text-gray-900 ${isPending ? 'opacity-50' : ''}`}>{user.full_name}</td>
-                  <td className={`px-6 py-4 text-gray-600 ${isPending ? 'opacity-50' : ''}`}>{user.email}</td>
-                  <td className={`px-6 py-4 ${isPending ? 'opacity-50' : ''}`}>
+          <tbody className="text-sm divide-y divide-gray-100">
+            {users.length > 0 ? (
+              users.map((user) => (
+                <tr key={user._id} className={`hover:bg-gray-50 transition-colors ${user.is_deleted ? 'bg-red-50/50' : ''}`}>
+                  <td className="p-4 flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                        {user.avatar ? (
+                            <img src={user.avatar} alt="" className="w-full h-full object-cover"/>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xs">
+                                {user.full_name?.charAt(0) || 'U'}
+                            </div>
+                        )}
+                     </div>
+                     <span className={`font-medium ${user.is_deleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {user.full_name || 'Chưa đặt tên'}
+                     </span>
+                  </td>
+                  <td className="p-4 text-gray-500">{user.email}</td>
+                  <td className="p-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                      user.role === 'seller' ? 'bg-blue-100 text-blue-700' : 
-                      user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                      user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                      user.role === 'seller' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
                     }`}>
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    {isPending ? (
-                      <button 
-                        onClick={() => cancelAction(user._id)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-800 text-white rounded-md text-xs font-bold hover:bg-gray-700"
-                      >
-                        <Undo2 className="w-3 h-3" /> Hoàn tác (5s)
-                      </button>
+                  <td className="p-4">
+                    {user.is_deleted ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Đã khóa
+                      </span>
                     ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Hoạt động
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-4 text-right">
+                    {user.role !== 'admin' && (
                       <button 
-                        onClick={() => triggerAction(user._id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          viewDeleted 
-                            ? 'text-green-600 hover:bg-green-50' 
-                            : 'text-red-600 hover:bg-red-50'
+                        onClick={() => handleToggleStatus(user)}
+                        className={`font-medium px-3 py-1.5 rounded-md transition-colors text-xs border ${
+                          user.is_deleted 
+                            ? 'border-green-600 text-green-600 hover:bg-green-50' 
+                            : 'border-red-600 text-red-600 hover:bg-red-50'
                         }`}
-                        title={viewDeleted ? "Khôi phục" : "Xóa người dùng"}
                       >
-                        {viewDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+                        {user.is_deleted ? 'Khôi phục' : 'Vô hiệu hóa'}
                       </button>
                     )}
                   </td>
                 </tr>
-              );
-            })}
+              ))
+            ) : (
+               <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-500">
+                     Không tìm thấy người dùng nào.
+                  </td>
+               </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {confirmDialog.isOpen && (
+        <ConfirmDialog 
+          message={confirmDialog.message}
+          onYes={confirmDialog.onConfirm}
+          onNo={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 }

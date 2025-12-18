@@ -4,6 +4,15 @@ import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
 export function UserRoutes(userController) {
     const router = express.Router();
 
+    // === ADMIN === (Đặt trước để tránh conflict với routes có params)
+
+    // Lấy danh sách tất cả người dùng
+    router.get('/', [checkAuth, checkRole('admin')], userController.getAllUsers);
+
+    // Lấy danh sách người dùng đã xóa
+    router.get('/deleted', [checkAuth, checkRole('admin')], userController.getDeletedUsers);
+
+
     // === USER ===
 
     // Lấy thông tin cá nhân
@@ -20,12 +29,6 @@ export function UserRoutes(userController) {
 
     // Khôi phục người dùng
     router.post('/:id/restore', [checkAuth, checkRole('admin')], userController.restoreUser);
-
-    // Lấy danh sách người dùng đã xóa
-    router.get('/deleted', [checkAuth, checkRole('admin')], userController.getDeletedUsers);
-
-    // Lấy danh sách tất cả người dùng
-    router.get('/', [checkAuth, checkRole('admin')], userController.getAllUsers);
 
     return router;
 }
