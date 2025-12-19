@@ -5,7 +5,6 @@ const userService = {
   getUsers: async () => {
     try {
       const response = await api.get('/users');
-      // Trả về response.data để component xử lý (có thể là { data: [...] } hoặc [...])
       return response.data;
     } catch (error) {
       throw error;
@@ -32,7 +31,7 @@ const userService = {
     }
   },
 
-  // --- USER PROFILE APIs (GIỮ NGUYÊN TỪ FILE CŨ) ---
+  // --- USER PROFILE APIs ---
 
   // Lấy profile hiện tại
   getProfile: async () => {

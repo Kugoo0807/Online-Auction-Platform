@@ -4,7 +4,7 @@ import { checkAuth, checkRole } from '../middleware/auth.middleware.js';
 export function UserRoutes(userController) {
     const router = express.Router();
 
-    // === ADMIN === (Đặt trước để tránh conflict với routes có params)
+    // === ADMIN ===
 
     // Lấy danh sách tất cả người dùng
     router.get('/', [checkAuth, checkRole('admin')], userController.getAllUsers);
