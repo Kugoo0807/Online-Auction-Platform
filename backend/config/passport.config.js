@@ -18,18 +18,20 @@ passport.use(new LocalStrategy(
     },
     async (email, password, done) => {
         try {
+            const errorMessage = "Email hoặc mật khẩu không chính xác!";
+
             // Tìm user
             const user = await userRepository.findByEmail(email);
 
             if (!user) {
-                return done(null, false, { message: 'Email không tồn tại!' });
+                return done(null, false, { message: errorMessage });
             }
 
             // Dùng brypt để so sánh
             const isMatch = await bcrypt.compare(password, user.password);
 
             if (!isMatch) {
-                return done(null, false, { message: 'Mật khẩu không chính xác!' });
+                return done(null, false, { message: errorMessage });
             }
 
             return done(null, user);
