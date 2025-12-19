@@ -1,7 +1,6 @@
 import api from './api';
 
 const categoryService = {
-  // --- PUBLIC/MENU APIS (GIỮ NGUYÊN TỪ FILE CŨ) ---
   
   // Lấy danh sách danh mục (tree structure cho menu)
   getCategories: async () => {

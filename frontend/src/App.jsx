@@ -23,6 +23,7 @@ import MyProducts from './pages/MyProducts'
 import Order from './pages/Order'
 import Ratings from "./pages/Ratings"
 import BiddingProducts from './pages/BiddingProducts'
+import WonProducts from './pages/WonProducts'
 import { useAuth } from './context/AuthContext'
 
 // Components
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/watch-list" element={<WatchList />} />
+          <Route path="/auctions/won" element={<WonProducts />} />
           <Route path="/manage-products" element={<MyProducts />} />
           <Route path="/orders/:orderId" element={<Order />} />
           <Route path="/profile/ratings" element={<Ratings />} />
