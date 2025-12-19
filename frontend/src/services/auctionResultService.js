@@ -3,6 +3,15 @@ import api from './api';
 const BASE_URL = '/auction-results';
 
 class AuctionResultService {
+    async getOrdersByWinner() {
+        try {
+            const response = await api.get(`${BASE_URL}/winner`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async getOrdersByProductId(productId) {
         try {
             const response = await api.get(`${BASE_URL}/by-product/${productId}`);
