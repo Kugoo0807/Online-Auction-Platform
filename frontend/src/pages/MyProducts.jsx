@@ -20,6 +20,9 @@ const MyProducts = () => {
   const [descLoading, setDescLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [showRelistModal, setShowRelistModal] = useState(false);
+  const [newEndDate, setNewEndDate] = useState('');
+  const [relistLoading, setRelistLoading] = useState(false);
 
   useEffect(() => {
     fetchProducts(true);
@@ -106,7 +109,101 @@ const MyProducts = () => {
   };
 
   const handleRelistProduct = (product) => {
-    ToastNotification("Tính năng bán lại sản phẩm đang được phát triển", "info");
+    setSelectedProduct(product);
+    // Mặc định 7 ngày kể từ bây giờ
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+    setNewEndDate(defaultDate.toISOString().slice(0, 16));
+    setShowRelistModal(true);
+  };
+
+  const handleSubmitRelist = async () => {
+    if (!newEndDate) {
+      return ToastNotification("Vui lòng chọn ngày kết thúc mới", "warning");
+    }
+
+    const selectedDate = new Date(newEndDate);
+    const now = new Date();
+    
+    if (selectedDate <= now) {
+      return ToastNotification("Ngày kết thúc phải sau thời điểm hiện tại", "warning");
+    }
+
+    try {
+      setRelistLoading(true);
+      ToastNotification("Đang tạo lại sản phẩm...", "info");
+      
+      // Hàm helper để tải ảnh từ URL và chuyển thành File
+      const urlToFile = async (url, filename) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new File([blob], filename, { type: blob.type });
+      };
+
+      // Tải ảnh thumbnail
+      const thumbnailFile = await urlToFile(
+        selectedProduct.thumbnail, 
+        `thumbnail_${Date.now()}.jpg`
+      );
+
+      // Tải tất cả ảnh chi tiết
+      const imageFiles = await Promise.all(
+        selectedProduct.images.map((imgUrl, index) => 
+          urlToFile(imgUrl, `image_${index}_${Date.now()}.jpg`)
+        )
+      );
+      
+      // Tạo FormData giống như tạo sản phẩm mới
+      const formData = new FormData();
+      formData.append('product_name', selectedProduct.product_name);
+      formData.append('description', selectedProduct.description_history?.[0]?.content || '');
+      formData.append('start_price', selectedProduct.start_price);
+      if (selectedProduct.buy_it_now_price) {
+        formData.append('buy_it_now_price', selectedProduct.buy_it_now_price);
+      }
+      formData.append('bid_increment', selectedProduct.bid_increment);
+      formData.append('auction_end_time', newEndDate);
+      
+      // Lấy category ID
+      const categoryId = selectedProduct.category?._id || selectedProduct.category;
+      formData.append('category', categoryId);
+      
+      // Append ảnh thumbnail
+      formData.append('thumbnail', thumbnailFile);
+      
+      // Append ảnh chi tiết
+      imageFiles.forEach(file => {
+        formData.append('images', file);
+      });
+      
+      const response = await productService.createProduct(formData);
+      
+      // Hủy sản phẩm cũ trên backend
+      const oldProductId = selectedProduct._id || selectedProduct.id;
+      try {
+        await productService.adminCancelProduct(oldProductId);
+      } catch (cancelError) {
+        console.error("Lỗi khi hủy sản phẩm cũ:", cancelError);
+      }
+      
+      // Xóa sản phẩm cũ khỏi danh sách
+      setProducts(prevProducts => prevProducts.filter(p => {
+        const pId = p._id || p.id;
+        return pId !== oldProductId;
+      }));
+      
+      ToastNotification("Đã tạo lại sản phẩm thành công!", "success");
+      setShowRelistModal(false);
+      setNewEndDate('');
+      
+      // Refresh để lấy sản phẩm mới
+      fetchProducts(false);
+    } catch (error) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra khi tạo lại sản phẩm!";
+      ToastNotification(message, 'error');
+    } finally {
+      setRelistLoading(false);
+    }
   };
 
   const handleViewDetail = (product) => {
@@ -379,6 +476,63 @@ const MyProducts = () => {
           onYes={submitAppendDescription}
           onNo={() => setShowConfirm(false)}
         />
+      )}
+
+      {/* Modal: Bán lại sản phẩm */}
+      {showRelistModal && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Bán lại sản phẩm</h3>
+              <button
+                onClick={() => setShowRelistModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="font-semibold text-gray-900 mb-1">{selectedProduct.product_name || selectedProduct.name}</p>
+              <p className="text-sm text-gray-500">Sản phẩm sẽ được tạo lại với cùng thông tin và ảnh, chỉ thay đổi thời gian kết thúc</p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Thời gian kết thúc mới <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Thời gian kết thúc phải sau thời điểm hiện tại
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRelistModal(false);
+                  setNewEndDate('');
+                }}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmitRelist}
+                disabled={relistLoading}
+                className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {relistLoading ? 'Đang xử lý...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
