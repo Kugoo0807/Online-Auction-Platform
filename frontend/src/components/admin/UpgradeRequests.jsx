@@ -16,16 +16,21 @@ export default function UpgradeRequestsTab() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+    const interval = setInterval(fetchData, 30000); // Polling 30s
+    return () => clearInterval(interval);
+  }, []);
 
   // Hàm thực thi API
   const executeDecision = async (id, status) => {
     try {
-        await upgradeRequestService.updateRequestStatus(id, { status });
-        ToastNotification(status === 'approved' ? 'Đã duyệt yêu cầu' : 'Đã từ chối yêu cầu', 'success');
-        fetchData();
-    } catch(err) {
-        ToastNotification('Lỗi khi xử lý', 'error');
+      await upgradeRequestService.updateRequestStatus(id, { status });
+      ToastNotification(status === 'approved' ? 'Đã duyệt yêu cầu' : 'Đã từ chối yêu cầu', 'success');
+      fetchData();
+    } catch(error) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra!";
+      ToastNotification(message, 'error');
     }
   };
 

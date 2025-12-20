@@ -31,11 +31,6 @@ export function AuthProvider({ children }) {
       return null;
     } catch (error) {
       console.error("Error fetching current user:", error);
-      
-      if (error.response && error.response.status === 401) {
-         console.warn("Phiên đăng nhập hết hạn hoặc không hợp lệ. Đang đăng xuất...");
-         await logout();
-      }
     }
   }
 
