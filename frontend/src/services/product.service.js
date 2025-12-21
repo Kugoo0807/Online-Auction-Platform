@@ -272,7 +272,7 @@ try {
     }
   }
   
-  async adminCancelProduct(id) {
+  async cancelProduct(id) {
     try {
       const response = await api.post(`/products/${id}/cancel`);
       return response.data;
