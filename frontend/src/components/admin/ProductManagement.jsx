@@ -40,8 +40,9 @@ export default function ProductManagement() {
           await productService.adminCancelProduct(product._id);
           ToastNotification('Đã hủy đấu giá sản phẩm thành công', 'success');
           fetchData();
-        } catch (error) {
-          ToastNotification(error.response?.data?.message || 'Lỗi khi hủy đấu giá', 'error');
+        } catch(error) {
+            const message = error?.response?.data?.message || "Có lỗi xảy ra!";
+            ToastNotification(message, 'error');
         } finally {
           setConfirmDialog(prev => ({ ...prev, isOpen: false }));
         }
