@@ -37,7 +37,7 @@ export default function ProductManagement() {
       message: `Bạn có chắc chắn muốn HỦY buổi đấu giá sản phẩm "${product.product_name}"? Hành động này không thể hoàn tác.`,
       onConfirm: async () => {
         try {
-          await productService.adminCancelProduct(product._id);
+          await productService.cancelProduct(product._id);
           ToastNotification('Đã hủy đấu giá sản phẩm thành công', 'success');
           fetchData();
         } catch(error) {

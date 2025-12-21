@@ -153,21 +153,32 @@ class ProductService {
   // --- SELLER API ---
 
   async createProduct(productData) {
-try {
-  const response = await api.post('/products/create', productData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+    try {
+      const response = await api.post('/products/create', productData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi createProduct:", error);
+      console.error("Response data:", error.response?.data);
+      console.error("Response status:", error.response?.status);
+      throw error;
     }
-  });
-  return response.data;
-} catch (error) {
-  console.error("Lỗi createProduct:", error);
-  console.error("Response data:", error.response?.data);
-  console.error("Response status:", error.response?.status);
-  throw error;
-}
-}
+  }
 
+  async resellProduct(productId, newAuctionEndTime) {
+    try {
+      const response = await api.post(`/products/${productId}/resell`, {
+        auction_end_time: newAuctionEndTime
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi resellProduct:", error);
+      throw error;
+    }
+  }
 
   async getSellerProducts(page = 1) {
     try {
@@ -272,7 +283,7 @@ try {
     }
   }
   
-  async adminCancelProduct(id) {
+  async cancelProduct(id) {
     try {
       const response = await api.post(`/products/${id}/cancel`);
       return response.data;

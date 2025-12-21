@@ -298,6 +298,39 @@ class ProductService {
         return await productRepository.findActive(userId);
     }
 
+    async resellProduct(sellerId, productId, newAuctionEndTime) {
+        const product = await productRepository.findById(productId);
+        if (!product) {
+            throw new Error('Sản phẩm không tồn tại!');
+        }
+
+        const realSellerId = product.seller._id ? product.seller._id.toString() : product.seller.toString();
+        if (realSellerId !== sellerId) {
+            throw new Error('Bạn không có quyền bán lại sản phẩm này!');
+        }
+
+        if (product.auction_status === 'active') {
+            throw new Error('Sản phẩm đang trong phiên đấu giá, không thể bán lại!');
+        }
+
+        if (product.auction_status === 'cancelled') {
+            throw new Error('Sản phẩm đã bị hủy, không thể bán lại!');
+        }
+
+        if (product.auction_status === 'sold') {
+            throw new Error('Sản phẩm đã được bán, không thể bán lại!');
+        }
+
+        const newEndTime = new Date(newAuctionEndTime);
+        if (newEndTime <= new Date()) {
+            throw new Error('Thời gian kết thúc đấu giá phải sau thời điểm hiện tại!');
+        }
+
+        const updatedProduct = await productRepository.resellProduct(productId, newEndTime);
+        
+        return updatedProduct;
+    }
+
     async logicBuyProductNow(userId, product, session) {
         const amount = product.buy_it_now_price;
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { productService } from '../../services/product.service'
 import LoginRequestModal from '../common/LoginRequestModal'
 import ToastNotification from '../common/ToastNotification'
+import ConfirmDialog from '../common/ConfirmDialog'
 import AuctionCountdown from './AuctionCountdown'
 import { calculateRatingRatio, maskName, avatar, formatPrice, formatDate, isEndingSoon, isAuctionActive } from './productDetail.utils.jsx'
 
@@ -9,6 +10,8 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
     const [isFavorite, setIsFavorite] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     useEffect(() => {
         const checkFavoriteStatus = async () => {
@@ -44,6 +47,26 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
         }
     };
 
+    const handleCancelAuction = () => {
+        setShowConfirmDialog(true);
+    };
+
+    const confirmCancelAuction = async () => {
+        try {
+            setIsCancelling(true);
+            setShowConfirmDialog(false);
+            await productService.cancelProduct(product._id);
+            ToastNotification('Đã hủy đấu giá thành công', 'success');
+            // Reload trang để cập nhật trạng thái
+            window.location.reload();
+        } catch (error) {
+            const message = error?.response?.data?.message || "Có lỗi khi hủy đấu giá!";
+            ToastNotification(message, 'error');
+        } finally {
+            setIsCancelling(false);
+        }
+    };
+
     const FavoriteButton = () => (
         <button
             type="button"
@@ -75,7 +98,21 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 <div className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${isAuctionActive(product) ? 'bg-green-100 border-green-200 text-green-700' : 'bg-red-100 border-red-200 text-red-700'}`}>
                     {isAuctionActive(product) ? '🟢 Đang đấu giá' : '🔴 Đã kết thúc'}
                 </div>
-                {!isRealSeller && !isAdmin && product.auction_status === 'active' && <FavoriteButton />}
+                <div className="flex gap-2">
+                    {!isRealSeller && !isAdmin && product.auction_status === 'active' && <FavoriteButton />}
+                    {isRealSeller && product.auction_status === 'active' && (
+                        <button
+                            type="button"
+                            disabled={isCancelling}
+                            onClick={handleCancelAuction}
+                            title="Hủy đấu giá"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold cursor-pointer"
+                        >
+                            <span>🚫</span>
+                            <span>{isCancelling ? 'Đang hủy...' : 'Hủy đấu giá'}</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Giá hiện tại, Giá mua ngay, Giá đặt tối thiểu */}
@@ -172,6 +209,13 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 <AuctionCountdown endTime={product.auction_end_time} formatDate={formatDate} />
             </div>
             <LoginRequestModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} productName={product.product_name} />
+            {showConfirmDialog && (
+                <ConfirmDialog
+                    message="Bạn có chắc chắn muốn hủy đấu giá sản phẩm này? Hành động này không thể hoàn tác."
+                    onYes={confirmCancelAuction}
+                    onNo={() => setShowConfirmDialog(false)}
+                />
+            )}
         </div>
     )
 }
