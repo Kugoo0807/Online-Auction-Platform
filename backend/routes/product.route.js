@@ -92,5 +92,8 @@ export function ProductRoutes(productController, qnaController) {
     // Hủy sản phẩm
     router.post('/:id/cancel', checkAuth, productController.cancelProduct);
 
+    // Bán lại sản phẩm
+    router.post('/:id/resell', [checkAuth, checkNotAdmin], productController.resellProduct);
+
     return router;
 }

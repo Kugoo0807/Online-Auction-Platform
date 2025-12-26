@@ -313,6 +313,29 @@ class ProductController {
             return res.status(400).json({ message: error.message });
         }
     }
+
+    async resellProduct(req, res) {
+        try {
+            const seller = req.user._id.toString();
+            const productId = req.params.id;
+            const { auction_end_time } = req.body;
+
+            if (!auction_end_time) {
+                return res.status(400).json({ 
+                    message: 'Vui lòng cung cấp thời gian kết thúc đấu giá mới!' 
+                });
+            }
+
+            const result = await productService.resellProduct(seller, productId, auction_end_time);
+
+            return res.status(200).json({
+                message: 'Bán lại sản phẩm thành công!',
+                data: result
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export const productController = new ProductController();

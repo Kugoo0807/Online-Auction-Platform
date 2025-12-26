@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { categoryService } from '../services/categoryService';
+import { productService } from '../services/product.service';
 import ProductSection from '../components/product/ProductSection';
 import FilterDropdown from '../components/common/FilterDropdown'; 
 
@@ -30,7 +31,7 @@ const CategoryPage = () => {
     const fetchAllData = async (isPolling = false) => {
       if (!isPolling) setLoading(true); 
       try {
-        const result = await categoryService.getProductsByCategorySlug(slug);
+        const result = await productService.getProductsByCategory(slug, page, LIMIT);
         
         // Kiểm tra nếu không có categoryName hoặc là message lỗi
         if (!result.categoryName || result.categoryName === "Lỗi tải dữ liệu" || result.categoryName === slug) {

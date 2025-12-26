@@ -179,8 +179,9 @@ export default function SignUp() {
         setCaptchaChecked(false)
         setCaptchaToken('')
       }
-    } catch (err) {
-      setError('Có lỗi xảy ra. Vui lòng thử lại.')
+    } catch (error) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại";
+      setError(message);
       setCaptchaChecked(false)
       setCaptchaToken('')
     } finally {

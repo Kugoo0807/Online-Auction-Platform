@@ -47,8 +47,8 @@ export default function BiddingSection({ product, minValidPrice, user, isRealSel
         
         if(onRefresh) onRefresh(); 
         } catch (error) {
-        const message = error?.response?.data?.message || "Có lỗi xảy ra!";
-        ToastNotification(message, 'error');
+            const message = error?.response?.data?.message || "Có lỗi xảy ra!";
+            ToastNotification(message, 'error');
         } finally {
             setBanTarget(null);
         }

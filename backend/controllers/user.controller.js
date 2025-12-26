@@ -10,7 +10,7 @@ class UserController {
                 user: user
             });
         } catch (error) {
-            return res.status(404).json({ error: error.message });
+            return res.status(404).json({ message: error.message });
         }
     }
 
@@ -26,7 +26,7 @@ class UserController {
                 user: updatedUser
             });
         } catch (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 
@@ -44,7 +44,7 @@ class UserController {
 
             return res.status(200).json(result);
         } catch (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 
@@ -56,7 +56,7 @@ class UserController {
 
             return res.status(200).json(result);
         } catch (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 
@@ -65,7 +65,7 @@ class UserController {
             const users = await userService.getAllUsers();
             return res.status(200).json({ data: users });
         } catch (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 
@@ -74,7 +74,7 @@ class UserController {
             const users = await userService.getDeletedUsers();
             return res.status(200).json({ users });
         } catch (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
 }

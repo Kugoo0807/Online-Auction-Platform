@@ -151,16 +151,7 @@ export const authService = {
         isEmailExists: false
       };
     } catch (error) {
-      const status = error.response?.status;
-      const message = error.response?.data?.message || 'Có lỗi xảy ra khi gửi OTP';
-
-      return {
-        success: false,
-        message: message,
-        isEmailExists: errorData.isEmailExists || false,
-        isCaptchaInvalid: errorData.isCaptchaInvalid || false,
-        error: error
-      };
+      throw error;
     }
   },
 

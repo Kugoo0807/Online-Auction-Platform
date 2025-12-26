@@ -188,6 +188,29 @@ class ProductRepository {
             { new: true }
         ).session(session);
     }
+
+    async resellProduct(productId, newAuctionEndTime, session = null) {
+        const product = await Product.findById(productId).session(session);
+        if (!product) return null;
+        
+        return await Product.findByIdAndUpdate(
+            productId,
+            {
+                auction_status: 'active',
+                auction_start_time: new Date(),
+                auction_end_time: newAuctionEndTime,
+                bid_count: 0,
+                auto_bid_map: {},
+                bid_counts: {},
+                current_highest_bidder: null,
+                current_highest_price: product.start_price,
+                banned_bidder: []
+            },
+            { new: true }
+        ).session(session)
+            .populate('seller', 'full_name email rating_score rating_count') 
+            .populate('category', 'category_name slug');
+    }
 }
 
 export const productRepository = new ProductRepository();

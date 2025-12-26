@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from '../services/authService';
 import { setAuthToken } from '../services/api';
+import ToastNotification from '../components/common/ToastNotification';
 
 const AuthContext = createContext();
 
@@ -9,6 +10,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const logout = async () => {
     try {
@@ -31,10 +38,12 @@ export function AuthProvider({ children }) {
       return null;
     } catch (error) {
       console.error("Error fetching current user:", error);
-      
+
       if (error.response && error.response.status === 401) {
-         console.warn("Phiên đăng nhập hết hạn hoặc không hợp lệ. Đang đăng xuất...");
-         await logout();
+        if (userRef.current) {
+          ToastNotification("Phiên đăng nhập hết hạn!", "error");
+          await logout();
+        }
       }
     }
   }
@@ -63,7 +72,7 @@ export function AuthProvider({ children }) {
       fetchCurrentUser();
     }, 60000);
 
-    return () => clearInterval(fetchCurrentUser, intervalId);
+    return () => clearInterval(intervalId);
   }, []);
 
   const login = async (credentials) => {

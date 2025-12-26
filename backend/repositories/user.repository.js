@@ -6,11 +6,11 @@ class UserRepository {
   }
 
   async findByEmail(email, session = null) {
-    return await User.findOne({ email }).session(session);
+    return await User.findOne({ email, is_deleted: false }).session(session);
   }
 
   async findById(id, session = null) {
-    return await User.findOne({ _id: id }).session(session);
+    return await User.findOne({ _id: id, is_deleted: false }).session(session);
   }
 
   async findByEmailAndProvider(email, provider, session = null) {
