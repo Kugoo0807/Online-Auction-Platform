@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import categoryService from '../../services/categoryService';
 import ToastNotification from '../common/ToastNotification';
 import ConfirmDialog from '../common/ConfirmDialog';
+import LoadingIndicator from '../common/LoadingIndicator';
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
@@ -108,7 +109,7 @@ export default function CategoryManagement() {
     });
   };
 
-  if (loading && categories.length === 0) return <div className="p-8 text-center">Đang tải...</div>;
+  if (loading && categories.length === 0) return <LoadingIndicator />;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

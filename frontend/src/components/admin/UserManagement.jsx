@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import userService from '../../services/userService';
 import ToastNotification from '../common/ToastNotification';
 import ConfirmDialog from '../common/ConfirmDialog';
+import LoadingIndicator from '../common/LoadingIndicator';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -66,7 +67,7 @@ export default function UserManagement() {
     });
   };
 
-  if (loading && users.length === 0) return <div className="p-8 text-center">Đang tải danh sách người dùng...</div>;
+  if (loading && users.length === 0) return <LoadingIndicator />;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

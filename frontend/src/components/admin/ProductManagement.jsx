@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { productService } from '../../services/product.service';
 import ToastNotification from '../common/ToastNotification';
 import ConfirmDialog from '../common/ConfirmDialog';
+import LoadingIndicator from '../common/LoadingIndicator';
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -55,7 +56,7 @@ export default function ProductManagement() {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  if (loading && products.length === 0) return <div className="p-8 text-center">Đang tải...</div>;
+  if (loading && products.length === 0) return <LoadingIndicator />;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
