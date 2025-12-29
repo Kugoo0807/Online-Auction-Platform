@@ -445,7 +445,9 @@ const MyProducts = () => {
                 value={newAuctionEndTime}
                 onChange={(e) => setNewAuctionEndTime(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                min={new Date().toISOString().slice(0, 16)}
+                onFocus={(e) => {
+                  e.target.min = new Date().toISOString().slice(0, 16);
+                }}
               />
               <p className="text-xs text-gray-500 mt-2">
                 Chọn thời gian kết thúc phải sau thời điểm hiện tại
