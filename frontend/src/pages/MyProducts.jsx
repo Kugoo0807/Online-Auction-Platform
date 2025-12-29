@@ -142,13 +142,14 @@ const MyProducts = () => {
       ToastNotification("Đã đăng lại sản phẩm thành công!", "success");
       setShowResellModal(false);
       setNewAuctionEndTime('');
-      setResellProduct(null);
       fetchProducts();
     } catch (error) {
       const message = error?.response?.data?.message || "Có lỗi xảy ra khi bán lại sản phẩm!";
       ToastNotification(message, 'error');
     } finally {
       setResellLoading(false);
+      setResellProduct(null);
+      setNewAuctionEndTime('');
     }
   };
 
