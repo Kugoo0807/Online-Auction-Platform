@@ -282,6 +282,7 @@ export function ProductCard({ product }) {
                 to={`/category/${product.category.slug}`}
                 className="absolute bottom-2 left-2 bg-blue-500 hover:bg-white text-white hover:text-blue-600 text-xs font-semibold px-2 py-1 rounded-md shadow-sm transition-all duration-200 z-10"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Category: ${product.category.category_name}`}
               >
                 📁 {product.category.category_name}
               </Link>
