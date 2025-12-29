@@ -222,6 +222,17 @@ export function ProductCard({ product }) {
                 e.target.src = "/images/placeholder.jpg";
               }}
             />
+            {/* Category Badge */}
+            {product.category && (
+              <Link
+                to={`/category/${product.category.slug}`}
+                className="absolute bottom-2 left-2 bg-orange-500 hover:bg-white text-white hover:text-orange-600 text-xs font-semibold px-2 py-1 rounded-md shadow-sm transition-all duration-200 z-10"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Category: ${product.category.category_name}`}
+              >
+                📁 {product.category.category_name}
+              </Link>
+            )}
         </div>
 
         <div className="flex flex-col flex-1 pt-2 sm:pt-3">
@@ -265,6 +276,17 @@ export function ProductCard({ product }) {
                 e.target.src = "/images/placeholder.jpg";
               }}
             />
+            {/* Category Badge */}
+            {product.category && (
+              <Link
+                to={`/category/${product.category.slug}`}
+                className="absolute bottom-2 left-2 bg-blue-500 hover:bg-white text-white hover:text-blue-600 text-xs font-semibold px-2 py-1 rounded-md shadow-sm transition-all duration-200 z-10"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Category: ${product.category.category_name}`}
+              >
+                📁 {product.category.category_name}
+              </Link>
+            )}
         </div>
 
         <FavoriteButton 
