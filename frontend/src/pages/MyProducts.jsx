@@ -20,6 +20,11 @@ const MyProducts = () => {
   const [descLoading, setDescLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [showResellModal, setShowResellModal] = useState(false);
+  const [resellProduct, setResellProduct] = useState(null);
+  const [newAuctionEndTime, setNewAuctionEndTime] = useState('');
+  const [resellLoading, setResellLoading] = useState(false);
+  const [showResellConfirm, setShowResellConfirm] = useState(false);
 
   useEffect(() => {
     fetchProducts(true);
@@ -106,7 +111,46 @@ const MyProducts = () => {
   };
 
   const handleRelistProduct = (product) => {
-    ToastNotification("Tính năng bán lại sản phẩm đang được phát triển", "info");
+    setResellProduct(product);
+    setNewAuctionEndTime('');
+    setShowResellModal(true);
+  };
+
+  const handleSubmitResell = () => {
+    if (!newAuctionEndTime) {
+      return ToastNotification("Vui lòng chọn ngày kết thúc đấu giá", "warning");
+    }
+
+    const selectedDate = new Date(newAuctionEndTime);
+    const now = new Date();
+
+    if (selectedDate <= now) {
+      return ToastNotification("Ngày kết thúc phải sau thời điểm hiện tại", "warning");
+    }
+
+    setShowResellConfirm(true);
+  };
+
+  const submitResellProduct = async () => {
+    setShowResellConfirm(false);
+
+    try {
+      setResellLoading(true);
+      const productId = resellProduct._id || resellProduct.id;
+      await productService.resellProduct(productId, newAuctionEndTime);
+      
+      ToastNotification("Đã đăng lại sản phẩm thành công!", "success");
+      setShowResellModal(false);
+      setNewAuctionEndTime('');
+      fetchProducts();
+    } catch (error) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra khi bán lại sản phẩm!";
+      ToastNotification(message, 'error');
+    } finally {
+      setResellLoading(false);
+      setResellProduct(null);
+      setNewAuctionEndTime('');
+    }
   };
 
   const handleViewDetail = (product) => {
@@ -158,13 +202,11 @@ const MyProducts = () => {
       <ToastContainer />
 
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Quản lý sản phẩm</h1>
           <p className="text-gray-500">Quản lý danh sách đấu giá và theo dõi giao dịch</p>
         </div>
 
-        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="flex border-b border-gray-200 overflow-x-auto">
             <button
@@ -235,7 +277,6 @@ const MyProducts = () => {
           </div>
         </div>
 
-        {/* Order Status Filter - Chỉ hiển thị khi tab 'Đã bán' được chọn */}
         {activeTab === 'sold' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-4">
             <div className="flex flex-wrap gap-2">
@@ -315,7 +356,6 @@ const MyProducts = () => {
         />
       </div>
 
-      {/* Modal: Bổ sung mô tả */}
       {showDescModal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
@@ -367,7 +407,6 @@ const MyProducts = () => {
         </div>
       )}
 
-      {/* Confirm Dialog */}
       {showConfirm && selectedProduct && (
         <ConfirmDialog
           message={
@@ -378,6 +417,83 @@ const MyProducts = () => {
           }
           onYes={submitAppendDescription}
           onNo={() => setShowConfirm(false)}
+        />
+      )}
+
+      {showResellModal && resellProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Bán lại sản phẩm</h3>
+              <button
+                onClick={() => {
+                  setShowResellModal(false);
+                  setResellProduct(null);
+                  setNewAuctionEndTime('');
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="font-semibold text-gray-900 mb-1">{resellProduct.product_name || resellProduct.name}</p>
+              <p className="text-sm text-gray-500">Sản phẩm sẽ được đăng lại với thời gian kết thúc mới</p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ngày kết thúc đấu giá mới <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={newAuctionEndTime}
+                onChange={(e) => setNewAuctionEndTime(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                onFocus={(e) => {
+                  e.target.min = new Date().toISOString().slice(0, 16);
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Chọn thời gian kết thúc phải sau thời điểm hiện tại
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowResellModal(false);
+                  setNewAuctionEndTime('');
+                  setResellProduct(null);
+                }}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmitResell}
+                disabled={resellLoading}
+                className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {resellLoading ? 'Đang xử lý...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResellConfirm && resellProduct && (
+        <ConfirmDialog
+          message={
+            <>
+              <span>Bạn có chắc chắn muốn đăng lại sản phẩm:</span><br />
+              <span className="font-semibold">{resellProduct.product_name || resellProduct.name}</span><br />
+              <span className="text-sm text-gray-600">với ngày kết thúc: {new Date(newAuctionEndTime).toLocaleString('vi-VN')}</span>
+            </>
+          }
+          onYes={submitResellProduct}
+          onNo={() => setShowResellConfirm(false)}
         />
       )}
     </div>
