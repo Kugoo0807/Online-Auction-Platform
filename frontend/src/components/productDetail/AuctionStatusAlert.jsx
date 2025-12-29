@@ -8,8 +8,8 @@ const AuctionStatusAlert = ({ product, user, orderId }) => {
   const { auction_status, current_highest_bidder, seller, _id, name } = product;
   
   // Xác định vai trò người dùng
-  const isSeller = user?._id === seller?._id || user?._id === seller;
-  const isHighestBidder = user?._id === current_highest_bidder?._id || user?._id === current_highest_bidder;
+  const isSeller = user && (user?._id === seller?._id || user?._id === seller);
+  const isHighestBidder = user && current_highest_bidder && (user?._id === current_highest_bidder?._id || user?._id === current_highest_bidder);
   
   switch (auction_status) {
   // CASE I: Sản phẩm đã bán
