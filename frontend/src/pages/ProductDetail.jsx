@@ -86,11 +86,13 @@ export default function ProductDetail() {
       }
 
       // Lấy giá sàn
-      const cond_getMinPrice = user && currentProduct.seller && user?._id !== (currentProduct.seller._id || currentProduct.seller);
+      const userId = user?._id;
+      const sellerId = currentProduct.seller?._id || currentProduct.seller;
+      const cond_getMinPrice = userId && currentProduct.seller && userId !== sellerId;
       
       if (cond_getMinPrice) {
         try {
-          const minPriceRes = await productService.getMinValidPrice(id, user?._id);
+          const minPriceRes = await productService.getMinValidPrice(id, userId);
           setMinValidPrice(minPriceRes.min_valid_price);
           setLastBid(minPriceRes.last_bid);
         } catch (error) {
@@ -115,7 +117,7 @@ export default function ProductDetail() {
     } finally {
       if (isInitialLoad) setLoading(false);
     }
-  }, [id, user]);
+  }, [id, user?._id]);
 
   useEffect(() => {
     let isMounted = true 
