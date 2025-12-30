@@ -32,7 +32,17 @@ export function AuthProvider({ children }) {
     try {
       const profileRes = await authService.getProfile();
       if (profileRes && profileRes.user) {
-        setUser(profileRes.user);
+        setUser(prevUser => {
+          const newUser = profileRes.user;
+          if (!prevUser || 
+              prevUser._id !== newUser._id ||
+              prevUser.role !== newUser.role ||
+              prevUser.rating_count !== newUser.rating_count ||
+              prevUser.upgrade_request_status !== newUser.upgrade_request_status) {
+            return newUser;
+          }
+          return prevUser;
+        });
         return profileRes.user;
       }
       return null;
@@ -67,7 +77,7 @@ export function AuthProvider({ children }) {
 
     initAuth();
 
-    // Polling mỗi 1 phút để fetch lại thông tin user
+    // Polling mỗi 60 giây để làm mới thông tin người dùng
     const intervalId = setInterval(() => {
       fetchCurrentUser();
     }, 60000);
