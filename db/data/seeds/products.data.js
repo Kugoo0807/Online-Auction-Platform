@@ -347,7 +347,7 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
 
     soldProducts: [
       {
-        product_name: "Sony PlayStation 5 (Đã bán)",
+        product_name: "Sony PlayStation 5",
         description: "Máy chơi game console, fullbox.",
         start_price: 10000000,
         bid_increment: 200000,
@@ -355,13 +355,10 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         seller: seller1._id,
         category: catElectronics._id,
         thumbnail: assets.electronics.thumbnail,
-        images: assets.electronics.images,
-        auction_status: 'sold',
-        current_highest_bidder: bidder1._id,
-        current_highest_price: 12000000
+        images: assets.electronics.images
       },
       {
-        product_name: "Loa Bluetooth Marshall (Đã bán)",
+        product_name: "Loa Bluetooth Marshall",
         description: "Nghe nhạc cực hay.",
         start_price: 5000000,
         bid_increment: 100000,
@@ -369,13 +366,10 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         seller: seller1._id,
         category: catElectronics._id,
         thumbnail: assets.electronics.thumbnail,
-        images: assets.electronics.images,
-        auction_status: 'sold',
-        current_highest_bidder: bidder2._id,
-        current_highest_price: 6000000
+        images: assets.electronics.images
       },
       {
-        product_name: "Bàn Làm Việc Gỗ Cao Su 1m2 (Đã bán)",
+        product_name: "Bàn Làm Việc Gỗ Cao Su 1m2",
         description: "Bàn làm việc gỗ cao su tự nhiên, thiết kế minimalist, kích thước 1m2, rất chắc chắn.",
         start_price: 3000000,
         bid_increment: 100000,
@@ -383,13 +377,10 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         seller: seller1._id,
         category: catFurniture._id,
         thumbnail: assets.furniture.thumbnail,
-        images: assets.furniture.images,
-        auction_status: 'sold',
-        current_highest_bidder: bidder1._id,
-        current_highest_price: 3500000
+        images: assets.furniture.images
       },
       {
-        product_name: "iPhone 14 Plus 128GB Blue (Đã bán)",
+        product_name: "iPhone 14 Plus 128GB Blue",
         description: "iPhone 14 Plus màu xanh, bản 128GB, máy đẹp 98%, pin 95%, đã qua sử dụng 6 tháng.",
         start_price: 18000000,
         bid_increment: 500000,
@@ -397,13 +388,10 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         seller: seller1._id,
         category: catPhone._id,
         thumbnail: assets.phone.thumbnail,
-        images: assets.phone.images,
-        auction_status: 'sold',
-        current_highest_bidder: bidder2._id,
-        current_highest_price: 20000000
+        images: assets.phone.images
       },
       {
-        product_name: "Máy Ảnh Canon EOS R6 (Đã hủy)",
+        product_name: "Máy Ảnh Canon EOS R6",
         description: "Máy ảnh mirrorless Canon EOS R6, fullbox, ít sử dụng, kèm lens 24-105mm.",
         start_price: 45000000,
         bid_increment: 1000000,
@@ -415,7 +403,7 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         auction_status: 'cancelled'
       },
       {
-        product_name: "Laptop HP Pavilion 15 (Hết hạn)",
+        product_name: "Laptop HP Pavilion 15",
         description: "Laptop HP Pavilion 15, Intel i5 Gen 11, RAM 8GB, SSD 256GB, màn hình 15.6 inch.",
         start_price: 12000000,
         bid_increment: 500000,

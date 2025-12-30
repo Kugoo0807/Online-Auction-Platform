@@ -101,30 +101,50 @@ const seedDatabase = async () => {
     // --- 6.5. TẠO BIDS THÔNG QUA LOGIC ĐẤU GIÁ ---
     console.log('💰 Đang tạo Bids thông qua logic đấu giá...');
     
+    // Helper function để random thứ tự bidders
+    const shuffleArray = (array) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+    
     // Helper function để tạo bids cho 1 product
     const createBidsForProduct = async (product, productData) => {
       const { start_price, bid_increment } = productData;
-      const bidders = [bidder1, bidder2, bidder3];
+      const allBidders = [bidder1, bidder2, bidder3];
       let bidCount = 0;
       
-      // Tạo 5 lượt đấu giá xen kẽ giữa các bidder
+      // Random thứ tự bidders cho 5 lượt đấu giá - đảm bảo không trùng liên tiếp
+      const bidSequence = [];
+      let lastBidder = null;
       for (let i = 0; i < 5; i++) {
-        const bidder = bidders[i % 3];
-        const bidPrice = start_price + (bid_increment * (i + 1));
+        let availableBidders = lastBidder 
+          ? allBidders.filter(b => b._id.toString() !== lastBidder._id.toString())
+          : allBidders;
         
-        // Logic đấu giá đơn giản (không validate quá kỹ)
-        const isFirstBid = product.bid_count === 0 || !product.current_highest_bidder;
+        const shuffled = shuffleArray(availableBidders);
+        const selectedBidder = shuffled[0];
+        bidSequence.push(selectedBidder);
+        lastBidder = selectedBidder;
+      }
+      
+      // Tạo đúng 5 lượt đấu giá với logic đơn giản hơn
+      for (let i = 0; i < 5; i++) {
+        const bidder = bidSequence[i];
+        const bidPrice = start_price + (bid_increment * (i + 1));
         const userIdStr = bidder._id.toString();
         
-        // Cập nhật dữ liệu
-        const currentBidCount = product.bid_counts.get(userIdStr) || 0;
-        product.bid_counts.set(userIdStr, currentBidCount + 1);
-        product.auto_bid_map.set(userIdStr, bidPrice);
-        product.bid_count += 1;
-        
-        if (isFirstBid) {
+        // Lượt đầu tiên
+        if (i === 0) {
           product.current_highest_price = start_price;
           product.current_highest_bidder = bidder._id;
+          product.bid_count = 1;
+          product.bid_counts.set(userIdStr, 1);
+          product.auto_bid_map.set(userIdStr, bidPrice);
+          
           await product.save();
           
           await Bid.create({
@@ -134,101 +154,127 @@ const seedDatabase = async () => {
             date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
           });
           bidCount++;
-        } else if (product.current_highest_bidder?.toString() === userIdStr) {
-          // Người giữ giá tăng max bid
-          product.bid_counts.set(userIdStr, currentBidCount);
-          product.bid_count -= 1;
-          await product.save();
         } else {
+          // Các lượt sau: luôn thắng vì giá cao hơn
           const currentHolderId = product.current_highest_bidder;
-          const currentHolderIdStr = currentHolderId ? currentHolderId.toString() : null;
-          const currentHolderMaxBid = currentHolderIdStr ? product.auto_bid_map.get(currentHolderIdStr) : 0;
+          const currentHolderMaxBid = product.auto_bid_map.get(currentHolderId.toString()) || 0;
           
-          if (bidPrice > currentHolderMaxBid) {
-            // Người mới thắng
-            product.current_highest_bidder = bidder._id;
-            product.current_highest_price = Math.min(bidPrice, currentHolderMaxBid + bid_increment);
-            await product.save();
-            
-            await Bid.create({
-              user: bidder._id,
-              product: product._id,
-              price: product.current_highest_price,
-              date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
-            });
-            bidCount++;
-          } else {
-            // Người cũ vẫn giữ
-            product.current_highest_price = bidPrice;
-            
-            await Bid.create({
-              user: bidder._id,
-              product: product._id,
-              price: bidPrice,
-              date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
-            });
-            
-            await Bid.create({
-              user: currentHolderId,
-              product: product._id,
-              price: product.current_highest_price,
-              is_priority: true,
-              date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
-            });
-            
-            product.bid_counts.set(currentHolderIdStr, (product.bid_counts.get(currentHolderIdStr) || 0) + 1);
-            product.bid_count += 1;
-            await product.save();
-            bidCount += 2;
-          }
+          product.current_highest_bidder = bidder._id;
+          product.current_highest_price = Math.min(bidPrice, currentHolderMaxBid + bid_increment);
+          product.bid_count += 1;
+          product.bid_counts.set(userIdStr, (product.bid_counts.get(userIdStr) || 0) + 1);
+          product.auto_bid_map.set(userIdStr, bidPrice);
+          
+          await product.save();
+          
+          await Bid.create({
+            user: bidder._id,
+            product: product._id,
+            price: product.current_highest_price,
+            date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
+          });
+          bidCount++;
         }
       }
       
       return bidCount;
     };
     
-    // Tạo bids cho active products
+    // Tạo bids cho tất cả products (giờ đều là active)
     let totalBids = 0;
-    for (const product of currentActiveProducts) {
-      const count = await createBidsForProduct(product, product);
-      totalBids += count;
-    }
-    
-    // Tạo bids cho sold products
-    for (const product of dbSoldProducts) {
+    const allProducts = await Product.find();
+    for (const product of allProducts) {
+      // Skip tạo bids cho Laptop HP Pavilion 15 (ended, không có người đấu giá)
+      if (product.product_name === "Laptop HP Pavilion 15") {
+        console.log(`   ⏭️ Skip tạo bids cho "${product.product_name}" (ended, no bids)`);
+        continue;
+      }
       const count = await createBidsForProduct(product, product);
       totalBids += count;
     }
     
     console.log(`✅ Đã tạo ${totalBids} bids!`);
 
+    // --- 6.6. CHỌN 4 SẢN PHẨM ĐỂ CHUYỂN THÀNH 'SOLD' VÀ TẠO AUCTION RESULTS ---
+    console.log('🔄 Đang chọn 4 sản phẩm để chuyển thành sold...');
+    
+    // Tìm 4 sản phẩm theo tên cụ thể (các sản phẩm trước đây là soldProducts)
+    const productNamesToSell = [
+      "Sony PlayStation 5",
+      "Loa Bluetooth Marshall",
+      "Bàn Làm Việc Gỗ Cao Su 1m2",
+      "iPhone 14 Plus 128GB Blue"
+    ];
+    
+    const productsToSell = await Product.find({ 
+      product_name: { $in: productNamesToSell } 
+    });
+    
+    // Chuyển trạng thái sang 'sold'
+    for (const product of productsToSell) {
+      product.auction_status = 'sold';
+      await product.save();
+      console.log(`   ✅ Đã chuyển "${product.product_name}" sang sold`);
+    }
+    
     // Tạo WatchList
-    if (currentActiveProducts.length > 0) {
+    const activeProductsForWatch = await Product.find({ auction_status: 'active' });
+    if (activeProductsForWatch.length > 0) {
       console.log('👀 Đang tạo WatchLists...');
-      await WatchList.create(relationsData.watchLists);
+      const relationsDataForWatch = getRelationsData({ users, products: activeProductsForWatch, auctionResults: [] });
+      await WatchList.create(relationsDataForWatch.watchLists);
     } else {
       console.log('⚠️ Không tìm thấy Active Product nào để tạo WatchList');
     }
 
-    // Tạo Auction Results và điều chỉnh final_price nếu cần
+    // Tạo Auction Results dựa trên current_highest_bidder và current_highest_price
     let auctionResults = [];
-    if (dbSoldProducts.length > 0) {
+    if (productsToSell.length > 0) {
       console.log('🏆 Đang tạo Auction Results...');
-      const auctionResultsData = relationsData.auctionResultsData(dbSoldProducts);
       
-      // Điều chỉnh final_price nếu current_highest_price cao hơn
-      for (let i = 0; i < auctionResultsData.length; i++) {
-        const product = dbSoldProducts[i];
-        if (product && product.current_highest_price > auctionResultsData[i].final_price) {
-          auctionResultsData[i].final_price = product.current_highest_price;
-          console.log(`   ⚠️ Điều chỉnh final_price cho ${product.product_name}: ${auctionResultsData[i].final_price.toLocaleString()}đ`);
-        }
-      }
+      const auctionResultsData = productsToSell.map((product, index) => {
+        // Map status theo thứ tự như cũ
+        const statuses = ['completed', 'pending_payment', 'pending_shipment', 'shipping'];
+        const shippingAddresses = [
+          "123 Đường A, Đà Nẵng",
+          null,
+          "456 Đường B, Quận 1, TP.HCM",
+          "789 Đường C, Quận 7, TP.HCM"
+        ];
+        const paymentProofs = [
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          null,
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg"
+        ];
+        const shippingProofs = [
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          null,
+          null,
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg"
+        ];
+        
+        const result = {
+          product: product._id,
+          winning_bidder: product.current_highest_bidder,
+          seller: product.seller,
+          final_price: product.current_highest_price,
+          status: statuses[index]
+        };
+        
+        if (shippingAddresses[index]) result.shipping_address = shippingAddresses[index];
+        if (paymentProofs[index]) result.payment_proof = paymentProofs[index];
+        if (shippingProofs[index]) result.shipping_proof = shippingProofs[index];
+        
+        console.log(`   📦 ${product.product_name}: Winner = ${product.current_highest_bidder}, Price = ${product.current_highest_price.toLocaleString()}đ`);
+        
+        return result;
+      });
       
       auctionResults = await AuctionResult.create(auctionResultsData);
       console.log('✅ Tạo Auction Results thành công!');
     } else {
-      console.log('⚠️ Không tìm thấy sản phẩm đã bán (Sold) nào để tạo kết quả.');
+      console.log('⚠️ Không tìm thấy sản phẩm nào để tạo kết quả.');
     }
 
     // --- 8. TẠO RATINGS & UPDATE USER STATS ---
@@ -248,9 +294,11 @@ const seedDatabase = async () => {
     }
 
     // --- 9. TẠO QnA ---
-    if (currentActiveProducts.length > 0) {
+    const finalActiveProducts = await Product.find({ auction_status: 'active' });
+    if (finalActiveProducts.length > 0) {
       console.log('❓ Đang tạo QnAs...');
-      await QnA.create(relationsData.qnas);
+      const relationsDataForQnA = getRelationsData({ users, products: finalActiveProducts, auctionResults: [] });
+      await QnA.create(relationsDataForQnA.qnas);
       console.log('✅ Tạo QnA thành công!');
     } else {
       console.log('⚠️ Không có Active Product để tạo QnA.');

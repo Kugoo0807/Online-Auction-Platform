@@ -9,6 +9,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
     const isInvalid = !bid.is_valid;
 
     // Product is sold and having a winner
+    const isTopRow = index === 0;
     const winnerExists = product.auction_status === 'sold' && product.current_highest_bidder?._id && isTopRow;
 
     const rowBgClass = isInvalid 

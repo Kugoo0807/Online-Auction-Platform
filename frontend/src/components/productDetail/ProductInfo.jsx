@@ -186,7 +186,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 </div>
             </div>
 
-            {product.current_highest_bidder && (
+            {product.auction_status !== 'cancelled' && product.current_highest_bidder && (
                 <div className="mb-6 flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
                 {avatar(product.current_highest_bidder.full_name)}
                 <div>
