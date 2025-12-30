@@ -36,9 +36,10 @@ export function AuthProvider({ children }) {
           const newUser = profileRes.user;
           if (!prevUser || 
               prevUser._id !== newUser._id ||
+              prevUser.full_name !== newUser.full_name ||
               prevUser.role !== newUser.role ||
               prevUser.rating_count !== newUser.rating_count ||
-              prevUser.upgrade_request_status !== newUser.upgrade_request_status) {
+              prevUser.rating_score !== newUser.rating_score) {
             return newUser;
           }
           return prevUser;
