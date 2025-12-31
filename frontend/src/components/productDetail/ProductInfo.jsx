@@ -13,6 +13,20 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
     const [isCancelling, setIsCancelling] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
+    // Helper function to format rating display
+    const formatRating = (ratingScore, ratingCount) => {
+        if (!ratingCount || ratingCount === 0) {
+            return 'Chưa có đánh giá';
+        }
+        const ratio = calculateRatingRatio(ratingScore, ratingCount);
+        return (
+            <>
+                ⭐ {ratio}%
+                <span className="text-gray-400 ml-1">({ratingCount} đánh giá)</span>
+            </>
+        );
+    };
+
     useEffect(() => {
         const checkFavoriteStatus = async () => {
         if (user && product._id) {
@@ -180,8 +194,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                     <div className="text-xs text-gray-500 uppercase font-semibold">Người bán</div>
                     <div className="font-bold text-gray-900">{maskName(product.seller?.full_name) || "Ẩn danh"}</div>
                     <div className="text-xs text-yellow-500 flex items-center">
-                        ⭐ {product.seller ? (isNaN(calculateRatingRatio(product.seller.rating_score, product.seller.rating_count)) ? 'NaN' : calculateRatingRatio(product.seller.rating_score, product.seller.rating_count) + '%') : ''}
-                        <span className="text-gray-400 ml-1">({product.seller ? product.seller.rating_count : 'Nan'} đánh giá)</span>
+                        {product.seller && formatRating(product.seller.rating_score, product.seller.rating_count)}
                     </div>
                 </div>
             </div>
@@ -196,8 +209,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                         {user?._id.toString() === product.current_highest_bidder._id.toString() ? ' (Bạn)' : ''}
                     </div>
                     <div className="text-xs text-yellow-500 flex items-center">
-                        ⭐ {isNaN(calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count)) ? 'NaN' : calculateRatingRatio(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count) + '%'}
-                        <span className="text-gray-400 ml-1">({product.current_highest_bidder.rating_count} đánh giá)</span>
+                        {formatRating(product.current_highest_bidder.rating_score, product.current_highest_bidder.rating_count)}
                     </div>
                 </div>
                 </div>

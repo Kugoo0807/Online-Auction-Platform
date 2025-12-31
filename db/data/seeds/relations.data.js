@@ -68,27 +68,39 @@ module.exports = ({ users, products, auctionResults }) => {
     ],
 
     // Ratings data - Phụ thuộc vào auction results
-    ratings: (auctionResults) => [
-      {
-        rater: bidder1._id,
-        rated_user: seller1._id,
-        auction_result: auctionResults[0]._id,
-        rating_type: 1,
-        comment: "Shop uy tín, máy ngon!"
-      },
-      {
-        rater: seller1._id,
-        rated_user: bidder1._id,
-        auction_result: auctionResults[0]._id,
-        rating_type: 1,
-        comment: "Khách chuyển khoản nhanh, very good."
-      }
-    ],
+    ratings: (auctionResults) => {
+      if (!auctionResults || auctionResults.length === 0) return [];
+      
+      const ratingsData = [];
+      
+      // Tạo ratings cho từng auction result
+      auctionResults.forEach((result, index) => {
+        // Chỉ tạo rating cho completed (đơn hàng đã hoàn tất)
+        if (result.status === 'completed') {
+          // Rating từ winner về seller
+          ratingsData.push({
+            rater: result.winning_bidder,
+            rated_user: result.seller,
+            auction_result: result._id,
+            rating_type: 1,
+            comment: "Shop uy tín, máy ngon!"
+          });
+          
+          // Rating từ seller về winner
+          ratingsData.push({
+            rater: result.seller,
+            rated_user: result.winning_bidder,
+            auction_result: result._id,
+            rating_type: 1,
+            comment: "Khách chuyển khoản nhanh, very good."
+          });
+        }
+      });
+      
+      return ratingsData;
+    },
 
-    // User stats updates
-    userStatsUpdates: [
-      { userId: seller1._id, rating_score: 1, rating_count: 1 },
-      { userId: bidder1._id, rating_score: 1, rating_count: 1 }
-    ]
+    // User stats updates - Sẽ được tính toán động trong seed.js
+    userStatsUpdates: []
   };
 };

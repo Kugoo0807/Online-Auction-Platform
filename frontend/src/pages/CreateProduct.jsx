@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { productService } from '../services/product.service';
 import { categoryService } from '../services/categoryService';
 import ToastNotification from '../components/common/ToastNotification';
@@ -27,6 +27,7 @@ const CreateProduct = () => {
     description: '',
     auction_end: '',
     auto_renew: false,
+    allow_newbie: true,
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -37,6 +38,8 @@ const CreateProduct = () => {
   const [imagesPreview, setImagesPreview] = useState([]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
@@ -218,7 +221,7 @@ const CreateProduct = () => {
 
   const getConfirmMessage = () => {
     let parts = [];
-    parts.push(`Tên sản phẩm: ${formData.name}`);
+    parts.push(`${formData.name}`);
     parts.push(`Giá khởi điểm: ${formatPrice(formData.start_price)}`);
     parts.push(`Bước giá: ${formatPrice(formData.step_price)}`);
     parts.push(`Danh mục: ${categories.find(cat => (cat._id || cat.id) === formData.category)?.category_name || 'N/A'}`);
@@ -227,6 +230,7 @@ const CreateProduct = () => {
       parts.push(`Giá mua ngay: ${formatPrice(formData.buy_now_price)}`);
     }
     parts.push(`Tự động gia hạn: ${formData.auto_renew ? 'Có' : 'Không'}`);
+    parts.push(`Cho phép người mới tham gia: ${formData.allow_newbie ? 'Có' : 'Không'}`);
     
     return parts.map((line, idx) => (
       <span key={idx}>{line}<br /></span>
@@ -258,6 +262,7 @@ const CreateProduct = () => {
     // Hiển thị confirm dialog
     setShowConfirm(true);
   };
+
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
     setIsLoading(true);
@@ -280,17 +285,7 @@ const CreateProduct = () => {
       }
 
       dataToSend.append('auto_renew', formData.auto_renew);
-
-      console.log('=== Dữ liệu gửi đi ===');
-      console.log('product_name:', formData.name);
-      console.log('category:', formData.category);
-      console.log('start_price:', formData.start_price);
-      console.log('bid_increment:', formData.step_price);
-      console.log('buy_it_now_price:', formData.buy_now_price);
-      console.log('auction_end_time:', formData.auction_end);
-      console.log('auto_renew:', formData.auto_renew);
-      console.log('thumbnail:', thumbnail?.name);
-      console.log('images count:', images.length);
+      dataToSend.append('allow_newbie', formData.allow_newbie);
 
       if (!(thumbnail instanceof File)) {
         throw new Error("Thumbnail không hợp lệ");
@@ -308,11 +303,6 @@ const CreateProduct = () => {
       if (validImageCount === 0) {
         throw new Error("Không có ảnh chi tiết hợp lệ");
       }
-
-      const response = await productService.createProduct(dataToSend);
-      
-      console.log('=== Phản hồi từ server ===');
-      console.log('Response:', response);
       
       ToastNotification("Tạo sản phẩm thành công!", "success");
       setFormData(initialFormState);
@@ -611,6 +601,36 @@ const CreateProduct = () => {
                 </div>
               )}
             </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div className="flex-1">
+                  <span className="text-sm font-medium text-gray-700">
+                    Cho phép người dùng mới đấu giá
+                  </span>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Người chưa có lượt đánh giá vẫn có thể tham gia đấu giá sản phẩm này
+                  </p>
+                </div>
+                <div className="relative ml-4 flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    name="allow_newbie"
+                    checked={formData.allow_newbie}
+                    onChange={handleChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-7 h-7 border-2 border-gray-300 rounded-md peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 peer-focus:ring-offset-2 transition-all duration-200 flex items-center justify-center bg-white peer">
+                    {formData.allow_newbie && (
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </label>
+            </div>
+
             <div className="flex gap-4 pt-4">
               <button
                 type="button"

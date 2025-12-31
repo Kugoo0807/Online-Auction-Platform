@@ -281,15 +281,30 @@ const seedDatabase = async () => {
     if (auctionResults.length > 0) {
       console.log('⭐ Đang tạo Ratings...');
       const ratingsData = relationsData.ratings(auctionResults);
-      await Rating.create(ratingsData);
+      const createdRatings = await Rating.create(ratingsData);
+      console.log(`✅ Đã tạo ${createdRatings.length} ratings!`);
 
-      // Cập nhật điểm số User
+      // Tính toán điểm số User dựa trên ratings đã tạo
       console.log('📊 Đang cập nhật điểm User...');
-      for (const update of relationsData.userStatsUpdates) {
-        await User.findByIdAndUpdate(update.userId, { 
-          rating_score: update.rating_score, 
-          rating_count: update.rating_count 
+      const userRatingMap = new Map();
+      
+      for (const rating of createdRatings) {
+        const userId = rating.rated_user.toString();
+        if (!userRatingMap.has(userId)) {
+          userRatingMap.set(userId, { totalScore: 0, count: 0 });
+        }
+        const userStats = userRatingMap.get(userId);
+        userStats.totalScore += rating.rating_type;
+        userStats.count += 1;
+      }
+      
+      // Cập nhật vào database
+      for (const [userId, stats] of userRatingMap) {
+        await User.findByIdAndUpdate(userId, { 
+          rating_score: stats.totalScore, 
+          rating_count: stats.count 
         });
+        console.log(`   ✅ User ${userId}: ${stats.totalScore} điểm từ ${stats.count} ratings`);
       }
     }
 
