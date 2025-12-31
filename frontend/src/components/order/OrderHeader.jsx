@@ -43,7 +43,7 @@ const OrderHeader = ({ orderId, status, onBack, canCancel, onCancel, canceling }
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7 7-7" />
                 </svg>
-                Quay lại danh sách
+                Quay lại
             </button>
 
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm ">

@@ -16,6 +16,13 @@ const {
   OtpModel,
 } = require('./schema');
 
+// Import dữ liệu từ các file đã tách
+const getUsersData = require('./data/seeds/users.data');
+const getCategoriesData = require('./data/seeds/categories.data');
+const getProductsData = require('./data/seeds/products.data');
+const getRelationsData = require('./data/seeds/relations.data');
+const sampleAssets = require('./data/seeds/sample-assets.data');
+
 const seedDatabase = async () => {
   try {
     await connectDB();
@@ -44,434 +51,34 @@ const seedDatabase = async () => {
 
     // --- 3. TẠO USERS ---
     console.log('👤 Đang tạo Users...');
-    const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create([
-      { 
-        full_name: "Seller Một", 
-        email: "seller1@example.com", 
-        password: hashedPassword, 
-        role: "seller", 
-        address: "Hà Nội",
-        phone_number: "0901234567",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Seller Hai", 
-        email: "seller2@example.com", 
-        password: hashedPassword, 
-        role: "seller", 
-        address: "TP.HCM",
-        phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Seller Ba", 
-        email: "seller3@example.com", 
-        password: hashedPassword, 
-        role: "seller", 
-        address: "TP.HCM",
-        phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Seller Bốn", 
-        email: "seller4@example.com", 
-        password: hashedPassword, 
-        role: "seller", 
-        address: "TP.HCM",
-        phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Seller Năm", 
-        email: "seller5@example.com", 
-        password: hashedPassword, 
-        role: "seller", 
-        address: "TP.HCM",
-        phone_number: "0909888777",
-        seller_expiry_date: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Bidder Một", 
-        email: "bidder1@example.com", 
-        password: hashedPassword, 
-        role: "bidder", 
-        address: "Đà Nẵng",
-        phone_number: "0912345678",
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Bidder Hai", 
-        email: "bidder2@example.com", 
-        password: hashedPassword, 
-        role: "bidder", 
-        address: "Cần Thơ",
-        phone_number: "0987654321",
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Bidder Ba", 
-        email: "bidder3@example.com", 
-        password: hashedPassword, 
-        role: "bidder", 
-        address: "Cần Thơ",
-        phone_number: "0987654321",
-        providers: [
-          { provider: 'local' }
-        ],
-      },
-      { 
-        full_name: "Admin Quản Trị", 
-        email: "admin@example.com", 
-        password: hashedPassword, 
-        role: "admin", 
-        address: "Server",
-        phone_number: "0000000000",
-        providers: [
-          { provider: 'local' }
-        ],
-      }
-    ]);
+    const usersData = getUsersData(hashedPassword);
+    const [seller1, seller2, seller3, seller4, seller5, bidder1, bidder2, bidder3, admin] = await User.create(usersData);
 
     // --- 4. TẠO CATEGORIES ---
     console.log('📂 Đang tạo Categories...');
-    
-    // 3 Danh mục cha
-    const catElectronics = await Category.create({ category_name: "Đồ Điện Tử", description: "Các thiết bị điện tử" , slug: "do-dien-tu" });
-    const catFashion = await Category.create({ category_name: "Thời Trang", description: "Quần áo, giày dép", slug: "thoi-trang" });
-    const catFurniture = await Category.create({ category_name: "Nội Thất", description: "Bàn ghế, tủ giường", slug: "noi-that" }); // Không có con
-
-    // 3 Danh mục con
-    const catLaptop = await Category.create({ 
-      category_name: "Laptop", 
-      description: "Máy tính xách tay các loại", 
-      parent: catElectronics._id,
-      slug: "laptop"
-    });
-    const catPhone = await Category.create({ 
-      category_name: "Điện Thoại", 
-      description: "Smartphones", 
-      parent: catElectronics._id,
-      slug: "dien-thoai"
-    });
-    
-    const catShoes = await Category.create({ 
-      category_name: "Giày Dép", 
-      description: "Giày thể thao, giày da", 
-      parent: catFashion._id,
-      slug: "giay-dep"
-    });
+    const categories = await getCategoriesData(Category);
 
     // --- 5. TẠO PRODUCTS ---
     console.log('📦 Đang tạo Products...');
     
-    // Mảng ảnh mẫu (3 ảnh để thỏa mãn validation)
-    const sampleThumbnail = "https://bizweb.dktcdn.net/thumb/1024x1024/100/116/615/products/mbp-spacegray-select-202206-jpeg.jpg";
-    const sampleImages = [
-      "https://cdn.shopify.com/s/files/1/0456/5070/6581/files/top-23-mau-giay-sneaker-dang-duoc-san-lung-nhat-nam-2022_600x600.jpg",
-      "https://thanhnien.mediacdn.vn/uploaded/thuthao/2018_11_10/14_ZHRV.jpg",
-      "https://cdn.tgdd.vn/Files/2020/06/22/1264873/9bestportabletechgadgetsforeverydayuse_800x450.jpg"
-    ];
-
     const createList = async (dataList) => {
         for (const item of dataList) {
-            // 1. Tách description cũ ra
             const { description, ...otherFields } = item;
-
-            // 2. Tạo object mới đúng chuẩn Schema
             const productData = {
                 ...otherFields,
-                // Chuyển description text -> description_history array
                 description_history: [{
-                    // Bọc thẻ <p> để giả lập đây là HTML từ Editor gửi lên
                     content: `<p>${description}</p>`, 
                     timestamp: new Date()
                 }]
-                // Không cần field description_current, hook pre-save sẽ tự làm
             };
-
-            // 3. Create (Nó sẽ kích hoạt pre('save') hook để sanitize và tạo index search)
             await Product.create(productData);
         }
     };
 
-    const activeProducts = [
-      {
-        product_name: "MacBook Pro 14 M1 2021 – Likenew 99%",
-        description: "Máy còn mới 99%, pin sạc ít lần, đầy đủ phụ kiện zin theo máy.",
-        start_price: 20000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller5._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 16 M1 Max 2022 – Bản cao cấp",
-        description: "Hiệu năng cực mạnh, phù hợp cho designer, editor.",
-        start_price: 22000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller5._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Air M1 2023 – Mỏng nhẹ tiện dụng",
-        description: "Thiết kế mỏng nhẹ, pin trâu, phù hợp sinh viên.",
-        start_price: 18000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller5._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 14 M2 2024 – Máy đẹp như mới",
-        description: "Chip M2 mạnh mẽ, màn hình XDR siêu đẹp.",
-        start_price: 24000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller5._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Air M2 2025 – Siêu mỏng nhẹ",
-        description: "Máy rất ít sử dụng, ngoại hình không tì vết.",
-        start_price: 19000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 16 M3 2026 – Hàng fullbox",
-        description: "Hiệu năng vô đối, phù hợp dân chuyên nghiệp.",
-        start_price: 26000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 13 M3 2027 – Like new",
-        description: "Máy sử dụng văn phòng nhẹ nhàng, máy đẹp.",
-        start_price: 21000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Air M3 2028 – Chính hãng VN/A",
-        description: "Hàng ít dùng, pin cực ngon.",
-        start_price: 20000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller3._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 14 M2 Pro 2029 – Gần như mới",
-        description: "Máy không trầy xước, cấu hình mạnh mẽ.",
-        start_price: 25000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller3._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "MacBook Pro 13 Intel 2020 – Máy văn phòng",
-        description: "Máy chạy mượt, phù hợp dân văn phòng.",
-        start_price: 16000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-
-      {
-        product_name: "iPhone 13 Pro Max 256GB – Xanh Sierra",
-        description: "Bản 256GB màu xanh, trầy nhẹ ở viền, cam kết chưa sửa chữa.",
-        start_price: 15000000,
-        bid_increment: 200000,
-        buy_it_now_price: 18000000,
-        auction_end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catPhone._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Laptop Dell XPS 13 – Màn 4K cảm ứng",
-        description: "Dòng doanh nhân mỏng nhẹ, màn hình 4K cảm ứng cực đẹp.",
-        start_price: 18000000,
-        bid_increment: 500000,
-        auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catLaptop._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Samsung Galaxy S22 Ultra – Bút S-Pen đầy đủ",
-        description: "Bút S-Pen đầy đủ, màn hình bị ám nhẹ, bán giá xác.",
-        start_price: 8000000,
-        bid_increment: 100000,
-        auction_end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        seller: seller1._id,
-        category: catPhone._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-
-      // --- Seller 2: Thời trang & Nội thất ---
-      {
-        product_name: "Đồng Hồ Rolex Submariner – Cấm Newbie",
-        description: "Chỉ dành cho người có uy tín cao.",
-        start_price: 100000000,
-        bid_increment: 2000000,
-        auction_end_time: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catFashion._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages,
-        allow_newbie: false
-      },
-      {
-        product_name: "Nike Air Jordan 1 – Size 42, Auth 100%",
-        description: "Hàng auth bao check, size 42, mới đi lướt 2 lần.",
-        start_price: 3000000,
-        bid_increment: 100000,
-        auction_end_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catShoes._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Adidas Ultraboost – Fullbox Size 40",
-        description: "Chạy bộ cực êm, size 40, full box.",
-        start_price: 1500000,
-        bid_increment: 50000,
-        auction_end_time: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catShoes._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Sofa Da Bò Ý – Cao Cấp Nhập Khẩu",
-        description: "Sofa nhập khẩu nguyên chiếc, da thật 100%, ngồi rất êm.",
-        start_price: 25000000,
-        bid_increment: 1000000,
-        auction_end_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catFurniture._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Bàn Ăn Gỗ Sồi 6 Ghế – Hàng cao cấp",
-        description: "Gỗ sồi nga tự nhiên đã qua xử lý mối mọt.",
-        start_price: 5000000,
-        bid_increment: 200000,
-        auction_end_time: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catFurniture._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Giày Tây Da Cá Sấu – Handmade Size 41",
-        description: "Hàng thủ công handmade, size 41, lịch lãm sang trọng.",
-        start_price: 4000000,
-        bid_increment: 100000,
-        buy_it_now_price: 6000000,
-        auction_end_time: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catShoes._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      },
-      {
-        product_name: "Tủ Quần Áo Gỗ Công Nghiệp 4 Cánh – Màu Trắng",
-        description: "Tủ 4 cánh, màu trắng hiện đại, tháo lắp dễ dàng.",
-        start_price: 2000000,
-        bid_increment: 50000,
-        auction_end_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        seller: seller2._id,
-        category: catFurniture._id,
-        thumbnail: sampleThumbnail,
-        images: sampleImages
-      }
-    ];
-
-    const soldProducts = [
-        {
-            product_name: "Sony PlayStation 5 (Đã bán)",
-            description: "Máy chơi game console, fullbox.",
-            start_price: 10000000,
-            bid_increment: 200000,
-            auction_end_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Đã hết hạn 2 ngày
-            seller: seller1._id,
-            category: catElectronics._id,
-            thumbnail: sampleThumbnail,
-            images: sampleImages,
-            auction_status: 'sold', // Đã bán
-            current_highest_bidder: bidder1._id, // Bidder 1 thắng
-            current_highest_price: 12000000
-        },
-        {
-            product_name: "Loa Bluetooth Marshall (Đã bán)",
-            description: "Nghe nhạc cực hay.",
-            start_price: 5000000,
-            bid_increment: 100000,
-            auction_end_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // Đã hết hạn 5 ngày
-            seller: seller2._id,
-            category: catElectronics._id,
-            thumbnail: sampleThumbnail,
-            images: sampleImages,
-            auction_status: 'sold',
-            current_highest_bidder: bidder2._id, // Bidder 2 thắng
-            current_highest_price: 6000000
-        }
-    ];
+    // Lấy dữ liệu products
+    const sellers = { seller1, seller2, seller3, seller4, seller5 };
+    const bidders = { bidder1, bidder2, bidder3 };
+    const { activeProducts, soldProducts } = getProductsData({ sellers, categories, assets: sampleAssets, bidders });
 
     console.log('Đang seed Active Products...');
     await createList(activeProducts);
@@ -482,111 +89,222 @@ const seedDatabase = async () => {
     // --- 6. TẠO WATCHLIST ---
     console.log('🔄 Đang lấy lại ID sản phẩm từ DB...');
     const currentActiveProducts = await Product.find({ auction_status: 'active' });
-    if (currentActiveProducts.length > 0) {
-      console.log('👀 Đang tạo WatchLists...');
+    
+    // --- 7. TẠO AUCTION RESULTS (Đơn hàng) ---
+    console.log('🔄 Đang lấy danh sách sản phẩm ĐÃ BÁN từ DB...');
+    const dbSoldProducts = await Product.find({ auction_status: 'sold' });
+    
+    // Lấy dữ liệu quan hệ
+    const users = { seller1, seller2, bidder1, bidder2, bidder3 };
+    const relationsData = getRelationsData({ users, products: currentActiveProducts, auctionResults: [] });
+
+    // --- 6.5. TẠO BIDS THÔNG QUA LOGIC ĐẤU GIÁ ---
+    console.log('💰 Đang tạo Bids thông qua logic đấu giá...');
+    
+    // Helper function để random thứ tự bidders
+    const shuffleArray = (array) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+    
+    // Helper function để tạo bids cho 1 product
+    const createBidsForProduct = async (product, productData) => {
+      const { start_price, bid_increment } = productData;
+      const allBidders = [bidder1, bidder2, bidder3];
+      let bidCount = 0;
       
-      await WatchList.create([
-        // Giờ thì activeProducts đã có dữ liệu thật, gọi [0] vô tư
-        { user: bidder1._id, product: currentActiveProducts[0]._id }, 
-        { user: bidder1._id, product: currentActiveProducts[4] ? currentActiveProducts[4]._id : currentActiveProducts[0]._id }, // Check lỡ mảng ngắn quá
-        { user: bidder2._id, product: currentActiveProducts[1] ? currentActiveProducts[1]._id : currentActiveProducts[0]._id }, 
-        { user: seller1._id, product: currentActiveProducts[6] ? currentActiveProducts[6]._id : currentActiveProducts[0]._id }, 
-      ]);
+      // Random thứ tự bidders cho 5 lượt đấu giá - đảm bảo không trùng liên tiếp
+      const bidSequence = [];
+      let lastBidder = null;
+      for (let i = 0; i < 5; i++) {
+        let availableBidders = lastBidder 
+          ? allBidders.filter(b => b._id.toString() !== lastBidder._id.toString())
+          : allBidders;
+        
+        const shuffled = shuffleArray(availableBidders);
+        const selectedBidder = shuffled[0];
+        bidSequence.push(selectedBidder);
+        lastBidder = selectedBidder;
+      }
+      
+      // Tạo đúng 5 lượt đấu giá với logic đơn giản hơn
+      for (let i = 0; i < 5; i++) {
+        const bidder = bidSequence[i];
+        const bidPrice = start_price + (bid_increment * (i + 1));
+        const userIdStr = bidder._id.toString();
+        
+        // Lượt đầu tiên
+        if (i === 0) {
+          product.current_highest_price = start_price;
+          product.current_highest_bidder = bidder._id;
+          product.bid_count = 1;
+          product.bid_counts.set(userIdStr, 1);
+          product.auto_bid_map.set(userIdStr, bidPrice);
+          
+          await product.save();
+          
+          await Bid.create({
+            user: bidder._id,
+            product: product._id,
+            price: start_price,
+            date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
+          });
+          bidCount++;
+        } else {
+          // Các lượt sau: luôn thắng vì giá cao hơn
+          const currentHolderId = product.current_highest_bidder;
+          const currentHolderMaxBid = product.auto_bid_map.get(currentHolderId.toString()) || 0;
+          
+          product.current_highest_bidder = bidder._id;
+          product.current_highest_price = Math.min(bidPrice, currentHolderMaxBid + bid_increment);
+          product.bid_count += 1;
+          product.bid_counts.set(userIdStr, (product.bid_counts.get(userIdStr) || 0) + 1);
+          product.auto_bid_map.set(userIdStr, bidPrice);
+          
+          await product.save();
+          
+          await Bid.create({
+            user: bidder._id,
+            product: product._id,
+            price: product.current_highest_price,
+            date: new Date(Date.now() - (5 - i) * 60 * 60 * 1000)
+          });
+          bidCount++;
+        }
+      }
+      
+      return bidCount;
+    };
+    
+    // Tạo bids cho tất cả products (giờ đều là active)
+    let totalBids = 0;
+    const allProducts = await Product.find();
+    for (const product of allProducts) {
+      // Skip tạo bids cho Laptop HP Pavilion 15 (ended, không có người đấu giá)
+      if (product.product_name === "Laptop HP Pavilion 15") {
+        console.log(`   ⏭️ Skip tạo bids cho "${product.product_name}" (ended, no bids)`);
+        continue;
+      }
+      const count = await createBidsForProduct(product, product);
+      totalBids += count;
+    }
+    
+    console.log(`✅ Đã tạo ${totalBids} bids!`);
+
+    // --- 6.6. CHỌN 4 SẢN PHẨM ĐỂ CHUYỂN THÀNH 'SOLD' VÀ TẠO AUCTION RESULTS ---
+    console.log('🔄 Đang chọn 4 sản phẩm để chuyển thành sold...');
+    
+    // Tìm 4 sản phẩm theo tên cụ thể (các sản phẩm trước đây là soldProducts)
+    const productNamesToSell = [
+      "Sony PlayStation 5",
+      "Loa Bluetooth Marshall",
+      "Bàn Làm Việc Gỗ Cao Su 1m2",
+      "iPhone 14 Plus 128GB Blue"
+    ];
+    
+    const productsToSell = await Product.find({ 
+      product_name: { $in: productNamesToSell } 
+    });
+    
+    // Chuyển trạng thái sang 'sold'
+    for (const product of productsToSell) {
+      product.auction_status = 'sold';
+      await product.save();
+      console.log(`   ✅ Đã chuyển "${product.product_name}" sang sold`);
+    }
+    
+    // Tạo WatchList
+    const activeProductsForWatch = await Product.find({ auction_status: 'active' });
+    if (activeProductsForWatch.length > 0) {
+      console.log('👀 Đang tạo WatchLists...');
+      const relationsDataForWatch = getRelationsData({ users, products: activeProductsForWatch, auctionResults: [] });
+      await WatchList.create(relationsDataForWatch.watchLists);
     } else {
-        console.log('⚠️ Không tìm thấy Active Product nào để tạo WatchList');
+      console.log('⚠️ Không tìm thấy Active Product nào để tạo WatchList');
+    }
+
+    // Tạo Auction Results dựa trên current_highest_bidder và current_highest_price
+    let auctionResults = [];
+    if (productsToSell.length > 0) {
+      console.log('🏆 Đang tạo Auction Results...');
+      
+      const auctionResultsData = productsToSell.map((product, index) => {
+        // Map status theo thứ tự như cũ
+        const statuses = ['completed', 'pending_payment', 'pending_shipment', 'shipping'];
+        const shippingAddresses = [
+          "123 Đường A, Đà Nẵng",
+          null,
+          "456 Đường B, Quận 1, TP.HCM",
+          "789 Đường C, Quận 7, TP.HCM"
+        ];
+        const paymentProofs = [
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          null,
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg"
+        ];
+        const shippingProofs = [
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          null,
+          null,
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg"
+        ];
+        
+        const result = {
+          product: product._id,
+          winning_bidder: product.current_highest_bidder,
+          seller: product.seller,
+          final_price: product.current_highest_price,
+          status: statuses[index]
+        };
+        
+        if (shippingAddresses[index]) result.shipping_address = shippingAddresses[index];
+        if (paymentProofs[index]) result.payment_proof = paymentProofs[index];
+        if (shippingProofs[index]) result.shipping_proof = shippingProofs[index];
+        
+        console.log(`   📦 ${product.product_name}: Winner = ${product.current_highest_bidder}, Price = ${product.current_highest_price.toLocaleString()}đ`);
+        
+        return result;
+      });
+      
+      auctionResults = await AuctionResult.create(auctionResultsData);
+      console.log('✅ Tạo Auction Results thành công!');
+    } else {
+      console.log('⚠️ Không tìm thấy sản phẩm nào để tạo kết quả.');
+    }
+
+    // --- 8. TẠO RATINGS & UPDATE USER STATS ---
+    if (auctionResults.length > 0) {
+      console.log('⭐ Đang tạo Ratings...');
+      const ratingsData = relationsData.ratings(auctionResults);
+      await Rating.create(ratingsData);
+
+      // Cập nhật điểm số User
+      console.log('📊 Đang cập nhật điểm User...');
+      for (const update of relationsData.userStatsUpdates) {
+        await User.findByIdAndUpdate(update.userId, { 
+          rating_score: update.rating_score, 
+          rating_count: update.rating_count 
+        });
+      }
+    }
+
+    // --- 9. TẠO QnA ---
+    const finalActiveProducts = await Product.find({ auction_status: 'active' });
+    if (finalActiveProducts.length > 0) {
+      console.log('❓ Đang tạo QnAs...');
+      const relationsDataForQnA = getRelationsData({ users, products: finalActiveProducts, auctionResults: [] });
+      await QnA.create(relationsDataForQnA.qnas);
+      console.log('✅ Tạo QnA thành công!');
+    } else {
+      console.log('⚠️ Không có Active Product để tạo QnA.');
     }
 
     console.log('✅ Xong tất cả!');
-
-    // --- 7. TẠO AUCTION RESULTS (Đơn hàng) ---
-    console.log('🔄 Đang lấy danh sách sản phẩm ĐÃ BÁN từ DB...');
-    
-    // BƯỚC QUAN TRỌNG: Phải query lấy thằng status 'sold' về mới có _id
-    const dbSoldProducts = await Product.find({ auction_status: 'sold' });
-    
-    let result = []
-    if (dbSoldProducts.length > 0) {
-        console.log('🏆 Đang tạo Auction Results...');
-        
-        result = await AuctionResult.create([
-             {
-                product: dbSoldProducts[0]._id,
-                winning_bidder: bidder1._id,
-                seller: seller1._id,
-                final_price: 12000000,
-                status: 'completed',
-                shipping_address: "123 Đường A, Đà Nẵng",
-                payment_proof: "https://example.com/payment.jpg",
-                shipping_proof: "https://example.com/ship.jpg"
-            },
-            {
-                product: dbSoldProducts[1] ? dbSoldProducts[1]._id : dbSoldProducts[0]._id, 
-                winning_bidder: bidder2._id,
-                seller: seller2._id,
-                final_price: 6000000,
-                status: 'pending_payment',
-            }
-        ]);
-        
-        console.log('✅ Tạo Auction Results thành công!');
-
-    } else {
-        console.log('⚠️ Không tìm thấy sản phẩm đã bán (Sold) nào để tạo kết quả.');
-    }
-
-    // --- 7. TẠO RATINGS & UPDATE USER STATS ---
-    console.log('⭐ Đang tạo Ratings...');
-
-    await Rating.create([
-        {
-            rater: bidder1._id,
-            rated_user: seller1._id, // Khen Seller 1
-            auction_result: result[0]._id,
-            rating_type: 1,
-            comment: "Shop uy tín, máy ngon!"
-        },
-        {
-            rater: seller1._id,
-            rated_user: bidder1._id, // Khen Bidder 1
-            auction_result: result[0]._id,
-            rating_type: 1,
-            comment: "Khách chuyển khoản nhanh, very good."
-        },
-    ]);
-
-    // --- 8. CẬP NHẬT ĐIỂM SỐ USER (Quan trọng để test logic) ---
-    console.log('📊 Đang cập nhật điểm User...');
-
-    // Seller 1: +1 điểm (1 đánh giá)
-    await User.findByIdAndUpdate(seller1._id, { rating_score: 1, rating_count: 1 });
-
-    // Bidder 1: +1 điểm (1 đánh giá) -> Uy tín 100%
-    await User.findByIdAndUpdate(bidder1._id, { rating_score: 1, rating_count: 1 });
-
-    // --- 9. TẠO QnA ---
-    if (typeof currentActiveProducts !== 'undefined' && currentActiveProducts.length > 0) {
-        console.log('❓ Đang tạo QnAs...');
-        
-        await QnA.create([
-          {
-            product: currentActiveProducts[0]._id, // Macbook
-            asker: bidder1._id,
-            question_content: "Máy có bị trầy xước gì không shop?",
-            answerer: seller1._id,
-            answer_content: "Máy đẹp keng như mới bạn nhé.",
-            answer_timestamp: new Date()
-          },
-          {
-            product: currentActiveProducts[6] ? currentActiveProducts[6]._id : currentActiveProducts[0]._id, // Sofa
-            asker: bidder2._id,
-            question_content: "Shop có hỗ trợ vận chuyển lên chung cư không?",
-          }
-        ]);
-        
-        console.log('✅ Tạo QnA thành công!');
-    } else {
-        console.log('⚠️ Không có Active Product để tạo QnA.');
-    }
 
     console.log('✨ --- TẠO DỮ LIỆU MẪU THÀNH CÔNG --- ✨');
 

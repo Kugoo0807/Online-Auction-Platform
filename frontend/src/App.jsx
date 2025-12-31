@@ -30,6 +30,7 @@ import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
 import SellerRoute from './components/SellerRoute'
+import NonAdminRoute from './components/NonAdminRoute'
 
 function RoleDashboard() {
   const { user } = useAuth();
@@ -64,6 +65,10 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
+        </Route>
+
+        {/* Non-Admin Routes (Bidder & Seller Only) */}
+        <Route element={<NonAdminRoute />}>
           <Route path="/watch-list" element={<WatchList />} />
           <Route path="/auctions/won" element={<WonProducts />} />
           <Route path="/manage-products" element={<MyProducts />} />
