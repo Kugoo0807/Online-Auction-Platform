@@ -89,7 +89,18 @@ export default function BiddingForm({
         />;
     }
 
-    // Trường hợp 7: Hợp lệ -> Hiển thị Form đặt giá
+    // Trường hợp 7: Có tỉ lệ đánh giá dưới 80%
+    let ratingPercentage = ((user.rating_count + user.rating_score) / 2 / user.rating_count) * 100;
+    ratingPercentage = Math.min(Math.max(ratingPercentage, 0), 100);
+    if (user.rating_count > 0 && ratingPercentage < 80) {
+        return <BlockingMessage 
+        title="Giới hạn người tham gia"
+        message="Sản phẩm này chỉ cho phép tài khoản có tỉ lệ đánh giá từ 80% trở lên tham gia đấu giá."
+        type="yellow" 
+        />;
+    }
+
+    // Trường hợp 8: Hợp lệ -> Hiển thị Form đặt giá
     return (
         <div className="mb-4">
         <label className="block mb-2 font-bold text-gray-700">Giá đặt của bạn (₫)</label>
