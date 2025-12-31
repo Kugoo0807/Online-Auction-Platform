@@ -95,7 +95,7 @@ export default function BiddingForm({
     if (user.rating_count > 0 && ratingPercentage < 80) {
         return <BlockingMessage 
         title="Giới hạn người tham gia"
-        message="Sản phẩm này chỉ cho phép tài khoản có tỉ lệ đánh giá từ 80% trở lên tham gia đấu giá."
+        message="Sản phẩm này không cho phép tài khoản có tỉ lệ đánh giá dưới 80% tham gia đấu giá."
         type="yellow" 
         />;
     }
