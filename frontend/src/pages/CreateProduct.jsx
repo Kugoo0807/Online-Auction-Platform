@@ -303,6 +303,8 @@ const CreateProduct = () => {
       if (validImageCount === 0) {
         throw new Error("Không có ảnh chi tiết hợp lệ");
       }
+
+      await productService.createProduct(dataToSend);
       
       ToastNotification("Tạo sản phẩm thành công!", "success");
       setFormData(initialFormState);
