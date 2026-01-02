@@ -77,7 +77,7 @@ class UserRepository {
       return await this.findById(userId); 
     }
 
-    const allowed = ['full_name', 'phone_number', 'address', 'email'];
+    const allowed = ['full_name', 'phone_number', 'address', 'email', 'date_of_birth'];
     const cleaned = Object.fromEntries(
       Object.entries(updateData).filter(([key, val]) =>
         allowed.includes(key) &&
