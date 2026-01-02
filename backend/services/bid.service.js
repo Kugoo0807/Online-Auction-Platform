@@ -348,6 +348,15 @@ class BidService {
         const products = await productRepository.findActive(productIds, true);
 
         const result = products
+            .filter(product => {
+                const productObj = product.toObject ? product.toObject() : product;
+                const userIdStr = userId.toString();
+                
+                // Loại bỏ sản phẩm có banned_bidder chứa userId
+                const isBanned = productObj.banned_bidder && 
+                    productObj.banned_bidder.some(id => id.toString() === userIdStr);
+                return !isBanned;
+            })
             .map(product => {
                 const productObj = product.toObject ? product.toObject() : product;
                 const userIdStr = userId.toString();

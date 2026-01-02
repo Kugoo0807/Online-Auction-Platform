@@ -50,7 +50,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
 
                     <div className="flex flex-wrap items-center gap-1.5">
                         {/* Badge Auto Bid */}
-                        {!isInvalid && bid.is_priority && (
+                        {!isInvalid && !bid.is_adjusted && bid.is_priority && (
                         <span className="group/scaled relative w-fit bg-orange-100 text-orange-700 text-[12px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 flex items-center justify-center gap-1 select-none">
                             <span>Ưu thế</span>
                             <span>⚡</span>
@@ -58,7 +58,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                             {/* Tooltip */}
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/scaled:block z-50 w-72 pointer-events-none">
                                 <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-xl leading-relaxed opacity-95">
-                                    <p>Người chơi đạt mức giá này trước hoặc có mức đặt tối đa cao hơn nên được ưu tiên giữ thứ hạng cao hơn.</p>
+                                    <p>Người này được ưu tiên giữ thứ hạng cao hơn do đạt mức giá sớm hơn hoặc có giá đặt tối đa cao hơn.</p>
                                 </div>
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800 opacity-95"></div>
                             </div>
@@ -74,8 +74,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                             {/* Tooltip */}
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/scaled:block z-50 w-72 pointer-events-none">
                                 <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-xl leading-relaxed opacity-95">
-                                    <p className="font-semibold mb-1">⚠️ Giá đã được điều chỉnh</p>
-                                    <p>Do có bidder khác bị loại khỏi phiên đấu giá, giá của bid này đã được hệ thống tự động điều chỉnh để phù hợp với phiên đấu giá.</p>
+                                    <p>Do có người đặt giá khác bị loại khỏi phiên đấu giá, giá của bid này đã được hệ thống tự động điều chỉnh để phù hợp với phiên đấu giá.</p>
                                 </div>
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800 opacity-95"></div>
                             </div>

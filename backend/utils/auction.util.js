@@ -55,7 +55,7 @@ export const recalculateAuctionState = async (product, currentHolderId, session 
     if (winner) {
         newWinnerId = winner.userId;
         if (second) {
-            newPrice = Math.min(winner.price, second.price);
+            newPrice = second.price;
 
             /* === LOGIC XỬ LÝ SYSTEM BID ===
 

@@ -167,17 +167,27 @@ class ProductService {
             }
 
             // Hủy tất cả các giá hợp lệ của bidder này trong phiên đấu giá
-            await bidRepository.banBidsByUser(bidderIdToBan, session);
+            await bidRepository.banBidsByUser(bidderIdToBan, productId, session);
+
+            // Kiểm tra thứ hạng hiện tại của bidder
+            const bannedIdStr = bidderIdToBan.toString();
+            const sortedBidders = Array.from(product.auto_bid_map.entries())
+                .sort((a, b) => b[1] - a[1]);
+            const bidderRank = sortedBidders.findIndex(([bidderId]) => bidderId === bannedIdStr) + 1;
 
             // Xóa khỏi bản đồ auto bid
             product.auto_bid_map.delete(bidderIdToBan);
 
-            // === LOGIC XỬ LÍ SAU KHI CẤM ===
-            await recalculateAuctionState(product, product.current_highest_bidder, session);
+            // === LOGIC XỬ LÍ SAU KHI CẤM (Nếu bidder bị cấm là người đang giữ vị trí cao nhất hoặc cao nhì hiện tại) ===
+            if (bidderRank < 3) {
+                await recalculateAuctionState(product, product.current_highest_bidder, session);
 
-            await productRepository.save(product, session);
+                await productRepository.save(product, session);
 
-            await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
+                await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
+            } else {
+                await productRepository.save(product, session);
+            }
 
             // TODO: Gửi email thông báo
             const bidder = await userRepository.findById(bidderIdToBan, session);
