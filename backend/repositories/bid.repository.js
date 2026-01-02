@@ -17,9 +17,9 @@ class BidRepository {
             .sort({ price: -1 });
     }
 
-    async banBidsByUser(userId, session = null) {
+    async banBidsByUser(userId, productId, session = null) {
         return await Bid.updateMany(
-            { user: userId, is_valid: true },
+            { user: userId, product: productId, is_valid: true },
             { $set: { is_valid: false } },
             { session: session }
         );

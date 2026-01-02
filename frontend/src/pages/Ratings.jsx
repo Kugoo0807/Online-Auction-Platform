@@ -22,14 +22,14 @@ const Ratings = () => {
     useEffect(() => {
         fetchRatings();
 
-        const intervalId = setInterval(fetchRatings, 30000);
+        const intervalId = setInterval(() => fetchRatings(false), 300);
 
         return () => clearInterval(intervalId);
     }, []);
 
-    const fetchRatings = async () => {
+    const fetchRatings = async (loading = true) => {
         try {
-            setLoading(true);
+            if (loading) setLoading(true);
             const response = await ratingService.getReviewsReceived();
             const reviewsData = response.data || [];
             
@@ -50,7 +50,7 @@ const Ratings = () => {
             console.error('Lỗi khi lấy danh sách đánh giá:', error);
             ToastNotification('Không thể tải danh sách đánh giá', 'error');
         } finally {
-            setLoading(false);
+            if (loading) setLoading(false);
         }
     };
 
