@@ -19,13 +19,7 @@ export const profileService = {
     console.log("Dữ liệu gửi đi Update:", profileData);
     try {
       // Backend UserService: { full_name, phone_number, address, email, otp }
-      const response = await api.put('/users/profile', {
-        full_name: profileData.full_name,
-        address: profileData.address,
-        phone_number: profileData.phone_number,
-        email: profileData.email, 
-        otp: profileData.otp
-      });
+      const response = await api.put('/users/profile', profileData);
       return { success: true, data: response.data, message: "Cập nhật thành công" };
     } catch (error) {
       

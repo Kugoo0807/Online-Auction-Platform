@@ -17,7 +17,7 @@ import { executeTransaction } from '../../db/db.helper.js';
 
 class UserService {
     async updateProfile(userId, profileData) {
-        const { full_name, phone_number, address, email, otp } = profileData;
+        const { full_name, phone_number, address, email, date_of_birth, otp } = profileData;
 
         const currentUser = await userRepository.findById(userId);
         if (!currentUser) {
@@ -55,6 +55,7 @@ class UserService {
         if (phone_number) updateData.phone_number = phone_number;
         if (address) updateData.address = address;
         if (email) updateData.email = email;
+        if (date_of_birth) updateData.date_of_birth = new Date(date_of_birth);
 
         // Cập nhật
         const updateUser = await userRepository.updateData(userId, updateData);

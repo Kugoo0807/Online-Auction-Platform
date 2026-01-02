@@ -26,7 +26,8 @@ const UserProfile = () => {
     full_name: '',
     phone_number: '',
     address: '',
-    email: ''
+    email: '',
+    date_of_birth: ''
   });
 
   const validatePhone = (phone) => {
@@ -57,7 +58,8 @@ const UserProfile = () => {
                 full_name: finalUser.full_name || '',
                 phone_number: finalUser.phone_number || '',
                 address: finalUser.address || '',
-                email: finalUser.email || '' 
+                email: finalUser.email || '',
+                date_of_birth: finalUser.date_of_birth ? new Date(finalUser.date_of_birth).toISOString().split('T')[0] : ''
               });
           } 
 
@@ -186,7 +188,8 @@ const UserProfile = () => {
       full_name: user.full_name || '',
       phone_number: user.phone_number || '',
       address: user.address || '',
-      email: user.email || ''
+      email: user.email || '',
+      date_of_birth: user.date_of_birth ? new Date(user.date_of_birth).toISOString().split('T')[0] : ''
     });
   };
 
@@ -291,6 +294,18 @@ const UserProfile = () => {
                   {isEditing ? (
                     <input type="text" name="address" value={formData.address} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
                   ) : <p className="font-medium text-gray-900 py-1">{formData.address || "Chưa cập nhật"}</p>}
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="mt-2 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <div className="w-full">
+                  <p className="text-sm text-gray-500 mb-1">Ngày sinh</p>
+                  {isEditing ? (
+                    <input type="date" name="date_of_birth" value={formData.date_of_birth} onChange={handleChangeInfo} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                  ) : <p className="font-medium text-gray-900 py-1">{formData.date_of_birth ? new Date(formData.date_of_birth).toLocaleDateString('vi-VN') : "Chưa cập nhật"}</p>}
                 </div>
               </div>
 

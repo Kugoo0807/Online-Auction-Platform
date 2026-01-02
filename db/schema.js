@@ -48,6 +48,7 @@ const userSchema = new Schema({
   full_name: { type: String, required: true },
   email: { type: String, required: true, lowercase: true, trim: true },
   password: { type: String },
+  date_of_birth: { type: Date },
 
   // Delete
   is_deleted: { type: Boolean, default: false, index: true },
