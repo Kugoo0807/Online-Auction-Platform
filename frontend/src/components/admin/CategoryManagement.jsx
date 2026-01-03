@@ -48,11 +48,18 @@ export default function CategoryManagement() {
 
   const handleOpenModal = (category = null) => {
     if (category) {
+      // Nếu danh mục có parent, tìm slug từ danh sách categories
+      let parentSlug = '';
+      if (category.parent) {
+        const parentCategory = categories.find(c => c._id === category.parent._id);
+        parentSlug = parentCategory?.slug || '';
+      }
+      
       setEditingCategory(category);
       setFormData({
         category_name: category.category_name,
         description: category.description || '',
-        parent_slug: category.parent?.slug || ''
+        parent_slug: parentSlug
       });
     } else {
       setEditingCategory(null);
