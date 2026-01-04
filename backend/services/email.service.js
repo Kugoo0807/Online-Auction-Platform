@@ -530,3 +530,58 @@ export async function notifyRatingReceived(userEmail, raterName, score, comment,
         `
     });
 }
+
+// Gửi mail thông báo mật khẩu của bạn đã được quản trị viên đặt lại mật khẩu mặt định là password123
+export async function notifyPasswordReset(userEmail) {
+    return sendMailBase({
+        to: userEmail,
+        subject: `[Thông báo]: Mật khẩu của bạn đã được quản trị viên đặt lại`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #17a2b8; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">MẬT KHẨU ĐÃ ĐƯỢC ĐẶT LẠI</h2>
+                </div>
+                <div style="padding: 25px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px; color: #333;">Mật khẩu tài khoản của bạn đã được quản trị viên đặt lại.</p>
+                    <p style="font-size: 16px; color: #333;">Mật khẩu tạm thời của bạn là: <strong>password123</strong></p>
+                    <p style="font-size: 16px; color: #333;">Vui lòng đăng nhập và thay đổi mật khẩu ngay để bảo vệ tài khoản của bạn.</p>
+                </div>
+            </div>
+        `
+    });
+}
+
+// Email thông báo mô tả sản phẩm bạn giữ giá bị thay đổi
+export async function notifyProductDescriptionChanged(bidderEmail, productName, oldDescription, newDescription, productLink) {
+    return sendMailBase({
+        to: bidderEmail,
+        subject: `[Thông báo]: Mô tả sản phẩm "${productName}" đã bị thay đổi`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #ffc107; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">MÔ TẢ SẢN PHẨM ĐÃ THAY ĐỔI</h2>
+                </div>
+                <div style="padding: 25px;">
+                    <p style="font-size: 16px; color: #333;">Xin chào,</p>
+                    <p style="font-size: 16px;
+                    
+                    color: #333;">Mô tả của sản phẩm <strong>"${productName}"</strong> mà bạn đang giữ giá đã được người bán cập nhật.</p> 
+                    <h4 style="color: #333;">Mô tả cũ:</h4>
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; color: #555; margin: 10px 0;">
+                        ${oldDescription}
+                    </div>
+                    <h4 style="color: #333;">Mô tả mới:</h4>
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; color: #555; margin: 10px 0;">
+                        ${newDescription}
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${productLink}" style="background-color: #ffc107; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            XEM SẢN PHẨM
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `
+    });
+}
