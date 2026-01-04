@@ -195,12 +195,17 @@ const seedDatabase = async () => {
     
     console.log(`✅ Đã tạo ${totalBids} bids!`);
 
-    // --- 6.6. CHỌN 4 SẢN PHẨM ĐỂ CHUYỂN THÀNH 'SOLD' VÀ TẠO AUCTION RESULTS ---
-    console.log('🔄 Đang chọn 4 sản phẩm để chuyển thành sold...');
+    // --- 6.6. CHỌN 9 SẢN PHẨM ĐỂ CHUYỂN THÀNH 'SOLD' VÀ TẠO AUCTION RESULTS ---
+    console.log('🔄 Đang chọn 9 sản phẩm để chuyển thành sold...');
     
-    // Tìm 4 sản phẩm theo tên cụ thể (các sản phẩm trước đây là soldProducts)
+    // Tìm 9 sản phẩm theo tên cụ thể (các sản phẩm trước đây là soldProducts)
     const productNamesToSell = [
       "Sony PlayStation 5",
+      "Sony PlayStation 5 Digital Edition",
+      "Sony PlayStation 5 God of War Bundle",
+      "Sony PlayStation 5 Slim",
+      "Sony PlayStation 5 Disc Edition",
+      "Sony PlayStation 5 Spider-Man Edition",
       "Loa Bluetooth Marshall",
       "Bàn Làm Việc Gỗ Cao Su 1m2",
       "iPhone 14 Plus 128GB Blue"
@@ -233,21 +238,46 @@ const seedDatabase = async () => {
       console.log('🏆 Đang tạo Auction Results...');
       
       const auctionResultsData = productsToSell.map((product, index) => {
-        // Map status theo thứ tự như cũ
-        const statuses = ['completed', 'pending_payment', 'pending_shipment', 'shipping'];
+        // Map status theo thứ tự như cũ, thêm cho 5 sản phẩm mới
+        const statuses = [
+          'completed',           // Sony PlayStation 5
+          'completed',           // Sony PlayStation 5 Digital Edition
+          'completed',           // Sony PlayStation 5 God of War Bundle
+          'completed',           // Sony PlayStation 5 Slim
+          'completed',           // Sony PlayStation 5 Disc Edition
+          'completed',           // Sony PlayStation 5 Spider-Man Edition
+          'pending_payment',     // Loa Bluetooth Marshall
+          'pending_shipment',    // Bàn Làm Việc Gỗ Cao Su 1m2
+          'shipping'             // iPhone 14 Plus 128GB Blue
+        ];
         const shippingAddresses = [
           "123 Đường A, Đà Nẵng",
+          "456 Đường B, Quận 3, TP.HCM",
+          "789 Đường C, Quận 1, TP.HCM",
+          "321 Đường D, Quận 7, TP.HCM",
+          "654 Đường E, Hải Phòng",
+          "987 Đường F, Cần Thơ",
           null,
           "456 Đường B, Quận 1, TP.HCM",
           "789 Đường C, Quận 7, TP.HCM"
         ];
         const paymentProofs = [
           "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
+          "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
           null,
           "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg",
           "https://thuvienvector.vn/wp-content/uploads/2025/03/anh-chuyen-khoan-thanh-cong-Techcombank-01.jpg"
         ];
         const shippingProofs = [
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
+          "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
           "https://file.hstatic.net/200000472237/file/cach-kiem-tra-don-hang-7_cc2b5854a2bb4277a70c90adb64a9cda.jpg",
           null,
           null,
