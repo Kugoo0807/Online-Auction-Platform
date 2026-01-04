@@ -132,8 +132,19 @@ class ProductController {
     async getProductsByCategory(req, res) {
         try {
             const { slug } = req.params;
+            const { page, limit, sortOrder } = req.query;
 
-            const products = await productService.getProductsByCategorySlug(slug);
+            // Xử lý sortOrder
+            let sortOption = {};
+            if (sortOrder) {
+                try {
+                    sortOption = JSON.parse(sortOrder);
+                } catch (error) {
+                    return res.status(400).json({ message: 'sortOrder không hợp lệ' });
+                }
+            }
+
+            const products = await productService.getProductsByCategorySlug(slug, limit ? parseInt(limit) : 9, page ? parseInt(page) : 1, sortOption);
 
             return res.status(200).json({
                 message: 'Lấy danh sách sản phẩm theo thư mục thành công!',
@@ -175,13 +186,24 @@ class ProductController {
 
     async searchProducts(req, res) {
         try {
-            const { keyword } = req.query;
+            const { keyword, limit, page, sortOrder } = req.query;
+            
 
             if (!keyword) {
                 return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
             }
 
-            const products = await productService.searchProducts(keyword);
+            // Xử lý sortOrder
+            let sortOption = {};
+            if (sortOrder) {
+                try {
+                    sortOption = JSON.parse(sortOrder);
+                } catch (error) {
+                    return res.status(400).json({ message: 'sortOrder không hợp lệ' });
+                }
+            }
+
+            const products = await productService.searchProducts(keyword, limit ? parseInt(limit) : 9, page ? parseInt(page) : 1, sortOption);
 
             return res.status(200).json({
                 message: 'Kết quả tìm kiếm',

@@ -4,21 +4,27 @@ class ProductService {
 
   // --- PUBLIC APIS ---
 
-  // 1. Tìm kiếm sản phẩm (Đã thêm Mock Logic)
-  async searchProducts(keyword, page = 1, limit = 12) {
-    // --- REAL API MODE ---
+  // 1. Tìm kiếm sản phẩm với phân trang
+  async searchProducts(keyword, page = 1, limit = 12, sortOrder = null) {
     try {
-      // API của Backend: /products/search?keyword=...
-      const response = await api.get('/products/search', {
-        params: {
-          keyword, // Tham số query chính
-        }
-      });
+      // API của Backend: /products/search?keyword=...&page=...&limit=...&sortOrder=...
+      const params = {
+        keyword,
+        page,
+        limit
+      };
+
+      // Thêm sortOrder nếu có
+      if (sortOrder) {
+        params.sortOrder = JSON.stringify(sortOrder);
+      }
+
+      const response = await api.get('/products/search', { params });
 
       // Chuẩn hóa dữ liệu trả về để Frontend không bị lỗi
-      const data = response.data.data || response.data || [];
+      const data = response.data.data || response.data || {};
 
-      return Array.isArray(data) ? data : [];
+      return data;
 
     } catch (error) {
       console.error("Lỗi searchProducts:", error);
@@ -38,11 +44,16 @@ class ProductService {
   }
 
   // 3. Lấy sản phẩm theo danh mục
-  async getProductsByCategory(slug, page = 1, limit = 12) {
+  async getProductsByCategory(slug, page = 1, limit = 12, sortOrder = null) {
     try {
-      const response = await api.get(`/products/category/${slug}`, {
-        params: { page, limit }
-      });
+      const params = { page, limit };
+
+      // Thêm sortOrder nếu có
+      if (sortOrder) {
+        params.sortOrder = JSON.stringify(sortOrder);
+      }
+
+      const response = await api.get(`/products/category/${slug}`, { params });
       return response.data;
     } catch (error) {
       console.error("Lỗi getProductsByCategory:", error);

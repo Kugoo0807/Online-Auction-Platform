@@ -158,6 +158,21 @@ class UserService {
     async getDeletedUsers() {
         return await userRepository.findDeleted();
     }
+
+    async resetUserPassword(userId) {
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            throw new Error('Không tìm thấy người dùng!');
+        }
+
+        const defaultPassword = "password123";
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(defaultPassword, salt);
+        
+        await userRepository.updatePassword(userId, hashedPassword);
+
+        return { message: 'Mật khẩu đã được đặt lại về mặc định thành công!' };
+    }
 }
 
 export const userService = new UserService();

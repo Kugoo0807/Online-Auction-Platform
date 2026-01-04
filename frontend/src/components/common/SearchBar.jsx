@@ -26,7 +26,7 @@ export default function SearchBar({ onSearch }) {
     const fetchTrending = async () => {
         try {
             const res = await productService.getTopBidded();
-            const products = res.data || res || [];
+            const products = res.data.products || res || [];
             setTrending(products.slice(0, 3));
         } catch (error) {
             console.error("Lỗi lấy trending:", error);
@@ -70,12 +70,13 @@ export default function SearchBar({ onSearch }) {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await productService.searchProducts(query);
-        const results = res.data || res || [];
-        const activeProducts = (results || []).filter(p => p.auction_status === 'active');
-        setSuggestions(activeProducts.slice(0, 5));
+        const res = await productService.searchProducts(query, 1, 5);
+        const products = res.products || [];
+        const activeProducts = products.filter(p => p.auction_status === 'active');
+        setSuggestions(activeProducts);
       } catch (error) {
         console.error("Lỗi gợi ý:", error);
+        setSuggestions([]);
       }
     }, 300);
 

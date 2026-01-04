@@ -192,7 +192,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 {avatar(product.seller?.full_name)}
                 <div>
                     <div className="text-xs text-gray-500 uppercase font-semibold">Người bán</div>
-                    <div className="font-bold text-gray-900">{maskName(product.seller?.full_name) || "Ẩn danh"}</div>
+                    <div className="font-bold text-gray-900">{product.seller?.full_name || "Ẩn danh"}</div>
                     <div className="text-xs text-yellow-500 flex items-center">
                         {product.seller && formatRating(product.seller.rating_score, product.seller.rating_count)}
                     </div>
@@ -205,7 +205,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                 <div>
                     <div className="text-xs text-yellow-700 uppercase font-bold mb-0.5">{product.auction_status === 'active' ? 'Người giữ giá cao nhất' : 'Người thắng đấu giá'}</div>
                     <div className="font-bold text-gray-900">
-                        {maskName(product.current_highest_bidder.full_name)} 
+                        {isRealSeller ? product.current_highest_bidder.full_name : maskName(product.current_highest_bidder.full_name)} 
                         {user?._id.toString() === product.current_highest_bidder._id.toString() ? ' (Bạn)' : ''}
                     </div>
                     <div className="text-xs text-yellow-500 flex items-center">
