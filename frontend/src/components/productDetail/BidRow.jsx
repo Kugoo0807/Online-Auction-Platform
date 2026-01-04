@@ -37,7 +37,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                     {avatar(bidderName, 8)}
                     <span className={`font-medium text-sm leading-tight ${isInvalid ? 'text-gray-500 line-through italic' : 'text-gray-800'}`}>
                         {bidderName ? (
-                            isRealSeller ? (
+                            isRealSeller && !isInvalid ? (
                                 <Link 
                                     to={`/users/${bid.user?._id}/ratings`}
                                     className="hover:text-blue-600 hover:underline transition-colors"
