@@ -66,13 +66,25 @@ const UserRatings = () => {
     };
 
     const maskName = (name) => {
-        if (!name) return 'Người dùng ẩn danh';
-        const parts = name.trim().split(' ');
-        if (parts.length === 1) {
-            return parts[0][0] + '*'.repeat(parts[0].length - 1);
-        } else {
-            return parts[0] + ' ' + parts.slice(1).map(part => '*'.repeat(part.length)).join(' ');
+        if (!name || typeof name !== 'string') return 'u***r'; 
+
+        const cleanName = name.split('(')[0].trim();
+        
+        if (!cleanName) return 'u***r';
+
+        const chars = Array.from(cleanName);
+        const len = chars.length;
+
+        if (len === 1) {
+            return `${chars[0]}***${chars[0]}`;
         }
+
+        const first = chars[0];
+        const last = chars[len - 1];
+        const middleLength = Math.min(len - 2, 6); 
+        const middle = "*".repeat(middleLength);
+        
+        return `${first}${middle}${last}`;
     };
 
     if (loading) {
