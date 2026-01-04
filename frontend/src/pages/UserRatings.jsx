@@ -10,6 +10,7 @@ const UserRatings = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [ratings, setRatings] = useState([]);
+    const [ratedUser, setRatedUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalPositive: 0,
@@ -42,9 +43,21 @@ const UserRatings = () => {
         try {
             if (loading) setLoading(true);
             const response = await ratingService.getUserRatings(userId);
-            const reviewsData = response.data || [];
+            
+            let reviewsData = [];
+            if (Array.isArray(response.data)) {
+                reviewsData = response.data;
+            } else if (Array.isArray(response)) {
+                reviewsData = response;
+            }
             
             setRatings(reviewsData);
+            
+            if (response.user && response.user.full_name) {
+                setRatedUser(response.user);
+            } else if (reviewsData.length > 0 && reviewsData[0].rated_user) {
+                setRatedUser(reviewsData[0].rated_user);
+            }
 
             const positive = reviewsData.filter(r => r.rating_type === 1).length;
             const negative = reviewsData.filter(r => r.rating_type === -1).length;
@@ -63,6 +76,10 @@ const UserRatings = () => {
         } finally {
             if (loading) setLoading(false);
         }
+    };
+
+    const getUserName = () => {
+        return ratedUser?.full_name || 'người dùng';
     };
 
     const maskName = (name) => {
@@ -114,7 +131,7 @@ const UserRatings = () => {
 
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Đánh giá và phản hồi</h1>
-                    <p className="text-gray-600">Xem các đánh giá mà người dùng đã nhận</p>
+                    <p className="text-gray-600">Xem các đánh giá mà {getUserName()} đã nhận</p>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 mb-6">

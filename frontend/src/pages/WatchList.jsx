@@ -182,7 +182,7 @@ export default function WatchList() {
 
   // Lọc và transform data thành format phù hợp
   const productsForDisplay = watchList
-    .filter(item => item.product) // Chỉ lấy items có product
+    .filter(item => item.product && item.product.auction_status === 'active') // Chỉ lấy items có product
     .map(item => {
       const product = item.product;
       const timeRemaining = calculateTimeRemaining(product.auction_end_time);
@@ -339,7 +339,7 @@ export default function WatchList() {
                     {/* Product Info */}
                     <div className="p-3">
                       <Link to={`/product/${product.id}`}>
-                        <h3 className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-2 h-10 text-sm mb-1">
+                        <h3 className="font-semibold text-gray-800 hover:text-blue-600 truncate line-clamp-2 h-10 text-sm mb-1">
                           {product.name}
                         </h3>
                       </Link>

@@ -57,7 +57,7 @@ class RatingService {
 
     async getUserRatings(userId) {
         try {
-            const response = await api.get(`/ratings/users/${userId}`);
+            const response = await api.get(`/ratings/user/${userId}`);
             return response.data;
         } catch (error) {
             throw error;

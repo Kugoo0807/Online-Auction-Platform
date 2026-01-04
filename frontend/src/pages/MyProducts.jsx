@@ -45,9 +45,10 @@ const MyProducts = () => {
       }
       const response = await productService.getSellerProducts();
       const data = response.data || response.products || [];
+      const products = data.products || data || [];
 
       // Nếu product đã sold, lấy thông tin order tương ứng cho product đó
-      for (let product of data) {
+      for (let product of products) {
         if (product.auction_status === 'sold') {
           try {
             const order = await auctionResultService.getOrdersByProductId(product._id || product.id);
@@ -58,7 +59,7 @@ const MyProducts = () => {
         }
       }
 
-      setProducts(Array.isArray(data) ? data : []);
+      setProducts(Array.isArray(products) ? products : []);
     } catch (error) {
       console.error("Lỗi tải sản phẩm:", error);
       if (loading) {
