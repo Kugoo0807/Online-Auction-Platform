@@ -51,10 +51,10 @@ const EMAIL_HANDLERS = {
         await mailService.notifyBidUnBan(data.bidderEmail, data.productName, data.productLink);
     },
     'NOTIFY_PASSWORD_RESET': async (data) => {
-        await mailService.notifyPasswordReset(data.userEmail);
+        await mailService.notifyPasswordReset(data.userEmail, data.temporaryPassword);
     },
     'NOTIFY_DESCRIPTION_UPDATE': async (data) => {
-        await mailService.notifyDescriptionUpdate(data.bidderEmail, data.productName, data.oldDescription, data.newDescription, data.productLink);
+        await mailService.notifyProductDescriptionUpdate(data.bidderEmail, data.productName, data.newDescription, data.productLink);
     }
 };
 

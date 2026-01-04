@@ -532,7 +532,7 @@ export async function notifyRatingReceived(userEmail, raterName, score, comment,
 }
 
 // Gửi mail thông báo mật khẩu của bạn đã được quản trị viên đặt lại mật khẩu mặt định là password123
-export async function notifyPasswordReset(userEmail) {
+export async function notifyPasswordReset(userEmail, temporaryPassword) {
     return sendMailBase({
         to: userEmail,
         subject: `[Thông báo]: Mật khẩu của bạn đã được quản trị viên đặt lại`,
@@ -544,7 +544,7 @@ export async function notifyPasswordReset(userEmail) {
                 <div style="padding: 25px;">
                     <p style="font-size: 16px; color: #333;">Xin chào,</p>
                     <p style="font-size: 16px; color: #333;">Mật khẩu tài khoản của bạn đã được quản trị viên đặt lại.</p>
-                    <p style="font-size: 16px; color: #333;">Mật khẩu tạm thời của bạn là: <strong>password123</strong></p>
+                    <p style="font-size: 16px; color: #333;">Mật khẩu tạm thời của bạn là: <strong>${temporaryPassword}</strong></p>
                     <p style="font-size: 16px; color: #333;">Vui lòng đăng nhập và thay đổi mật khẩu ngay để bảo vệ tài khoản của bạn.</p>
                 </div>
             </div>
@@ -553,7 +553,7 @@ export async function notifyPasswordReset(userEmail) {
 }
 
 // Email thông báo mô tả sản phẩm bạn giữ giá bị thay đổi
-export async function notifyProductDescriptionChanged(bidderEmail, productName, oldDescription, newDescription, productLink) {
+export async function notifyProductDescriptionUpdate(bidderEmail, productName, newDescription, productLink) {
     return sendMailBase({
         to: bidderEmail,
         subject: `[Thông báo]: Mô tả sản phẩm "${productName}" đã bị thay đổi`,
@@ -567,10 +567,6 @@ export async function notifyProductDescriptionChanged(bidderEmail, productName, 
                     <p style="font-size: 16px;
                     
                     color: #333;">Mô tả của sản phẩm <strong>"${productName}"</strong> mà bạn đang giữ giá đã được người bán cập nhật.</p> 
-                    <h4 style="color: #333;">Mô tả cũ:</h4>
-                    <div style="background-color: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; color: #555; margin: 10px 0;">
-                        ${oldDescription}
-                    </div>
                     <h4 style="color: #333;">Mô tả mới:</h4>
                     <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; color: #555; margin: 10px 0;">
                         ${newDescription}

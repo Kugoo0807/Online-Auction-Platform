@@ -14,7 +14,7 @@ import { ratingService } from './rating.service.js';
 
 import { recalculateAuctionState } from '../utils/auction.util.js';
 import { executeTransaction } from '../../db/db.helper.js';
-
+import { dispatchEmail } from '../services/email.service.queue.js';
 class UserService {
     async updateProfile(userId, profileData) {
         const { full_name, phone_number, address, email, date_of_birth, otp } = profileData;
@@ -169,6 +169,11 @@ class UserService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(defaultPassword, salt);
         
+        dispatchEmail('NOTIFY_PASSWORD_RESET', {
+            userEmail: user.email,
+            temporaryPassword: defaultPassword
+        });
+
         await userRepository.updatePassword(userId, hashedPassword);
 
         return { message: 'Mật khẩu đã được đặt lại về mặc định thành công!' };
