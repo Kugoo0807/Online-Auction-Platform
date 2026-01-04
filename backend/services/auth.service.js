@@ -219,6 +219,13 @@ class AuthService {
         // Dọn dẹp OTP
         await otpRepository.deleteByEmail(email);
 
+        // Thêm provider local
+        await userRepository.addProvider(
+            newUser.id,
+            "local",
+            newUser.id.toString()
+        );
+
         // Ẩn mật khẩu
         newUser.password = undefined;
         return newUser;
