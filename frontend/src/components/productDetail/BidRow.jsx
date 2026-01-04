@@ -35,7 +35,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                     {winnerExists && <Medal className="text-orange-500 w-8 h-8" />}
                     {avatar(bidderName, 8)}
                     <span className={`font-medium text-sm leading-tight ${isInvalid ? 'text-gray-500 line-through italic' : 'text-gray-800'}`}>
-                        {bidderName ? maskName(bidderName) : '********'}
+                        {bidderName ? (isRealSeller ? bidderName : maskName(bidderName)) : '********'}
                         {isUserMe && ' (Bạn)'}
                     </span>
                 </div>
