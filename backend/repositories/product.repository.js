@@ -1,5 +1,6 @@
 import { Product } from '../../db/schema.js';
 import { Category } from '../../db/schema.js';
+import { categoryRepository } from './category.repository.js';
 
 class ProductRepository { 
     async create(productData) { 
@@ -34,13 +35,21 @@ class ProductRepository {
                 category_name: { $regex: keyword, $options: 'i' } 
             }).select('_id');
 
-            const matchingCategoryIds = matchingCategories.map(cat => cat._id);
+            // Lấy tất cả category IDs bao gồm cả category con
+            let allCategoryIds = [];
+            for (const cat of matchingCategories) {
+                const descendantIds = await categoryRepository.getAllDescendantIds(cat._id);
+                allCategoryIds = allCategoryIds.concat(descendantIds);
+            }
+
+            // Loại bỏ trùng lặp
+            const uniqueCategoryIds = [...new Set(allCategoryIds)];
 
             // Thêm điều kiện tìm kiếm vào filter
             filter.$or = [
                 { product_name: { $regex: keyword, $options: 'i' } },
                 { description_current: { $regex: keyword, $options: 'i' } },
-                { category: { $in: matchingCategoryIds } } 
+                { category: { $in: uniqueCategoryIds } } 
             ];
         }
 
