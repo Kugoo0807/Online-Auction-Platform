@@ -77,6 +77,18 @@ class UserController {
             return res.status(400).json({ message: error.message });
         }
     }
+
+    async resetUserPassword(req, res) {
+        try {
+            const userId = req.params.id;
+
+            const result = await userService.resetUserPassword(userId);
+
+            return res.status(200).json(result);
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export const userController = new UserController();
