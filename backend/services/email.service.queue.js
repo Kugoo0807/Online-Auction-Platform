@@ -49,6 +49,12 @@ const EMAIL_HANDLERS = {
     },
     'NOTIFY_UNBAN': async (data) => {
         await mailService.notifyBidUnBan(data.bidderEmail, data.productName, data.productLink);
+    },
+    'NOTIFY_PASSWORD_RESET': async (data) => {
+        await mailService.notifyPasswordReset(data.userEmail);
+    },
+    'NOTIFY_DESCRIPTION_UPDATE': async (data) => {
+        await mailService.notifyDescriptionUpdate(data.bidderEmail, data.productName, data.oldDescription, data.newDescription, data.productLink);
     }
 };
 
