@@ -61,8 +61,13 @@ const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
             <span className="font-medium">Tôi không phải là robot</span>
             <p className="text-xs text-slate-500 mt-1">
               Bằng cách tick vào ô này, bạn xác nhận bạn không phải là robot và đồng ý với
-              <a href="#" className="text-blue-600 hover:underline ml-1">Điều khoản dịch vụ</a> và
-              <a href="#" className="text-blue-600 hover:underline ml-1">Chính sách bảo mật</a>
+              <a href="https://policies.google.com/terms?hl=en" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener noreferrer">
+                Điều khoản dịch vụ
+              </a> 
+              và
+              <a href="https://policies.google.com/privacy?hl=en" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener noreferrer">
+                Chính sách bảo mật
+              </a>
             </p>
           </label>
         </div>

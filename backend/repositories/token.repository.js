@@ -23,10 +23,11 @@ class TokenRepository {
         );
     }
 
-    async deleteAllTokensByUser(userId) {
+    async deleteAllTokensByUser(userId, session = null) {
         return await RefreshToken.updateMany(
             { user: userId, is_revoked: false },
-            { is_revoked: true }
+            { is_revoked: true },
+            { session: session }
         );
     }
 }

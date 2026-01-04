@@ -73,26 +73,65 @@ module.exports = ({ users, products, auctionResults }) => {
       
       const ratingsData = [];
       
+      // Random rating comments
+      const positiveComments = [
+        "Shop uy tín, máy ngon!",
+        "Sản phẩm đẹp, đóng gói cẩn thận!",
+        "Giao hàng nhanh, shop nhiệt tình!",
+        "Chất lượng tốt như mô tả!",
+        "Rất hài lòng, sẽ ủng hộ tiếp!"
+      ];
+      
+      const negativeComments = [
+        "Sản phẩm không như mô tả.",
+        "Giao hàng chậm quá.",
+        "Thái độ shop không tốt.",
+        "Máy có trầy xước mà không báo trước.",
+        "Không đóng gói cẩn thận."
+      ];
+      
+      const positiveCommentsForBidder = [
+        "Khách chuyển khoản nhanh, very good.",
+        "Buyer tốt, thanh toán đúng hạn!",
+        "Khách dễ tính, giao dịch nhanh gọn!",
+        "Người mua uy tín, recommend!",
+        "Giao dịch suôn sẻ, khách nice!"
+      ];
+      
+      const negativeCommentsForBidder = [
+        "Khách chậm trễ thanh toán.",
+        "Không nhận hàng đúng hẹn.",
+        "Liên lạc khó khăn.",
+        "Trả giá sau khi thắng đấu giá.",
+        "Thái độ không tốt."
+      ];
+      
       // Tạo ratings cho từng auction result
       auctionResults.forEach((result, index) => {
         // Chỉ tạo rating cho completed (đơn hàng đã hoàn tất)
         if (result.status === 'completed') {
+          // Random rating type: -1 hoặc 1
+          const ratingFromWinner = Math.random() < 0.2 ? -1 : 1;
+          const ratingFromSeller = Math.random() < 0.3 ? -1 : 1;
+          
           // Rating từ winner về seller
+          const winnerComments = ratingFromWinner === 1 ? positiveComments : negativeComments;
           ratingsData.push({
             rater: result.winning_bidder,
             rated_user: result.seller,
             auction_result: result._id,
-            rating_type: 1,
-            comment: "Shop uy tín, máy ngon!"
+            rating_type: ratingFromWinner,
+            comment: winnerComments[Math.floor(Math.random() * winnerComments.length)]
           });
           
           // Rating từ seller về winner
+          const sellerComments = ratingFromSeller === 1 ? positiveCommentsForBidder : negativeCommentsForBidder;
           ratingsData.push({
             rater: result.seller,
             rated_user: result.winning_bidder,
             auction_result: result._id,
-            rating_type: 1,
-            comment: "Khách chuyển khoản nhanh, very good."
+            rating_type: ratingFromSeller,
+            comment: sellerComments[Math.floor(Math.random() * sellerComments.length)]
           });
         }
       });

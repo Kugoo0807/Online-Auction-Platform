@@ -200,6 +200,7 @@ const UserProfile = () => {
   );
 
   const isAdmin = user.role === 'admin';
+  const hasLocalProvider = user.providers.some(p => p.provider === 'local');
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-900">
@@ -229,9 +230,11 @@ const UserProfile = () => {
           <div className="flex gap-3">
              {!isEditing && (
                <>
-                <button onClick={() => setShowPassModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
-                  Đổi mật khẩu
-                </button>
+                {hasLocalProvider && (
+                  <button onClick={() => setShowPassModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                    Đổi mật khẩu
+                  </button>
+                )}
                 <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                   Chỉnh sửa hồ sơ
                 </button>
