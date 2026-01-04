@@ -393,28 +393,27 @@ export async function notifyNewQuestion(sellerEmail, productName, questionConten
 }
 
 export async function notifyNewAnswer(recipientsEmails, productName, questionContent, answerContent, productLink) {
-    // Lưu ý: Dùng bcc để bảo mật danh sách email người nhận
-    return transporter.sendMail({
-        from: `"AuctionHub Support" <${process.env.MAIL_USER}>`,
-        bcc: recipientsEmails, 
+    return sendMailBase({
+        to: recipientsEmails,
         subject: `[Cập nhật] Người bán đã trả lời về: ${productName}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
-                <div style="padding: 20px; border-bottom: 1px solid #eee;">
-                    <h3 style="margin: 0; color: #333;">Cập nhật thảo luận sản phẩm</h3>
-                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${productName}</p>
+                <div style="background-color: #17a2b8; color: white; padding: 15px 25px;">
+                    <h3 style="margin: 0;">Người bán đã trả lời!</h3>
                 </div>
-
+                
                 <div style="padding: 25px;">
-                    <div style="margin-bottom: 20px;">
-                        <span style="background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">CÂU HỎI</span>
-                        <p style="margin-top: 5px; color: #333;">${questionContent}</p>
+                    <p>Sản phẩm <strong>"${productName}"</strong> có câu trả lời mới từ người bán:</p>
+                    
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; font-style: italic; color: #555; margin: 20px 0;">
+                        <strong>Câu hỏi:</strong> "${questionContent}"
                     </div>
 
-                    <div style="margin-bottom: 30px;">
-                        <span style="background-color: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">TRẢ LỜI TỪ NGƯỜI BÁN</span>
-                        <p style="margin-top: 5px; color: #333; font-weight: 500;">${answerContent}</p>
+                    <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; color: #155724; margin: 20px 0;">
+                        <strong>Trả lời:</strong> ${answerContent}
                     </div>
+
+                    <p>Hãy xem chi tiết để theo dõi thêm thảo luận về sản phẩm này.</p>
                     <div style="text-align: center; margin-top: 30px;">
                         <a href="${productLink}" style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                             Xem chi tiết sản phẩm
