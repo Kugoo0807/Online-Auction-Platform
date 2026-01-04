@@ -20,9 +20,9 @@ export default function HomePage() {
           productService.getTopBidded()
         ])
 
-        setTopEnding(endingRes.data || [])
-        setTopPrice(priceRes.data || [])
-        setTopBidded(biddedRes.data || [])
+        setTopEnding(endingRes.data.products || [])
+        setTopPrice(priceRes.data.products || [])
+        setTopBidded(biddedRes.data.products || [])
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu homepage:', error)
       } finally {

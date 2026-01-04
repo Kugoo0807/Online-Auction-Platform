@@ -27,7 +27,7 @@ class ProductRepository {
         return await Product.find({ product_name: productName }).session(session).select(selectAutoBidMap ? '' : '-auto_bid_map');
     }
 
-    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0, selectAutoBidMap = false, session = null) {
+    async findByCondition(keyword, filter = {}, sortOption = {}, limit = 0, page = 1, selectAutoBidMap = false, session = null) {
         if (keyword) {
             // Tìm các category có tên khớp với từ khóa
             const matchingCategories = await Category.find({ 
@@ -46,19 +46,34 @@ class ProductRepository {
 
         const finalSort = Object.keys(sortOption).length ? sortOption : { auction_end_time: 1 };
 
-        // Tạo query
+        // Đếm tổng số documents
+        const totalCount = await Product.countDocuments(filter).session(session);
+
+        // Tạo query với phân trang
         const query = Product.find(filter).sort(finalSort);
 
         if (limit > 0) {
-            query.limit(limit);
+            const skip = (page - 1) * limit;
+            query.skip(skip).limit(limit);
         }
 
-        return await query.session(session)
+        const products = await query.session(session)
             .select(selectAutoBidMap ? '' : '-auto_bid_map')
             .populate('seller', 'full_name email rating_score rating_count') 
             .populate('category', 'category_name slug')
             .populate('current_highest_bidder', 'full_name email rating_score rating_count')
             .lean();
+
+        // Trả về kết quả với thông tin phân trang
+        return {
+            products,
+            pagination: {
+                total: totalCount,
+                page: page,
+                limit: limit,
+                totalPages: limit > 0 ? Math.ceil(totalCount / limit) : 1
+            }
+        };
     }
 
     async findRandom(filter, limit, selectAutoBidMap = false, session = null) {

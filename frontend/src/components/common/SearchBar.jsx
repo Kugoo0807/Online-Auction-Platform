@@ -26,7 +26,7 @@ export default function SearchBar({ onSearch }) {
     const fetchTrending = async () => {
         try {
             const res = await productService.getTopBidded();
-            const products = res.data || res || [];
+            const products = res.data.products || res || [];
             setTrending(products.slice(0, 3));
         } catch (error) {
             console.error("Lỗi lấy trending:", error);
