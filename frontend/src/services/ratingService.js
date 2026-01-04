@@ -54,6 +54,15 @@ class RatingService {
             throw error;
         }
     }
+
+    async getUserRatings(userId) {
+        try {
+            const response = await api.get(`/ratings/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export const ratingService = new RatingService();
