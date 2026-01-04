@@ -144,8 +144,19 @@ class ProductController {
                 }
             }
 
-            const products = await productService.getProductsByCategorySlug(slug, limit ? parseInt(limit) : 9, page ? parseInt(page) : 1, sortOption);
+            // Xử lý và validate phân trang
+            const pageNum = page ? parseInt(page, 10) : 1;
+            const limitNum = limit ? parseInt(limit, 10) : 9;
 
+            if (Number.isNaN(pageNum) || pageNum < 1) {
+                return res.status(400).json({ message: 'Giá trị page không hợp lệ, page phải là số nguyên >= 1' });
+            }
+
+            if (Number.isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+                return res.status(400).json({ message: 'Giá trị limit không hợp lệ, limit phải là số nguyên từ 1 đến 100' });
+            }
+
+            const products = await productService.getProductsByCategorySlug(slug, limitNum, pageNum, sortOption);
             return res.status(200).json({
                 message: 'Lấy danh sách sản phẩm theo thư mục thành công!',
                 data: products

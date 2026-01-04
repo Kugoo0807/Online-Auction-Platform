@@ -73,7 +73,13 @@ class ProductRepository {
             .populate('current_highest_bidder', 'full_name email rating_score rating_count')
             .lean();
 
-        // Trả về kết quả với thông tin phân trang
+        // Trả về kết quả
+        if (limit === 0) {
+            // Giữ tương thích ngược: khi không phân trang, trả về mảng products
+            return products;
+        }
+
+        // Khi có phân trang, trả về kèm thông tin phân trang
         return {
             products,
             pagination: {

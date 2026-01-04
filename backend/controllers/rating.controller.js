@@ -39,7 +39,20 @@ class RatingController {
             const reviews = await ratingService.getReviewsReceived(userId);
             return res.status(200).json({
                 message: 'Lấy danh sách đánh giá đã nhận thành công!',
-                data: reviews
+                ...reviews
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    async getUserReviewsReceived(req, res) {
+        try {
+            const userId = req.params.userId;
+            const reviews = await ratingService.getReviewsReceived(userId);
+            return res.status(200).json({
+                message: 'Lấy danh sách đánh giá đã nhận của người dùng thành công!',
+                ...reviews
             });
         } catch (error) {
             return res.status(400).json({ message: error.message });
