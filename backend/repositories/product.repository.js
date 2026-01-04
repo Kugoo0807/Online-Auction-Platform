@@ -86,7 +86,7 @@ class ProductRepository {
                 total: totalCount,
                 page: page,
                 limit: limit,
-                totalPages: Math.ceil(totalCount / limit)
+                totalPages: limit > 0 ? Math.ceil(totalCount / limit) : 1
             }
         };
     }

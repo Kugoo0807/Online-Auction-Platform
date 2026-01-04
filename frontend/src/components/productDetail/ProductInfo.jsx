@@ -199,6 +199,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                     >
                         {product.seller?.full_name || "Ẩn danh"}
                     </Link>
+                    <div className="font-bold text-gray-900">{product.seller?.full_name || "Ẩn danh"}</div>
                     <div className="text-xs text-yellow-500 flex items-center">
                         {product.seller && formatRating(product.seller.rating_score, product.seller.rating_count)}
                     </div>
@@ -221,6 +222,7 @@ export default function ProductInfo({ product, minValidPrice, lastBid, user, isR
                         ) : (
                             <span>{maskName(product.current_highest_bidder.full_name)}</span>
                         )}
+                        {isRealSeller ? product.current_highest_bidder.full_name : maskName(product.current_highest_bidder.full_name)} 
                         {user?._id.toString() === product.current_highest_bidder._id.toString() ? ' (Bạn)' : ''}
                     </div>
                     <div className="text-xs text-yellow-500 flex items-center">

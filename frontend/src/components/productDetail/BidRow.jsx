@@ -48,6 +48,7 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                                 <span>{maskName(bidderName)}</span>
                             )
                         ) : '********'}
+                        {bidderName ? (isRealSeller ? bidderName : maskName(bidderName)) : '********'}
                         {isUserMe && ' (Bạn)'}
                     </span>
                 </div>

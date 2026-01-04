@@ -49,7 +49,15 @@ class ProductService {
         if (product.seller._id.toString() !== userId.toString()) {
             throw new Error('Bạn không có quyền sửa sản phẩm này!');
         }
-
+        const bidderEmail = product.current_highest_bidder?.email;
+            if (bidderEmail) {
+                dispatchEmail('NOTIFY_DESCRIPTION_UPDATE', {
+                    bidderEmail,
+                    productName: product.product_name,
+                    newDescription: newContent,
+                    productLink: PRODUCT_URL_PREFIX + productId
+                });
+            }
         return await productRepository.appendDescription(productId, newContent);
     }
 
