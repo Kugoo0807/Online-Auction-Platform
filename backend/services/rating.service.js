@@ -70,7 +70,15 @@ class RatingService {
         if (!user) {
             throw new Error('Người dùng không tồn tại!');
         }
-        return await ratingRepository.getReviewsReceived(userId);
+        return {
+            user: {
+                _id: user.id,
+                full_name: user.full_name,
+                rating_score: user.rating_score,
+                rating_count: user.rating_count,
+            },
+            data: await ratingRepository.getReviewsReceived(userId),
+        }
     }
 
     async getByAuctionResult(auctionResultId) {

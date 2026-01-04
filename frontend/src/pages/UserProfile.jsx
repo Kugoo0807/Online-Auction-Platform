@@ -218,7 +218,7 @@ const UserProfile = () => {
             </div>
             
             <div className="text-center md:text-left">
-              <h1 className="text-2xl font-bold text-gray-900">{formData.full_name || "Người dùng"}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{formData.full_name}</h1>
               <p className="text-gray-500 mb-3">{user.email}</p>
               <div className="flex gap-2 justify-center md:justify-start">
                 <span className="bg-black text-white text-xs font-semibold px-3 py-1 rounded-full uppercase">{user.role || 'MEMBER'}</span>
