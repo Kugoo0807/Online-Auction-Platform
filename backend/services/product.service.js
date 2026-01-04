@@ -49,7 +49,15 @@ class ProductService {
         if (product.seller._id.toString() !== userId.toString()) {
             throw new Error('Bạn không có quyền sửa sản phẩm này!');
         }
-
+        const bidderEmail = product.current_highest_bidder?.email;
+            if (bidderEmail) {
+                dispatchEmail('NOTIFY_DESCRIPTION_UPDATE', {
+                    bidderEmail,
+                    productName: product.product_name,
+                    newDescription: newContent,
+                    productLink: PRODUCT_URL_PREFIX + productId
+                });
+            }
         return await productRepository.appendDescription(productId, newContent);
     }
 
@@ -63,11 +71,13 @@ class ProductService {
 
     async findTop5ProductsEndingSoon() {
         const sortOption = { auction_end_time: 1 };
+        const filter = { auction_status: 'active', auction_end_time: { $gt: new Date() } };
         return await productRepository.findByCondition(
             undefined,
-            { auction_status: 'active', auction_end_time: { $gt: new Date() } },
+            filter,
             sortOption,
-            5
+            5,
+            1
         );
     }
 
@@ -77,7 +87,8 @@ class ProductService {
             undefined,
             { auction_status: 'active', auction_end_time: { $gt: new Date() } },
             sortOption,
-            5
+            5,
+            1
         );
     }
 
@@ -87,30 +98,31 @@ class ProductService {
             undefined,
             { auction_status: 'active', auction_end_time: { $gt: new Date() } },
             sortOption,
-            5
+            5,
+            1
         );
     }
 
-    async getProductsByCategorySlug(slug) {
+    async getProductsByCategorySlug(slug, limit = 9, page = 1, sortOption = {}) {
         const category = await categoryRepository.findBySlug(slug);
         if (!category) {
             throw new Error('Danh mục không tồn tại!');
         }
 
         const allCategoryIds = await categoryRepository.getAllDescendantIds(category._id);
-        const filter = { category: { $in: allCategoryIds } };
+        const filter = { category: { $in: allCategoryIds }, auction_status: 'active', auction_end_time: { $gt: new Date() } };
 
-        return await productRepository.findByCondition(undefined, filter, {});
+        return await productRepository.findByCondition(undefined, filter, sortOption, limit, page);
     }
 
     async getProductsBySellerId(seller) {
         const filter = { seller: seller };
         const sortOption = { createdAt: -1 };
-        return await productRepository.findByCondition(undefined, filter, sortOption);
+        return await productRepository.findByCondition(undefined, filter, sortOption, 0, 1);
     }
 
-    async searchProducts(keyword) {
-        return await productRepository.findByCondition(keyword, {}, {});
+    async searchProducts(keyword, limit = 9, page = 1, sortOption = {}) {
+        return await productRepository.findByCondition(keyword, { auction_status: 'active', auction_end_time: { $gt: new Date() } }, sortOption, limit, page);
     }
 
     async getRandom5ProductsByCategorySlug(slug) {

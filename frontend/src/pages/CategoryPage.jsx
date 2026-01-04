@@ -10,20 +10,18 @@ const CategoryPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // --- 1. KHAI BÁO STATE ---
-  const [allProducts, setAllProducts] = useState([]); 
-  const [displayProducts, setDisplayProducts] = useState([]); 
+  const [products, setProducts] = useState([]); 
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
   const [parentCategory, setParentCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [categoryNotFound, setCategoryNotFound] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const [priceFilter, setPriceFilter] = useState('ALL');
-  const [timeFilter, setTimeFilter] = useState('ALL');
   const [sortOrder, setSortOrder] = useState('default');
 
   const page = parseInt(searchParams.get('page')) || 1; 
-  const LIMIT = 12;
+  const LIMIT = 6;
   const [totalPages, setTotalPages] = useState(1);
 
   // --- 2. GỌI API & CẬP NHẬT TỰ ĐỘNG ---
@@ -31,7 +29,16 @@ const CategoryPage = () => {
     const fetchAllData = async (isPolling = false) => {
       if (!isPolling) setLoading(true); 
       try {
-        const result = await productService.getProductsByCategory(slug, page, LIMIT);
+        // Tạo sortOption object cho backend
+        let sortOption = null;
+        if (sortOrder !== 'default') {
+          if (sortOrder === 'price_asc') sortOption = { current_highest_price: 1 };
+          if (sortOrder === 'price_desc') sortOption = { current_highest_price: -1 };
+          if (sortOrder === 'end_time_asc') sortOption = { auction_end_time: 1 };
+          if (sortOrder === 'end_time_desc') sortOption = { auction_end_time: -1 };
+        }
+
+        const result = await productService.getProductsByCategory(slug, page, LIMIT, sortOption);
         
         // Kiểm tra nếu không có categoryName hoặc là message lỗi
         if (!result.categoryName || result.categoryName === "Lỗi tải dữ liệu" || result.categoryName === slug) {
@@ -44,11 +51,18 @@ const CategoryPage = () => {
         }
         
         setCategoryNotFound(false);
-        const activeProducts = (result.data || []).filter(p => p.auction_status === 'active');
-        setAllProducts(activeProducts);
+        const responseData = result.data || {};
+        const products = responseData.products || [];
+        const pagination = responseData.pagination || {};
+        
+        const activeProducts = products.filter(p => p.auction_status === 'active');
+        setProducts(activeProducts);
         setCategoryName(result.categoryName || slug);
         setDescription(result.description || ''); 
-        setParentCategory(result.parentCategory || null); 
+        setParentCategory(result.parentCategory || null);
+        
+        setTotalItems(pagination.total || 0);
+        setTotalPages(pagination.totalPages || 1);
       } catch (error) {
         console.error("Lỗi tải danh mục:", error);
         setCategoryNotFound(true);
@@ -61,89 +75,9 @@ const CategoryPage = () => {
 
     const interval = setInterval(() => { fetchAllData(true); }, 5000);
     return () => clearInterval(interval);
-  }, [slug]);
+  }, [slug, page, LIMIT, sortOrder]);
 
-  // --- 3. XỬ LÝ LỌC & SẮP XẾP ---
-  const processedList = useMemo(() => {
-    let result = [...allProducts];
-    const now = Date.now();
-
-    // 1. Filter Giá 
-    if (priceFilter !== 'ALL') {
-      const maxPrice = parseFloat(priceFilter);
-      result = result.filter(p => (p.current_highest_price || p.start_price || 0) <= maxPrice);
-    }
-
-    // 2. Filter Thời gian
-    if (timeFilter !== 'ALL') {
-      const maxDuration = parseInt(timeFilter) * 24 * 60 * 60 * 1000;
-
-      result = result.filter(p => { 
-          const endTime = new Date(p.auction_end_time).getTime();
-          const timeLeft = endTime - now; // Tính thời gian còn lại
-
-          // ĐIỀU KIỆN: Thời gian còn lại phải > 0 (Chưa hết hạn) 
-          // VÀ nhỏ hơn giới hạn bộ lọc
-          return timeLeft > 0 && timeLeft <= maxDuration; 
-      });
-    }
-
-    // 3. Sắp xếp (Sort)
-    if (sortOrder !== 'default') {
-        result.sort((a, b) => {
-            const priceA = a.current_highest_price || a.start_price || 0;
-            const priceB = b.current_highest_price || b.start_price || 0;
-            
-            const timeA = new Date(a.auction_end_time).getTime();
-            const timeB = new Date(b.auction_end_time).getTime();
-
-            // sắp xếp
-            switch (sortOrder) {
-                case 'price_asc': 
-                    return priceA - priceB;
-                case 'price_desc': 
-                    return priceB - priceA;
-                case 'end_time_desc': // Thời gian kết thúc xa nhất -> gần nhất
-                    return timeB - timeA;
-                
-                case 'end_time_asc': // Sắp hết giờ
-                    // Logic: Cái nào còn ít thời gian nhất (nhưng > 0) thì lên đầu
-                    // Nếu dữ liệu chưa lọc "đã hết hạn", ta cần đẩy nó xuống cuối
-                    const timeLeftA = timeA - now;
-                    const timeLeftB = timeB - now;
-                    
-                    // Nếu A đã hết hạn, coi như nó rất lớn để đẩy xuống dưới
-                    if (timeLeftA <= 0) return 1; 
-                    // Nếu B đã hết hạn, coi như nó rất lớn
-                    if (timeLeftB <= 0) return -1;
-
-                    return timeA - timeB; // Xếp tăng dần theo thời gian kết thúc
-
-                default:
-                    return 0;
-            }
-        });
-    }
-    return result;
-  }, [allProducts, priceFilter, timeFilter, sortOrder]);
-
-  // --- 4. XỬ LÝ PHÂN TRANG & HIỂN THỊ  ---
-  
-  const totalItems = processedList.length;
-  useEffect(() => {
-    const calculatedTotalPages = Math.ceil(totalItems / LIMIT) || 1;
-    setTotalPages(calculatedTotalPages);
-
-    if (page > calculatedTotalPages && totalItems > 0) {
-        setSearchParams({ page: 1 });
-    }
-  }, [processedList, page, totalItems, setSearchParams]);
-
-  useEffect(() => {
-    const startIndex = (page - 1) * LIMIT;
-    const endIndex = startIndex + LIMIT;
-    setDisplayProducts(processedList.slice(startIndex, endIndex));
-  }, [page, processedList]); 
+  // --- 3. XỬ LÝ PHÂN TRANG --- 
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -161,12 +95,10 @@ const CategoryPage = () => {
     return [1, '...', page - 1, page, page + 1, '...', totalPages];
   };
 
-  // --- 5. CẤU HÌNH OPTIONS ---
-  const priceOptions = [ { label: "Tất cả", value: "ALL" }, { label: "< 5 triệu", value: 5000000 }, { label: "< 10 triệu", value: 10000000 }, { label: "< 20 triệu", value: 20000000 }, { label: "< 50 triệu", value: 50000000 } ];
-  const timeOptions = [ { label: "Mọi lúc", value: "ALL" }, { label: "Trong 24h", value: 1 }, { label: "Trong 3 ngày", value: 3 }, { label: "Trong 7 ngày", value: 7 } ];
-  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Sắp hết giờ", value: "end_time_asc" } ];
+  // --- 4. CẤU HÌNH OPTIONS ---
+  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Sắp hết giờ", value: "end_time_asc" }, { label: "Hết giờ muộn nhất", value: "end_time_desc" } ];
 
-  if (loading && allProducts.length === 0) return <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">Đang tải dữ liệu...</div>;
+  if (loading && products.length === 0) return <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">Đang tải dữ liệu...</div>;
 
   // Hiển thị khi danh mục không tồn tại
   if (categoryNotFound) {
@@ -206,26 +138,24 @@ const CategoryPage = () => {
           {description && <p className="mt-4 text-gray-600">{description}</p>}
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100 items-start lg:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <span className="text-gray-700 font-bold mr-2 hidden lg:block self-center">Lọc:</span>
-                <FilterDropdown label="Giá" options={priceOptions} selectedValue={priceFilter} onSelect={(val) => { setPriceFilter(val); setSearchParams({ page: 1 }); }} />
-                <FilterDropdown label="Thời gian" options={timeOptions} selectedValue={timeFilter} onSelect={(val) => { setTimeFilter(val); setSearchParams({ page: 1 }); }} />
-            </div>
+        {products.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100 items-start sm:items-center justify-between">
+              <span className="text-gray-700 font-bold">Sắp xếp</span>
+              <div className="flex gap-3">
+                  <FilterDropdown label="Sắp xếp" options={sortOptions} selectedValue={sortOrder} onSelect={(val) => { setSortOrder(val); setSearchParams({ page: 1 }); }} />
+                  {sortOrder !== 'default' && (
+                      <button onClick={() => { setSortOrder('default'); setSearchParams({ page: 1 }); }} className="text-sm text-red-500 hover:underline font-medium cursor-pointer">Đặt lại</button>
+                  )}
+              </div>
+          </div>
+        )}
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-gray-200">
-                <FilterDropdown label="Sắp xếp" options={sortOptions} selectedValue={sortOrder} onSelect={(val) => { setSortOrder(val); setSearchParams({ page: 1 }); }} />
-                {(priceFilter !== 'ALL' || timeFilter !== 'ALL' || sortOrder !== 'default') && (
-                    <button onClick={() => { setPriceFilter('ALL'); setTimeFilter('ALL'); setSortOrder('default'); setSearchParams({ page: 1 }); }} className="text-sm text-red-500 hover:underline font-medium ml-auto lg:ml-2 self-center whitespace-nowrap cursor-pointer">Xóa bộ lọc</button>
-                )}
-            </div>
-        </div>
+        <ProductSection title={`${categoryName} (${totalItems} kết quả)`} products={products} loading={loading} />
 
-        <ProductSection title={`${categoryName} (${processedList.length} kết quả)`} products={displayProducts} loading={loading} />
-
-        {displayProducts.length === 0 && !loading && (
-            <div className="flex justify-center py-8">
-                <button onClick={() => { setPriceFilter('ALL'); setTimeFilter('ALL'); setSortOrder('default'); setSearchParams({ page: 1 }); }} className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-all cursor-pointer">Đặt lại</button>
+        {products.length === 0 && !loading && (
+            <div className="text-center py-16 text-gray-500">
+                <p className="text-xl mb-6">😞 Không tìm thấy sản phẩm nào trong danh mục này.</p>
+                <Link to="/" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg">Quay về trang chủ</Link>
             </div>
         )}
 

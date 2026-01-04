@@ -30,5 +30,8 @@ export function UserRoutes(userController) {
     // Khôi phục người dùng
     router.post('/:id/restore', [checkAuth, checkRole('admin')], userController.restoreUser);
 
+    // Reset mật khẩu người dùng
+    router.post('/:id/reset-password', [checkAuth, checkRole('admin')], userController.resetUserPassword);
+
     return router;
 }

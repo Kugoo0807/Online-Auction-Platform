@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { avatar, maskName, formatDateTime, formatPrice } from './productDetail.utils.jsx'
 import { Medal } from 'lucide-react';
 
@@ -35,7 +36,19 @@ export default function BidRow({ bid, index, isRealSeller, currentUserId, onBanU
                     {winnerExists && <Medal className="text-orange-500 w-8 h-8" />}
                     {avatar(bidderName, 8)}
                     <span className={`font-medium text-sm leading-tight ${isInvalid ? 'text-gray-500 line-through italic' : 'text-gray-800'}`}>
-                        {bidderName ? maskName(bidderName) : '********'}
+                        {bidderName ? (
+                            isRealSeller ? (
+                                <Link 
+                                    to={`/users/${bid.user?._id}/ratings`}
+                                    className="hover:text-blue-600 hover:underline transition-colors"
+                                >
+                                    {bidderName}
+                                </Link>
+                            ) : (
+                                <span>{maskName(bidderName)}</span>
+                            )
+                        ) : '********'}
+                        {bidderName ? (isRealSeller ? bidderName : maskName(bidderName)) : '********'}
                         {isUserMe && ' (Bạn)'}
                     </span>
                 </div>

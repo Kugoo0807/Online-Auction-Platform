@@ -22,6 +22,7 @@ import CreateProduct from './pages/CreateProduct'
 import MyProducts from './pages/MyProducts'
 import Order from './pages/Order'
 import Ratings from "./pages/Ratings"
+import UserRatings from "./pages/UserRatings"
 import BiddingProducts from './pages/BiddingProducts'
 import WonProducts from './pages/WonProducts'
 import { useAuth } from './context/AuthContext'
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/users/:userId/ratings" element={<UserRatings />} />
 
         
         {/* Guest only */}
