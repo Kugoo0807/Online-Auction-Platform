@@ -67,6 +67,16 @@ export default function UserManagement() {
     });
   };
 
+  const handleResetPassword = async (user) => {
+    try {
+      await userService.resetUserPassword(user._id);
+      ToastNotification('Đã reset mật khẩu cho tài khoản', 'success');
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Có lỗi xảy ra khi reset mật khẩu';
+      ToastNotification(msg, 'error');
+    }
+  };
+
   if (loading && users.length === 0) return <LoadingIndicator />;
 
   return (
@@ -128,16 +138,24 @@ export default function UserManagement() {
                   </td>
                   <td className="p-4 text-right">
                     {user.role !== 'admin' && (
-                      <button 
-                        onClick={() => handleToggleStatus(user)}
-                        className={`font-medium px-3 py-1.5 rounded-md transition-colors text-xs border ${
-                          user.is_deleted 
-                            ? 'border-green-600 text-green-600 hover:bg-green-50' 
-                            : 'border-red-600 text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        {user.is_deleted ? 'Khôi phục' : 'Vô hiệu hóa'}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => handleToggleStatus(user)}
+                          className={`font-medium px-3 py-1.5 rounded-md transition-colors text-xs border ${
+                            user.is_deleted 
+                              ? 'border-green-600 text-green-600 hover:bg-green-50' 
+                              : 'border-red-600 text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          {user.is_deleted ? 'Khôi phục' : 'Vô hiệu hóa'}
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(user)}
+                          className="font-medium px-3 py-1.5 rounded-md transition-colors text-xs border border-blue-600 text-blue-600 hover:bg-blue-50"
+                        >
+                          Reset mật khẩu
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
