@@ -31,6 +31,16 @@ const userService = {
     }
   },
 
+  // Admin: Reset mật khẩu user
+  resetUserPassword: async (userId) => {
+    try {
+      const response = await api.post(`/users/${userId}/reset-password`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // --- USER PROFILE APIs ---
 
   // Lấy profile hiện tại
