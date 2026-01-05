@@ -72,13 +72,15 @@ class ProductService {
     async findTop5ProductsEndingSoon() {
         const sortOption = { auction_end_time: 1 };
         const filter = { auction_status: 'active', auction_end_time: { $gt: new Date() } };
-        return await productRepository.findByCondition(
+        const result = await productRepository.findByCondition(
             undefined,
             filter,
             sortOption,
             5,
             1
         );
+        result.products.sort((a, b) => b.auction_end_time - a.auction_end_time);
+        return result;
     }
 
     async findTop5HighestPriceProducts() {
