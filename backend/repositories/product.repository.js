@@ -130,6 +130,64 @@ class ProductRepository {
             auction_status: 'active'
         }).session(session).select(selectAutoBidMap ? '' : '-auto_bid_map');
     }
+
+    async findProductsUserIsTop(userId, selectAutoBidMap = false, session = null) {
+        const userIdStr = userId.toString();
+        
+        const pipeline = [
+            {
+                $match: {
+                    auction_status: 'active',
+                    [`auto_bid_map.${userIdStr}`]: { $exists: true }
+                }
+            },
+            {
+                $addFields: {
+                    auto_bid_array: { $objectToArray: '$auto_bid_map' }
+                }
+            },
+            {
+                $addFields: {
+                    sorted_bids: {
+                        $sortArray: {
+                            input: '$auto_bid_array',
+                            sortBy: { v: -1 }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    top_bidder: { $arrayElemAt: ['$sorted_bids.k', 0] },
+                    second_bidder: { $arrayElemAt: ['$sorted_bids.k', 1] }
+                }
+            },
+            {
+                $match: {
+                    $or: [
+                        { top_bidder: userIdStr },
+                        { second_bidder: userIdStr }
+                    ]
+                }
+            },
+            {
+                $project: { _id: 1 }
+            }
+        ];
+
+        const results = await Product.aggregate(pipeline).session(session);
+        const productIds = results.map(r => r._id);
+        
+        if (productIds.length === 0) {
+            return [];
+        }
+
+        return await Product.find({ _id: { $in: productIds } }).session(session)
+            .select(selectAutoBidMap ? '' : '-auto_bid_map')
+            .populate('seller', 'full_name email rating_score rating_count')
+            .populate('category', 'category_name slug')
+            .populate('current_highest_bidder', 'full_name email rating_score rating_count');
+    }
     
     async removeProduct(product, session = null) {
         return await Product.findByIdAndDelete(product).session(session);

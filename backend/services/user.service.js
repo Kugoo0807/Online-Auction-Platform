@@ -93,16 +93,16 @@ class UserService {
             if (activeProducts && activeProducts.length > 0) {
                 await Promise.all(
                     activeProducts.map(product =>
-                        productService.cancelProduct(userId, product._id) 
+                        productService.cancelProduct(userId, product._id, false, session) 
                     )
                 );
             }
 
-            // Tìm sản phẩm user đang dẫn đầu trước khi xóa
-            const leadingProducts = await productRepository.findProductsUserIsLeading(userId, session);
+            // Tìm sản phẩm user đang dẫn đầu hoặc đứng thứ 2 trước khi xóa
+            const topProducts = await productRepository.findProductsUserIsTop(userId, true, session);
 
             // Invalidate tất cả các lượt ra giá của user này
-            await bidRepository.banBidsByUser(userId, session);
+            await bidRepository.banAllBidsByUser(userId, session);
 
             // Xóa các rating đã cho
             await ratingService.deleteGivenRatingsByUser(userId, session);
@@ -114,10 +114,15 @@ class UserService {
             }
 
             // Tính lại giá & Lưu (Clean up)
-            if (leadingProducts && leadingProducts.length > 0) {
+            if (topProducts && topProducts.length > 0) {
                 await Promise.all(
-                    leadingProducts.map(async (product) => {
-                        await recalculateAuctionState(product, null, session); 
+                    topProducts.map(async (product) => {
+                        // Xóa auto bid map của user
+                        product.auto_bid_map.delete(userId.toString());
+
+                        await recalculateAuctionState(product, null, session);
+
+                        await bidRepository.scaleDownBids(product._id, product.current_highest_price, session);
                         
                         // Lưu xuống DB kèm session
                         return await productRepository.save(product, session);

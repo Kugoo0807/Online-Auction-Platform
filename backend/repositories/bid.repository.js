@@ -25,6 +25,14 @@ class BidRepository {
         );
     }
 
+    async banAllBidsByUser(userId, session = null) {
+        return await Bid.updateMany(
+            { user: userId, is_valid: true },
+            { $set: { is_valid: false } },
+            { session: session }
+        );
+    }
+
     async findByUser(userId, session = null) {
         return await Bid.find({ user: userId }).session(session)
             .distinct('product');

@@ -288,7 +288,7 @@ class ProductService {
         return isWatching;
     }
 
-    async cancelProduct(sellerId, productId, isAdmin) {
+    async cancelProduct(sellerId, productId, isAdmin, session = null) {
         const product = await productRepository.findById(productId);
         if (!product) {
             throw new Error('Sản phẩm không tồn tại!');
@@ -313,7 +313,7 @@ class ProductService {
             });
         }
 
-        return await productRepository.cancelProduct(productId);
+        return await productRepository.cancelProduct(productId, session);
     }
 
     async getActiveProduct(userId) {

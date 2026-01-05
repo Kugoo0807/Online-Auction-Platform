@@ -1,5 +1,5 @@
 module.exports = ({ sellers, categories, assets, bidders }) => {
-  const { seller1, seller2, seller3, seller5 } = sellers;
+  const { seller1, seller2, seller3, seller4, seller5 } = sellers;
   const { bidder1, bidder2 } = bidders || {};
   const { catElectronics, catLaptop, catPhone, catShoes, catFashion, catFurniture } = categories;
 
@@ -353,6 +353,61 @@ module.exports = ({ sellers, categories, assets, bidders }) => {
         bid_increment: 200000,
         auction_end_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
         seller: seller1._id,
+        category: catElectronics._id,
+        thumbnail: assets.electronics.thumbnail,
+        images: assets.electronics.images
+      },
+      {
+        product_name: "Sony PlayStation 5 Digital Edition",
+        description: "Bản không ổ đĩa, máy như mới, fullbox nguyên seal.",
+        start_price: 9500000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catElectronics._id,
+        thumbnail: assets.electronics.thumbnail,
+        images: assets.electronics.images
+      },
+      {
+        product_name: "Sony PlayStation 5 God of War Bundle",
+        description: "Kèm game God of War Ragnarök, 2 tay cầm DualSense.",
+        start_price: 11000000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catElectronics._id,
+        thumbnail: assets.electronics.thumbnail,
+        images: assets.electronics.images
+      },
+      {
+        product_name: "Sony PlayStation 5 Slim",
+        description: "Phiên bản Slim mới nhất, gọn gàng hơn, đầy đủ phụ kiện.",
+        start_price: 10500000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        seller: seller1._id,
+        category: catElectronics._id,
+        thumbnail: assets.electronics.thumbnail,
+        images: assets.electronics.images
+      },
+      {
+        product_name: "Sony PlayStation 5 Disc Edition",
+        description: "Bản đĩa chuẩn, kèm 5 game AAA hot nhất, bảo hành 6 tháng.",
+        start_price: 10200000,
+        bid_increment: 200000,
+        auction_end_time: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+        seller: seller4._id,
+        category: catElectronics._id,
+        thumbnail: assets.electronics.thumbnail,
+        images: assets.electronics.images
+      },
+      {
+        product_name: "Sony PlayStation 5 Spider-Man Edition",
+        description: "Phiên bản giới hạn Spider-Man 2, siêu đẹp và hiếm.",
+        start_price: 12000000,
+        bid_increment: 250000,
+        auction_end_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        seller: seller2._id,
         category: catElectronics._id,
         thumbnail: assets.electronics.thumbnail,
         images: assets.electronics.images
