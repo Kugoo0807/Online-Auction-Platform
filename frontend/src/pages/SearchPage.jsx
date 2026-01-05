@@ -87,7 +87,7 @@ const SearchPage = () => {
     return [1, '...', page - 1, page, page + 1, '...', totalPages];
   };
 
-  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Sắp hết giờ", value: "end_time_asc" }, { label: "Hết giờ muộn", value: "end_time_desc" } ];
+  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Kết thúc gần", value: "end_time_asc" }, { label: "Kết thúc xa", value: "end_time_desc" } ];
 
   // --- RENDER ---
   if (loading && products.length === 0) {

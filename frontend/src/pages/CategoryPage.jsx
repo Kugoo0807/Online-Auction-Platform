@@ -96,7 +96,7 @@ const CategoryPage = () => {
   };
 
   // --- 4. CẤU HÌNH OPTIONS ---
-  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Sắp hết giờ", value: "end_time_asc" }, { label: "Hết giờ muộn nhất", value: "end_time_desc" } ];
+  const sortOptions = [ { label: "Mặc định", value: "default" }, { label: "Giá tăng dần", value: "price_asc" }, { label: "Giá giảm dần", value: "price_desc" }, { label: "Kết thúc gần", value: "end_time_asc" }, { label: "Kết thúc xa", value: "end_time_desc" } ];
 
   if (loading && products.length === 0) return <div className="min-h-screen bg-white flex justify-center items-center text-gray-600 text-xl font-semibold">Đang tải dữ liệu...</div>;
 
