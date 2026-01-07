@@ -390,39 +390,43 @@ const CreateProduct = () => {
 
       await productService.createProduct(dataToSend);
       
+      setIsLoading(false);
+      
       ToastNotification("Tạo sản phẩm thành công!", "success");
-      setFormData(initialFormState);
-      setErrors({
-        name: '',
-        category: '',
-        start_price: '',
-        step_price: '',
-        buy_now_price: '',
-        description: '',
-        auction_end: '',
-        thumbnail: '',
-        images: ''
-      });
+      
+      setTimeout(() => {
+        setFormData(initialFormState);
+        setErrors({
+          name: '',
+          category: '',
+          start_price: '',
+          step_price: '',
+          buy_now_price: '',
+          description: '',
+          auction_end: '',
+          thumbnail: '',
+          images: ''
+        });
 
-      setThumbnail(null);
-      setThumbnailPreview(null);
-      if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+        setThumbnail(null);
+        setThumbnailPreview(null);
+        if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
 
-      setImages([]);
-      setImagesPreview([]);
-      if (imagesInputRef.current) imagesInputRef.current.value = '';
+        setImages([]);
+        setImagesPreview([]);
+        if (imagesInputRef.current) imagesInputRef.current.value = '';
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500);
 
     } catch (error) {
       console.error("Lỗi Submit:", error);
+      setIsLoading(false);
       const msg = error.response?.data?.message || 
                   error.response?.data?.error || 
                   error.message ||
                   "Có lỗi xảy ra khi tạo sản phẩm.";
       ToastNotification(msg, "error");
-    } finally {
-      setIsLoading(false);
     }
   };
   return (
