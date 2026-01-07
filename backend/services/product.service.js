@@ -151,7 +151,7 @@ class ProductService {
             throw new Error('Seller không thể tự đặt giá sản phẩm của mình!');
         }
 
-        const globalFloor = (product.bid_count === 0 || !product.current_highest_bidder)
+        const globalFloor = (product.bid_count === 0  || product.auto_bid_map.size === 0 || !product.current_highest_bidder)
             ? product.start_price
             : product.current_highest_price + product.bid_increment;
 
