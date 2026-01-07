@@ -16,6 +16,9 @@
 | 5   | **Phạm Đức Toàn**         | 23127540 |
 
 ---
+## Demo Clip: https://www.youtube.com/watch?v=Zp9bW-Rpjk8
+
+---
 ## Quick Start
 
 1. Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết
