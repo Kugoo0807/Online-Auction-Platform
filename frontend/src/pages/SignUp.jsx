@@ -1,6 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { authService } from '../services/authService'
+import ToastNotification from '../components/common/ToastNotification'
 
 const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
   const SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -87,6 +88,7 @@ const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
 
 export default function SignUp() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     full_name: '',
@@ -104,7 +106,14 @@ export default function SignUp() {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
+    
+    // Hiển thị lỗi từ social login nếu có
+    if (location.state?.error) {
+      ToastNotification(location.state.error, 'error', 5);
+      // Xóa error khỏi state để không hiển lại khi reload
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate])
 
   useEffect(() => {
     let timer
