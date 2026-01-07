@@ -16,12 +16,12 @@
 | 5   | **Phạm Đức Toàn**         | 23127540 |
 
 ---
-## Quick Start (For Grading)
+## Quick Start
 
-1. Setup `.env` files from `sample.env`
-2. Start MongoDB
-3. Run backend: `npm start`
-4. Run frontend: `npm run dev`
+1. Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết
+2. Khởi động MongoDB (local hoặc MongoDB Atlas)
+3. Chạy backend: `npm start`
+4. Chạy frontend: `npm run dev`
 
 ---
 

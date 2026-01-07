@@ -79,7 +79,6 @@ class ProductService {
             5,
             1
         );
-        result.products.sort((a, b) => b.auction_end_time - a.auction_end_time);
         return result;
     }
 
