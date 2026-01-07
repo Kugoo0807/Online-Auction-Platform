@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { authService } from '../services/authService'
 import ToastNotification from '../components/common/ToastNotification'
+import Button from '../components/common/Button'
 
 const ReCAPTCHA = ({ onChange, error, checked, onCheckChange }) => {
   const SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -257,7 +258,7 @@ export default function SignUp() {
     const state = "google";
 
     if (!googleClientId || googleClientId.includes('placeholder')) {
-      alert("Note: You are using a placeholder Client ID.");
+      ToastNotification('Chú ý: Bạn đang sử dụng Client ID mặc định', 'warning');
     }
 
     const targetUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${encodeURIComponent(
@@ -273,7 +274,7 @@ export default function SignUp() {
     const state = "facebook";
 
     if (!facebookAppId || facebookAppId.includes('placeholder')) {
-      alert("Note: You are using a placeholder Client ID.");
+      ToastNotification('Chú ý: Bạn đang sử dụng Client ID mặc định', 'warning');
     }
 
     const targetUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=email,public_profile`;
@@ -287,7 +288,7 @@ export default function SignUp() {
     const state = "github";
 
     if (!githubClientId || githubClientId.includes('placeholder')) {
-      alert("Note: You are using a placeholder Client ID.");
+      ToastNotification('Chú ý: Bạn đang sử dụng Client ID mặc định', 'warning');
     }
 
     const targetUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
@@ -350,21 +351,16 @@ export default function SignUp() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
               disabled={loading || !captchaChecked}
-              className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+              loading={loading}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Đang xử lý...
-                </span>
-              ) : 'Gửi OTP'}
-            </button>
+              Tiếp tục
+            </Button>
           </form>
         ) : (
           <form onSubmit={handleRegisterWithOTP} className="space-y-4">
@@ -412,21 +408,16 @@ export default function SignUp() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
+              variant="success"
+              size="lg"
+              fullWidth
               disabled={loading}
-              className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:opacity-70 transition-all"
+              loading={loading}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Đang xử lý...
-                </span>
-              ) : 'Hoàn tất đăng ký'}
-            </button>
+              Hoàn tất đăng ký
+            </Button>
           </form>
         )}
 
