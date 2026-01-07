@@ -27,10 +27,10 @@ class BidService {
     // Hàm logic trả về true nếu người đặt giá là người giữ giá cao nhất sau khi đặt
     async _logicPlaceBid(userId, product, amount, session) {
         /* Check first bid
-            Case 1: Chưa ai bid (auto_bid_map rỗng)
+            Case 1: Chưa ai bid (auto_bid_map rỗng hoặc bid_count = 0)
             Case 2: Holder cũ bị ban => current_highest_bidder được reset về undefined
         */
-        const isFirstBid = product.auto_bid_map.size === 0 || !product.current_highest_bidder;
+        const isFirstBid = product.auto_bid_map.size === 0 || product.bid_count === 0 || !product.current_highest_bidder;
         const userIdStr = userId.toString();
 
         // Cập nhật dữ liệu
@@ -236,7 +236,8 @@ class BidService {
             }
 
             // Check giá phải cao hơn sàn toàn cục
-            const globalMinPrice = product.bid_count === 0
+            const globalMinPrice = 
+                (product.bid_count === 0 || product.auto_bid_map.size === 0 || !product.current_highest_bidder)
                 ? product.start_price
                 : product.current_highest_price + product.bid_increment;
 
