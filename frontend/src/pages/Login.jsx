@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ToastNotification from '../components/common/ToastNotification';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,7 +14,14 @@ export default function Login() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    
+    // Hiển thị lỗi từ social login nếu có
+    if (location.state?.error) {
+      ToastNotification(location.state.error, 'error', 5);
+      // Xóa error khỏi state để không hiển lại khi reload
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

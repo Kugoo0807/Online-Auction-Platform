@@ -355,7 +355,12 @@ class BidService {
                 // Loại bỏ sản phẩm có banned_bidder chứa userId
                 const isBanned = productObj.banned_bidder && 
                     productObj.banned_bidder.some(id => id.toString() === userIdStr);
-                return !isBanned;
+
+                // Loại bỏ sản phẩm mà người dùng không có trong auto_bid_map
+                const hasBid = productObj.auto_bid_map &&
+                    productObj.auto_bid_map.has(userIdStr);
+
+                return !isBanned && hasBid;
             })
             .map(product => {
                 const productObj = product.toObject ? product.toObject() : product;
