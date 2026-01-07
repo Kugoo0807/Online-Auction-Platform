@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import connectDB from '../db/connect.js'
+import connectDB from './db/connect.js'
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import './config/passport.config.js';

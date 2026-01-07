@@ -1,4 +1,4 @@
-import { Category } from '../../db/schema.js';
+import { Category } from '../db/schema.js';
 import slugify from 'slugify'
 
 class CategoryRepository {
