@@ -135,7 +135,7 @@ npm run dev
 
 Ứng dụng sẽ chạy tại:
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
+- Backend API: http://localhost:5000/api
 
 ---
 
