@@ -16,6 +16,14 @@
 | 5   | **Phạm Đức Toàn**         | 23127540 |
 
 ---
+## Quick Start (For Grading)
+
+1. Setup `.env` files from `sample.env`
+2. Start MongoDB
+3. Run backend: `npm start`
+4. Run frontend: `npm run dev`
+
+---
 
 ## Giới thiệu Dự án
 
@@ -80,7 +88,7 @@ cd backend
 npm install
 ```
 
-Tạo file `.env` từ `sample.env` và điền các thông tin cần thiết.
+Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết.
 
 ### 3. Khởi tạo Database
 
@@ -89,7 +97,7 @@ cd ../db
 npm install
 ```
 
-Tạo file `.env` trong thư mục `db/` (copy từ `sample.env`) và chạy:
+Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết và chạy:
 
 ```bash
 # Tạo schema
@@ -106,11 +114,7 @@ cd ../frontend
 npm install
 ```
 
-Tạo file `.env` từ `sample.env`:
-
-```env
-VITE_API_URL=http://localhost:5000
-```
+Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết.
 
 ### 5. Chạy Ứng dụng
 
@@ -134,4 +138,4 @@ npm run dev
 
 ## License
 
-This project is for educational purposes only.
+Dự án được thực hiện phục vụ mục đích học tập trong khuôn khổ môn học và không sử dụng cho mục đích thương mại.
