@@ -6,6 +6,7 @@ import { profileService } from '../services/profileService';
 import ToastNotification from '../components/common/ToastNotification.jsx'; 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Button from '../components/common/Button';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -417,12 +418,25 @@ const UserProfile = () => {
 
               {isEditing && (
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
-                  <button type="submit" disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                    {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
-                  </button>
-                  <button type="button" onClick={handleCancel} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                  <Button
+                    type="submit"
+                    variant="success"
+                    size="md"
+                    disabled={loading}
+                    loading={loading}
+                    className="flex-1"
+                  >
+                    Lưu thay đổi
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="md"
+                    onClick={handleCancel}
+                    className="flex-1"
+                  >
                     Hủy
-                  </button>
+                  </Button>
                 </div>
               )}
             </form>
@@ -586,10 +600,24 @@ const UserProfile = () => {
               />
               
               <div className="flex gap-3">
-                 <button onClick={() => setShowOtpModal(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 py-2 rounded-lg font-medium cursor-pointer">Hủy</button>
-                 <button onClick={handleVerifyOtp} disabled={loading} className="flex-1 bg-black hover:bg-gray-800 text-white py-2 rounded-lg font-medium cursor-pointer">
-                   {loading ? '...' : 'Xác nhận'}
-                 </button>
+                 <Button
+                   variant="outline"
+                   size="md"
+                   onClick={() => setShowOtpModal(false)}
+                   className="flex-1"
+                 >
+                   Hủy
+                 </Button>
+                 <Button
+                   variant="black"
+                   size="md"
+                   onClick={handleVerifyOtp}
+                   disabled={loading}
+                   loading={loading}
+                   className="flex-1"
+                 >
+                   Xác nhận
+                 </Button>
               </div>
            </div>
         </div>
@@ -659,8 +687,21 @@ const UserProfile = () => {
               </div>
               
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium cursor-pointer">Đóng</button>
-                <button type="submit" className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-medium cursor-pointer">Xác nhận</button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleCloseModal}
+                >
+                  Đóng
+                </Button>
+                <Button
+                  type="submit"
+                  variant="black"
+                  size="md"
+                >
+                  Xác nhận
+                </Button>
               </div>
             </form>
           </div>

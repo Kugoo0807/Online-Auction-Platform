@@ -128,6 +128,8 @@ const CreateProduct = () => {
       
       case 'description':
         if (!value || !value.trim()) return 'Mô tả sản phẩm không được để trống';
+        const strippedContent = value.replace(/<[^>]*>/g, '').trim();
+        if (!strippedContent) return 'Mô tả sản phẩm không được để trống';
         return '';
       
       case 'auction_end':
@@ -174,11 +176,15 @@ const CreateProduct = () => {
       description: content
     }));
     
-    const error = validateField('description', content);
-    setErrors(prev => ({
-      ...prev,
-      description: error
-    }));
+    if (content && content.trim()) {
+      const strippedContent = content.replace(/<[^>]*>/g, '').trim();
+      if (strippedContent) {
+        setErrors(prev => ({
+          ...prev,
+          description: ''
+        }));
+      }
+    }
   };
 
   const handleThumbnailProcess = (file) => {
