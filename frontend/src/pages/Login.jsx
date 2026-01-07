@@ -11,6 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -23,8 +24,23 @@ export default function Login() {
     }
   }, [location.state, location.pathname, navigate]);
 
+  const validate = () => {
+    const newErrors = {};
+    if (!email.trim()) {
+      newErrors.email = 'Email là bắt buộc';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Email không hợp lệ';
+    }
+    if (!password.trim()) {
+      newErrors.password = 'Mật khẩu là bắt buộc';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
     setError('');
 
@@ -36,8 +52,9 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleInputChange = (setter) => (e) => {
+  const handleInputChange = (setter, field) => (e) => {
     setter(e.target.value);
+    setErrors(prev => ({ ...prev, [field]: '' }));
     if (error) setError('');
   };
 
@@ -100,18 +117,18 @@ export default function Login() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
             <input
-              type="email"
+              type="text"
               placeholder="name@example.com"
               value={email}
-              onChange={handleInputChange(setEmail)}
-              required
+              onChange={handleInputChange(setEmail, 'email')}
               disabled={loading}
               className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all duration-200
-                ${error 
+                ${errors.email || error 
                   ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                   : 'border-slate-300 bg-slate-50 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 hover:border-slate-400'
                 } disabled:opacity-70 disabled:cursor-not-allowed`}
             />
+            {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
           </div>
 
           {/* Password Input */}
@@ -129,15 +146,15 @@ export default function Login() {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={handleInputChange(setPassword)}
-              required
+              onChange={handleInputChange(setPassword, 'password')}
               disabled={loading}
               className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all duration-200
-                ${error 
+                ${errors.password || error 
                   ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                   : 'border-slate-300 bg-slate-50 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 hover:border-slate-400'
                 } disabled:opacity-70 disabled:cursor-not-allowed`}
             />
+            {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
           </div>
 
           {/* Error Message */}

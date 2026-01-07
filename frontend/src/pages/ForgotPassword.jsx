@@ -9,13 +9,23 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [])
 
+  const validate = () => {
+    const newErrors = {};
+    if (!email.trim()) newErrors.email = 'Email là bắt buộc';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Email không hợp lệ';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
     setMessage('');
 
@@ -32,8 +42,9 @@ export default function ForgotPassword() {
     setLoading(false);
   };
 
-  const handleInputChange = (setter) => (e) => {
+  const handleInputChange = (setter, field) => (e) => {
     setter(e.target.value);
+    setErrors(prev => ({ ...prev, [field]: '' }));
     if (message) setMessage('');
   };
 
@@ -57,14 +68,13 @@ export default function ForgotPassword() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Email liên kết</label>
             <div className="relative">
                 <input
-                type="email"
+                type="text"
                 placeholder="name@example.com"
                 value={email}
-                onChange={handleInputChange(setEmail)}
-                required
+                onChange={handleInputChange(setEmail, 'email')}
                 disabled={loading || emailSent}
                 className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all duration-200
-                    ${message && !message.includes('gửi')
+                    ${errors.email || (message && !message.includes('gửi'))
                     ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                     : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
                     } disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed`}
@@ -76,6 +86,7 @@ export default function ForgotPassword() {
                     </svg>
                 </div>
             </div>
+            {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
           </div>
 
           {/* Message Alert (Success/Error) */}
