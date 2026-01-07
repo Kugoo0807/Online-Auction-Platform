@@ -16,6 +16,11 @@ export default function CategoryManagement() {
     description: '',
     parent_slug: ''
   });
+  const [errors, setErrors] = useState({
+    category_name: '',
+    description: '',
+    parent_slug: ''
+  });
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState({
@@ -69,11 +74,46 @@ export default function CategoryManagement() {
         parent_slug: ''
       });
     }
+    setErrors({ category_name: '', description: '', parent_slug: '' });
     setIsModalOpen(true);
   };
 
+  const validateField = (name, value) => {
+    if (name === 'category_name') {
+      const v = (value || '').trim();
+      if (!v) return 'Tên danh mục là bắt buộc';
+      if (v.length < 2) return 'Tên danh mục quá ngắn';
+      if (v.length > 100) return 'Tên danh mục quá dài';
+      return '';
+    }
+    if (name === 'description') {
+      if (value && value.length > 300) return 'Mô tả tối đa 300 ký tự';
+      return '';
+    }
+    if (name === 'parent_slug') {
+      if (!value) return '';
+      const exists = categories.some(c => c.slug === value);
+      if (!exists) return 'Danh mục cha không hợp lệ';
+      if (editingCategory && editingCategory.slug && value === editingCategory.slug) return 'Không thể chọn chính mình làm cha';
+      return '';
+    }
+    return '';
+  };
+
+  const validateAll = () => ({
+    category_name: validateField('category_name', formData.category_name),
+    description: validateField('description', formData.description),
+    parent_slug: validateField('parent_slug', formData.parent_slug)
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = validateAll();
+    setErrors(newErrors);
+    if (Object.values(newErrors).some(msg => msg)) {
+      ToastNotification('Vui lòng sửa lỗi trong biểu mẫu', 'error');
+      return;
+    }
     try {
       if (editingCategory) {
         // Update
@@ -206,20 +246,30 @@ export default function CategoryManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tên danh mục <span className="text-red-500">*</span></label>
                 <input 
                   type="text" 
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none transition ${errors.category_name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'}`}
                   value={formData.category_name}
-                  onChange={(e) => setFormData({...formData, category_name: e.target.value})}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({...formData, category_name: v});
+                    setErrors(prev => ({...prev, category_name: validateField('category_name', v)}));
+                  }}
                   placeholder="Nhập tên danh mục..."
                 />
+                {errors.category_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.category_name}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục cha</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none transition ${errors.parent_slug ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'}`}
                   value={formData.parent_slug}
-                  onChange={(e) => setFormData({...formData, parent_slug: e.target.value})}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({...formData, parent_slug: v});
+                    setErrors(prev => ({...prev, parent_slug: validateField('parent_slug', v)}));
+                  }}
                 >
                   <option value="">-- Không có (Danh mục gốc) --</option>
                   {categories
@@ -231,17 +281,27 @@ export default function CategoryManagement() {
                     ))
                   }
                 </select>
+                {errors.parent_slug && (
+                  <p className="mt-1 text-sm text-red-600">{errors.parent_slug}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
                 <textarea 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none transition ${errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'}`}
                   rows="3"
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({...formData, description: v});
+                    setErrors(prev => ({...prev, description: validateField('description', v)}));
+                  }}
                   placeholder="Mô tả ngắn về danh mục..."
                 ></textarea>
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

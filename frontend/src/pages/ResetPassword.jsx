@@ -13,21 +13,29 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [])
 
+  const validate = () => {
+    const newErrors = {};
+    if (!otp.trim()) newErrors.otp = 'Mã OTP là bắt buộc';
+    else if (!/^[0-9]{6}$/.test(otp)) newErrors.otp = 'Mã OTP phải là 6 số';
+    if (!newPassword.trim()) newErrors.newPassword = 'Mật khẩu mới là bắt buộc';
+    else if (newPassword.length < 6) newErrors.newPassword = 'Mật khẩu phải có ít nhất 6 ký tự';
+    if (!confirmPassword.trim()) newErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc';
+    else if (newPassword !== confirmPassword) newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
     setMessage('');
-
-    if (newPassword !== confirmPassword) {
-      setMessage('Mật khẩu xác nhận không khớp');
-      setLoading(false);
-      return;
-    }
 
     const result = await authService.resetPassword(email, otp, newPassword);
     
@@ -43,14 +51,16 @@ export default function ResetPassword() {
     setLoading(false);
   };
 
-  const handleInputChange = (setter) => (e) => {
+  const handleInputChange = (setter, field) => (e) => {
     setter(e.target.value);
+    setErrors(prev => ({ ...prev, [field]: '' }));
     if (message) setMessage('');
   };
 
   const handleOtpChange = (e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     setOtp(value);
+    setErrors(prev => ({ ...prev, otp: '' }));
     if (message) setMessage('');
   };
 
@@ -100,15 +110,14 @@ export default function ResetPassword() {
               placeholder="000000"
               value={otp}
               onChange={handleOtpChange}
-              required
-              maxLength={6}
               disabled={loading}
               className={`w-full px-4 py-3 rounded-lg border text-lg font-bold tracking-[0.5em] text-center outline-none transition-all duration-200 placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-400
-                ${message && !message.includes('thành công')
+                ${errors.otp || (message && !message.includes('thành công'))
                   ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                   : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
                 } disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed`}
             />
+            {errors.otp && <p className="text-red-600 text-sm mt-1">{errors.otp}</p>}
           </div>
 
           {/* New Password */}
@@ -118,16 +127,15 @@ export default function ResetPassword() {
               type="password"
               placeholder="Tối thiểu 6 ký tự"
               value={newPassword}
-              onChange={handleInputChange(setNewPassword)}
-              required
-              minLength={6}
+              onChange={handleInputChange(setNewPassword, 'newPassword')}
               disabled={loading}
               className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all duration-200
-                ${message && !message.includes('thành công')
+                ${errors.newPassword || (message && !message.includes('thành công'))
                   ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                   : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
                 } disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed`}
             />
+            {errors.newPassword && <p className="text-red-600 text-sm mt-1">{errors.newPassword}</p>}
           </div>
 
           {/* Confirm Password */}
@@ -137,16 +145,15 @@ export default function ResetPassword() {
               type="password"
               placeholder="Nhập lại mật khẩu mới"
               value={confirmPassword}
-              onChange={handleInputChange(setConfirmPassword)}
-              required
-              minLength={6}
+              onChange={handleInputChange(setConfirmPassword, 'confirmPassword')}
               disabled={loading}
               className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all duration-200
-                ${message && !message.includes('thành công')
+                ${errors.confirmPassword || (message && !message.includes('thành công'))
                   ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-200' 
                   : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
                 } disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed`}
             />
+            {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
 
           {/* Message Alert */}
