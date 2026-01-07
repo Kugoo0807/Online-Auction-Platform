@@ -219,7 +219,7 @@ const CreateProduct = () => {
     const maxFiles = 10;
 
     if (images.length + fileList.length > maxFiles) {
-      setErrors(prev => ({ ...prev, images: `Chễ được upload tối đa ${maxFiles} ảnh chi tiết!` }));
+      setErrors(prev => ({ ...prev, images: `Chỉ được upload tối đa ${maxFiles} ảnh chi tiết!` }));
       return;
     }
 
