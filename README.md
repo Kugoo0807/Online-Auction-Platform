@@ -22,7 +22,9 @@
 ## Quick Start
 
 1. Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết
-2. Khởi động MongoDB (local hoặc MongoDB Atlas)
+2. Khởi động MongoDB:
+    - **MongoDB Atlas**: Đã hỗ trợ sẵn.
+    - **MongoDB Local**: Bắt buộc chạy ở chế độ **Replica Set** để hỗ trợ Transaction.
 3. Chạy backend: `npm start`
 4. Chạy frontend: `npm run dev`
 
@@ -39,9 +41,10 @@
 - **Đấu giá Tự động**: Hệ thống auto-bid, cấm bidder, mua ngay (buy-it-now)
 - **Danh mục**: Quản lý danh mục sản phẩm theo cấp bậc
 - **Đánh giá & Xếp hạng**: Hệ thống đánh giá người bán/mua
-- **Thông báo Email**: Gửi email thông báo kết quả đấu giá, cập nhật sản phẩm
+- **Thông báo Email**: Gửi email thông báo kết quả đấu giá, cập nhật sản phẩm, OTP ...
 - **Cron Jobs**: Tự động kết thúc phiên đấu giá và xử lý kết quả
-- **Chat**: Hệ thống chat realtime cho Q&A sản phẩm
+- **Đơn hàng**: Xử lý đơn hàng với giao diện wizard và hệ thống chat thân thiện để trao đổi thông tin đơn hàng
+- **Quản trị**: Quản lý người dùng, danh mục, sản phẩm
 
 ---
 
@@ -60,12 +63,11 @@ Online-Auction-Platform/
 ├── db/               # Database setup & seeding
 │   ├── schema.js     # MongoDB schemas
 │   ├── seed.js       # Seed data
-│   └── updates.js    # Schema updates
-├── frontend/         # React + Vite application
-│   ├── public/       # Static assets
-│   └── src/          # React components & pages
-├── design/           # UI/UX wireframes
-└── docs/             # API documentation
+|   ├── connect.js    # Connect database
+│   └── db.helper.js  # Database helper function
+└── frontend/         # React + Vite application
+    ├── public/       # Static assets
+    └── src/          # React components & pages
 ```
 
 ---
@@ -74,13 +76,13 @@ Online-Auction-Platform/
 
 ### Yêu cầu hệ thống
 - Node.js >= 18.x
-- MongoDB >= 6.x
+- MongoDB >= 6.x (**Lưu ý:** Nếu dùng Local, phải cấu hình **Replica Set** để chạy các tính năng giao dịch/thanh toán)
 - npm hoặc yarn
 
-### 1. Clone Repository
+### 1. Clone Repository (nếu chưa có source code)
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Kugoo0807/Online-Auction-Platform
 cd Online-Auction-Platform
 ```
 
@@ -109,6 +111,9 @@ node schema.js
 # Seed dữ liệu mẫu
 node seed.js
 ```
+
+### ⚠️ Lưu ý về MongoDB Local
+Dự án có sử dụng `mongoose transaction` để đảm bảo tính toàn vẹn dữ liệu. Nếu bạn chạy MongoDB ở máy local (không dùng Atlas), bạn cần bật **Replica Set**:
 
 ### 4. Cài đặt Frontend
 
