@@ -1,149 +1,139 @@
-# Đồ án cuối kỳ – Môn *Lập trình Ứng dụng Web*
+# 1. Title & Tech Stack Badges
 
-## Trường Đại học Khoa học Tự nhiên – ĐHQG TP.HCM  
-**Chuyên ngành: Kỹ Thuật Phần Mềm**
+## Online Auction Platform
 
----
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![REST API](https://img.shields.io/badge/REST%20API-02569B?style=for-the-badge&logo=fastapi&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
 
-## Thành viên Nhóm
+# 2. Project Overview
 
-| STT | Họ và Tên               | MSSV      |
-|-----|--------------------------|------------|
-| 1   | **Nguyễn Nhật Nam**       | 23127092 |
-| 2   | **Lê Quang Phúc**         | 23127102 |
-| 3   | **Nguyễn Quang Đăng Khoa** | 23127212 |
-| 4   | **Đỗ Thành Minh**         | 23127420 |
-| 5   | **Phạm Đức Toàn**         | 23127540 |
+Online Auction Platform is a full-stack web application that implements an online bidding system where users can register accounts, create auction listings, place bids, and manage transactions.  
+The platform supports automated bidding logic, category-based product management, secure user authentication, and email notification services. Auction updates are synchronized using client-side polling to periodically fetch the latest bid information.
 
----
-## Demo Clip: https://www.youtube.com/watch?v=Zp9bW-Rpjk8
+# 3. Architecture & Design Patterns
 
----
-## Quick Start
+The backend follows a **Controller-Service-Repository** architecture:
 
-1. Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết
-2. Khởi động MongoDB:
-    - **MongoDB Atlas**: Đã hỗ trợ sẵn.
-    - **MongoDB Local**: Bắt buộc chạy ở chế độ **Replica Set** để hỗ trợ Transaction.
-3. Chạy backend: `npm start`
-4. Chạy frontend: `npm run dev`
+- **Controllers** handle HTTP input/output and request validation boundaries.
+- **Services** encapsulate core domain logic (bidding rules, auction state transitions, user workflows).
+- **Repositories** isolate persistence and data access concerns for MongoDB operations.
 
----
+This layered structure separates HTTP handling, domain logic, and persistence concerns. 
 
-## Giới thiệu Dự án
+# 4. Core Features
 
-**Online Auction Platform** là một hệ thống đấu giá trực tuyến cho phép người dùng đăng ký, đăng bán sản phẩm, tham gia đấu giá, và quản lý các giao dịch. Hệ thống hỗ trợ đấu giá tự động, quản lý danh mục sản phẩm, xác thực người dùng đa nền tảng, và gửi thông báo qua email.
+- **Concurrency & Auto-Bidding:** Implements bid progression logic with increment validation, controlled bidder updates, and conflict-safe handling for competing bids on the same auction lot.
+- **Scheduled Cron Jobs:** Uses scheduled workers to close auctions and finalize outcomes, with **MongoDB transactions** to guarantee atomic multi-document updates and prevent partial result states.
+- **Authentication & Security:** Supports JWT-based Access/Refresh token flows, OTP-based 2-step email registration, and HTML sanitization for XSS mitigation on user-generated content.
+- **Media Management:** Integrates Cloudinary for image upload/storage pipelines used in auction product listings.
 
-### Tính năng chính
+# 5. Project Structure
 
-- **Đăng ký & Xác thực**: Đăng ký 2 bước với OTP qua email, đăng nhập bằng JWT hoặc Social Account (Google, Github, Facebook)
-- **Quản lý Sản phẩm**: Tạo, chỉnh sửa, hủy bỏ sản phẩm đấu giá với hình ảnh lưu trên Cloudinary
-- **Đấu giá Tự động**: Hệ thống auto-bid, cấm bidder, mua ngay (buy-it-now)
-- **Danh mục**: Quản lý danh mục sản phẩm theo cấp bậc
-- **Đánh giá & Xếp hạng**: Hệ thống đánh giá người bán/mua
-- **Thông báo Email**: Gửi email thông báo kết quả đấu giá, cập nhật sản phẩm, OTP ...
-- **Cron Jobs**: Tự động kết thúc phiên đấu giá và xử lý kết quả
-- **Đơn hàng**: Xử lý đơn hàng với giao diện wizard và hệ thống chat thân thiện để trao đổi thông tin đơn hàng
-- **Quản trị**: Quản lý người dùng, danh mục, sản phẩm
-
----
-
-## Cấu trúc Dự án
-
-```
+```text
 Online-Auction-Platform/
-├── backend/          # Node.js Express API
-│   ├── config/       # Configuration files (Cloudinary, Passport, System)
-│   ├── controllers/  # Request handlers
-│   ├── middleware/   # Auth, validation, logging
-│   ├── repositories/ # Database access layer
-│   ├── routes/       # API routes
-│   ├── services/     # Business logic
-│   └── utils/        # Utility functions
-├── db/               # Database setup & seeding
-│   ├── schema.js     # MongoDB schemas
-│   ├── seed.js       # Seed data
-|   ├── connect.js    # Connect database
-│   └── db.helper.js  # Database helper function
-└── frontend/         # React + Vite application
-    ├── public/       # Static assets
-    └── src/          # React components & pages
+├── backend/                     # Node.js + Express API server
+│   ├── config/                  # App configuration (Cloudinary, Passport, system settings)
+│   ├── controllers/             # HTTP controllers (request/response layer)
+│   ├── data/                    # Backend runtime data
+│   ├── middleware/              # Auth, validation, logging, sanitization middleware
+│   ├── repositories/            # Data access layer (MongoDB queries)
+│   ├── routes/                  # API route declarations
+│   ├── services/                # Business logic and orchestration layer
+│   └── utils/                   # Utility helpers
+├── db/                          # Database bootstrap, schema, seed, and migration scripts
+│   ├── connect.js               # MongoDB connection setup
+│   ├── db.helper.js             # Database helper utilities
+│   ├── query.js                 # Query utilities
+│   ├── schema.js                # Schema initialization script
+│   ├── seed.js                  # Seed data script
+│   ├── updates.js               # Data update scripts
+│   └── data/seeds/              # Seed resources
+├── design/wireframe/            # UI wireframes by role
+├── docs/                        # API specification documents
+└── frontend/                    # React + Vite client application
+    ├── public/                  # Static public assets
+    └── src/                     # Frontend source code
 ```
 
----
+# 7. Getting Started (Installation & Setup)
 
-## Cài đặt & Chạy Dự án
+## Prerequisites
 
-### Yêu cầu hệ thống
-- Node.js >= 18.x
-- MongoDB >= 6.x (**Lưu ý:** Nếu dùng Local, phải cấu hình **Replica Set** để chạy các tính năng giao dịch/thanh toán)
-- npm hoặc yarn
+- Node.js 18+
+- npm
+- MongoDB 6+
 
-### 1. Clone Repository (nếu chưa có source code)
+## Important: MongoDB Replica Set Requirement (Local Development)
+
+This project uses Mongoose transactions for auction/result consistency. **MongoDB transactions require a Replica Set**. If you are running MongoDB locally, Replica Set mode is mandatory.
+
+- **MongoDB Atlas:** Supported out of the box.
+- **MongoDB Local:** Start MongoDB with Replica Set enabled (for example: `mongod --replSet rs0`).
+- Then initialize the Replica Set once (for example via Mongo shell: `rs.initiate()`).
+
+## Installation
+
+1. Clone the repository
 
 ```bash
 git clone https://github.com/Kugoo0807/Online-Auction-Platform
 cd Online-Auction-Platform
 ```
 
-### 2. Cài đặt Backend
+2. Configure backend
 
 ```bash
 cd backend
 npm install
 ```
 
-Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết.
+Create `.env` from `sample.env` and populate all required variables.
 
-### 3. Khởi tạo Database
+3. Configure database scripts
 
 ```bash
 cd ../db
 npm install
 ```
 
-Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết và chạy:
+Create `.env` from `sample.env`, then initialize schema and seed data:
 
 ```bash
-# Tạo schema
 node schema.js
-
-# Seed dữ liệu mẫu
 node seed.js
 ```
 
-### ⚠️ Lưu ý về MongoDB Local
-Dự án có sử dụng `mongoose transaction` để đảm bảo tính toàn vẹn dữ liệu. Nếu bạn chạy MongoDB ở máy local (không dùng Atlas), bạn cần bật **Replica Set**:
-
-### 4. Cài đặt Frontend
+4. Configure frontend
 
 ```bash
 cd ../frontend
 npm install
 ```
 
-Tạo file `.env` từ `sample.env` và cấu hình các biến môi trường cần thiết.
+Create `.env` from `sample.env` and populate frontend environment variables.
 
-### 5. Chạy Ứng dụng
+## Run the Application
 
-**Terminal 1 - Backend:**
+Terminal 1 (Backend):
+
 ```bash
 cd backend
 npm start
 ```
 
-**Terminal 2 - Frontend:**
+Terminal 2 (Frontend):
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-Ứng dụng sẽ chạy tại:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000/api
+Default local endpoints:
 
----
-
-## License
-
-Dự án được thực hiện phục vụ mục đích học tập trong khuôn khổ môn học và không sử dụng cho mục đích thương mại.
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:5000/api`
