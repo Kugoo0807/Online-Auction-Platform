@@ -60,7 +60,7 @@ Online-Auction-Platform/
     └── src/                     # Frontend source code
 ```
 
-# 7. Getting Started (Installation & Setup)
+# 6. Getting Started (Installation & Setup)
 
 ## Prerequisites
 
