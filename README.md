@@ -58,6 +58,22 @@ Online-Auction-Platform/
 └── frontend/                    # React + Vite client application
     ├── public/                  # Static public assets
     └── src/                     # Frontend source code
+        ├── assets/              # Images and static UI assets
+        ├── components/          # Reusable UI components and route guards
+        │   ├── admin/           # Admin management components
+        │   ├── chat/            # Chat widgets/components
+        │   ├── common/          # Shared/common UI components
+        │   ├── home/            # Homepage sections/components
+        │   ├── layout/          # Header, footer, and layout wrappers
+        │   ├── order/           # Order flow components
+        │   ├── product/         # Product listing/display components
+        │   └── productDetail/   # Product detail and bidding components
+        ├── constants/           # Shared constants/style tokens
+        ├── context/             # React context providers
+        ├── data/                # Local mock/static data
+        ├── hooks/               # Custom React hooks
+        ├── pages/               # Route-level page components
+        └── services/            # API clients and service modules
 ```
 
 # 6. Getting Started (Installation & Setup)
